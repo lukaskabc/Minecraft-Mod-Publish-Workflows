@@ -6,15 +6,19 @@ on:
         description: Version number
         required: true
         type: string
-      branhes:
-        description: Comma delimited list of branch names that should be included in the release, leave empty to release all configured branches.
+      branches:
+        description: Comma-delimited list of branch names that should be included in the release, leave empty to release all configured branches.
         required: false
         type: string
 
 jobs:
-  validate:
-    name: Validate
-    runs-on: ubuntu-slim
+  load-config:
+    name: Load and validate artifact configuration
+    runs-on: ubuntu-latest
+    outputs:
+      tag: ${{ steps.export.outputs.tag }}
+      matrix: ${{ steps.export.outputs.matrix }}
+      # TODO: output workflow ref
     steps:
       - name: Checkout caller repository
         uses: actions/checkout@v4
@@ -34,5 +38,83 @@ jobs:
           ref: ${{ steps.wfref.outputs.ref }}
           path: workflow
 
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Install JSON schema validator
+        run: npm install -g ajv-cli ajv-formats
+
+      - name: Validate publish config
+        run: |
+          test -f repository/publish.config.json
+          test -f workflow/artifacts.schema.json
+
+          ajv validate \
+            -s workflow/artifacts.schema.json \
+            -d repository/publish.config.json \
+            --spec=draft7 \
+            -c ajv-formats \
+            --strict=true
       
-      
+      - name: Export matrix output
+        id: export
+        shell: bash
+        env:
+          INPUT_BRANCHES: ${{ inputs.branches }}
+          INPUT_VERSION: ${{ inputs.version }}
+        # TODO: review script, add more comments
+        run: |
+          TAG="v${INPUT_VERSION#v}"
+
+          if [ -n "$INPUT_BRANCHES" ]; then
+            # filter by comma-delimited list from workflow input
+            FILTER_JSON=$(echo "$INPUT_BRANCHES" | tr ',' '\n' | sed 's/^ *//;s/ *$//' | jq -R -s -c 'split("\n")|map(select(length>0))')
+            MATRIX=$(jq -c --argjson filter "$FILTER_JSON" '
+              { include: [ .branches[] | select(.branch as $b | $filter | index($b)) ] }
+            ' repository/publish.config.json)
+          else
+            MATRIX=$(jq -c '{ include: .branches }' repository/publish.config.json)
+          fi
+
+          COUNT=$(echo "$MATRIX" | jq '.include | length')
+          if [ "$COUNT" -eq 0 ]; then
+            echo "No branches selected after filtering."
+            exit 1
+          fi
+
+          echo "tag=$TAG" >> "$GITHUB_OUTPUT"
+          echo "matrix=$MATRIX" >> "$GITHUB_OUTPUT"
+
+  create-release:
+    name: Create draft release
+    needs: load-config
+    runs-on: ubuntu-latest
+    outputs:
+      upload_url: ${{ steps.cr.outputs.upload_url }}
+      release_id: ${{ steps.cr.outputs.id }}
+    steps:
+      - name: Create draft release
+        id: cr
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        with:
+          tag_name: ${{ needs.load-config.outputs.tag }}
+          release_name: ${{ needs.load-config.outputs.tag }}
+          draft: true
+          prerelease: false
+
+  per-branch:
+    needs: [load-config, create-release]
+    strategy:
+      matrix: ${{ fromJson(needs.load-config.outputs.matrix) }}
+    # TODO: use workflow ref
+    uses: lukaskabc/Minecraft-Mod-Publish-Workflows/.github/workflows/publish-worker.yml@main
+    with:
+      version: ${{ inputs.version }}
+      branch: ${{ matrix.branch }}
+      loader: ${{ matrix.loader }}
+      game_version: ${{ matrix.game_version }}
+      release_upload_url: ${{ needs.create-release.outputs.upload_url }}
