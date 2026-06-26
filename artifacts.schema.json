@@ -1,0 +1,54 @@
+{
+  "$schema": "https://json-schema.org/draft-07/schema",
+  "type": "object",
+  "required": [
+    "artifacts"
+  ],
+  "properties": {
+    "artifacts": {
+      "type": "array",
+      "description": "Configuration for artifacts that should be released",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "properties": {
+          "branch": {
+            "type": "string",
+            "description": "The name of the branch from which the artifact is compiled"
+          },
+          "loaders": {
+            "type": "array",
+            "description": "Mod loaders that can load the artifact (neoforge, forge, fabric)",
+            "minItems": 1,
+            "items": {
+              "type": "string",
+              "enum": [
+                "neoforge",
+                "fabric",
+                "forge"
+              ]
+            },
+            "uniqueItems": true
+          },
+          "game_versions": {
+            "type": "array",
+            "description": "Supported game versions for the artifact",
+            "minItems": 1,
+            "items": {
+              "pattern": "^\\d+(.\\d+)+$",
+              "type": "string"
+            },
+            "uniqueItems": true
+          }
+        },
+        "additionalProperties": false,
+        "required": [
+          "branch",
+          "loaders",
+          "game_versions"
+        ]
+      },
+      "uniqueItems": true
+    }
+  }
+}
