@@ -1,0 +1,38 @@
+name: Publish
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: Version number
+        required: true
+        type: string
+      branhes:
+        description: Comma delimited list of branch names that should be included in the release, leave empty to release all configured branches.
+        required: false
+        type: string
+
+jobs:
+  validate:
+    name: Validate
+    runs-on: ubuntu-slim
+    steps:
+      - name: Checkout caller repository
+        uses: actions/checkout@v4
+        with:
+          path: repository
+
+      - name: Extract reusable workflow ref
+        id: wfref
+        shell: bash
+        run: |
+          echo "ref=${GITHUB_WORKFLOW_REF##*@}" >> "$GITHUB_OUTPUT"
+
+      - name: Checkout workflow repository
+        uses: actions/checkout@v4
+        with:
+          repository: lukaskabc/Minecraft-Mod-Publish-Workflows
+          ref: ${{ steps.wfref.outputs.ref }}
+          path: workflow
+
+      
+      
