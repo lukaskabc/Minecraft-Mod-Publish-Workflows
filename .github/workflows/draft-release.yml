@@ -1,6 +1,6 @@
 name: Create draft release and compile artifacts
 on:
-  workflow_dispatch:
+  workflow_call:
     inputs:
       version:
         description: Version number
@@ -88,16 +88,16 @@ jobs:
           fi
           
           # Applies filter if it is not empty
-          ARTIFACTS=$(jq -c --argjson filter "$FILTER_JSON" '{ artifacts: [ .artifacts[] | select(($filter | length == 0) or (.branch as $b | $filter | index($b))) ] }' "$CONFIG_FILE")
+          ARTIFACTS_ARRAY=$(jq -c --argjson filter "$FILTER_JSON" '[ .artifacts[] | select(($filter | length == 0) or (.branch as $b | $filter | index($b))) ]' "$CONFIG_FILE")
           
           # Ensure the filtered artifact is not empty
-          ARTIFACTS_LENGTH=$(echo "$ARTIFACTS" | jq '.artifacts | length')
+          ARTIFACTS_LENGTH=$(echo "$ARTIFACTS_ARRAY" | jq 'length')
           if [ "$ARTIFACTS_LENGTH" -eq 0 ]; then
             echo "Warning: No matching branches found in the config."
           fi
 
           echo "tag=$TAG" >> "$GITHUB_OUTPUT"
-          echo "artifacts=$ARTIFACTS" >> "$GITHUB_OUTPUT"
+          echo "artifacts=$ARTIFACTS_ARRAY" >> "$GITHUB_OUTPUT"
 
   create-release:
     name: Create draft release
@@ -120,14 +120,19 @@ jobs:
           prerelease: false
 
   per-branch:
+    name: Build artifact - ${{ matrix.artifact.branch }}
     needs: [load-config, create-release]
     strategy:
-      matrix: # ???
-    # TODO: use workflow ref
-    uses: lukaskabc/Minecraft-Mod-Publish-Workflows/.github/workflows/publish-worker.yml@main
+      fail-fast: false
+      matrix:
+        artifact: ${{ fromJson(needs.load-config.outputs.artifacts) }}
+
+    uses: ./.github/workflows/compile.yml
     with:
       version: ${{ inputs.version }}
-      branch: ${{ matrix.branch }}
-      loader: ${{ matrix.loader }}
-      game_version: ${{ matrix.game_version }}
-      release_upload_url: ${{ needs.create-release.outputs.upload_url }}
+    #   tag_name: ${{ needs.load-config.outputs.tag }}
+    #   branch: ${{ matrix.artifact.branch }}
+    #   loaders_json: ${{ toJson(matrix.artifact.loaders) }}
+    #   game_versions_json: ${{ toJson(matrix.artifact.game_versions) }}
+    #   release_id: ${{ needs.create-release.outputs.release_id }}
+    #   release_upload_url: ${{ needs.create-release.outputs.upload_url }}
