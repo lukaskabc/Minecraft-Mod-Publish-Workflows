@@ -1,0 +1,21 @@
+name: Create draft release and compile artifacts
+on:
+  workflow_call:
+    inputs:
+      version:
+        description: Version number
+        required: true
+        type: string
+    secrets:
+      release_upload_url:
+        description: URL for uploading assets to GitHub release
+        required: true
+
+jobs:
+  test-call:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Debug - Print vars
+        run: |
+          echo "${{ inputs.version }}"
+          echo "${{ secrets.release_upload_url }}"
