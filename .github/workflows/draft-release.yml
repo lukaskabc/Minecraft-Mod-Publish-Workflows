@@ -1,4 +1,4 @@
-name: Publish
+name: Create draft release and compile artifacts
 on:
   workflow_dispatch:
     inputs:
@@ -10,6 +10,11 @@ on:
         description: Comma-delimited list of branch names that should be included in the release, leave empty to release all configured branches.
         required: false
         type: string
+      validate-only:
+        description: Only parse and validate the file publish.config.json
+        required: true
+        type: boolean
+        default: false
 
 jobs:
   load-config:
@@ -17,21 +22,24 @@ jobs:
     runs-on: ubuntu-latest
     outputs:
       tag: ${{ steps.export.outputs.tag }}
-      matrix: ${{ steps.export.outputs.matrix }}
-      # TODO: output workflow ref
+      artifacts: ${{ steps.export.outputs.artifacts }}
+      workflow_ref: ${{ steps.wfref.outputs.ref }}
     steps:
       - name: Checkout caller repository
+        # Checksout the mod repository
         uses: actions/checkout@v4
         with:
           path: repository
 
       - name: Extract reusable workflow ref
+        # Extracts the used version of this workflow to pin subsequent calls
         id: wfref
         shell: bash
         run: |
           echo "ref=${GITHUB_WORKFLOW_REF##*@}" >> "$GITHUB_OUTPUT"
 
       - name: Checkout workflow repository
+        # Checksout the repository of this workflow to use the files
         uses: actions/checkout@v4
         with:
           repository: lukaskabc/Minecraft-Mod-Publish-Workflows
@@ -39,12 +47,13 @@ jobs:
           path: workflow
 
       - name: Setup Node.js
+        # setup nodejs for JSON schema validation with AJV
         uses: actions/setup-node@v4
         with:
-          node-version: "20"
+          node-version: "24"
 
       - name: Install JSON schema validator
-        run: npm install -g ajv-cli ajv-formats
+        run: npm install --ignore-scripts -g ajv-cli ajv-formats
 
       - name: Validate publish config
         run: |
@@ -58,48 +67,52 @@ jobs:
             -c ajv-formats \
             --strict=true
       
-      - name: Export matrix output
+      - name: Export artifacts output
         id: export
         shell: bash
         env:
           INPUT_BRANCHES: ${{ inputs.branches }}
           INPUT_VERSION: ${{ inputs.version }}
-        # TODO: review script, add more comments
         run: |
+          # Prepend "v" to the version for the tag name
           TAG="v${INPUT_VERSION#v}"
 
-          if [ -n "$INPUT_BRANCHES" ]; then
-            # filter by comma-delimited list from workflow input
-            FILTER_JSON=$(echo "$INPUT_BRANCHES" | tr ',' '\n' | sed 's/^ *//;s/ *$//' | jq -R -s -c 'split("\n")|map(select(length>0))')
-            MATRIX=$(jq -c --argjson filter "$FILTER_JSON" '
-              { include: [ .branches[] | select(.branch as $b | $filter | index($b)) ] }
-            ' repository/publish.config.json)
-          else
-            MATRIX=$(jq -c '{ include: .branches }' repository/publish.config.json)
-          fi
-
-          COUNT=$(echo "$MATRIX" | jq '.include | length')
-          if [ "$COUNT" -eq 0 ]; then
-            echo "No branches selected after filtering."
+          # Normalizes and converts input branch filter to a JSON array using only jq
+          FILTER_JSON=$(jq -R -c 'split(",") | map(gsub("^\\s+|\\s+$"; "")) | map(select(length>0))' <<< "$INPUT_BRANCHES")
+          
+          # Ensure the config file exists
+          CONFIG_FILE="repository/publish.config.json"
+          if [ ! -f "$CONFIG_FILE" ]; then
+            echo "Error: $CONFIG_FILE does not exist."
             exit 1
+          fi
+          
+          # Applies filter if it is not empty
+          ARTIFACTS=$(jq -c --argjson filter "$FILTER_JSON" '{ artifacts: [ .artifacts[] | select(($filter | length == 0) or (.branch as $b | $filter | index($b))) ] }' "$CONFIG_FILE")
+          
+          # Ensure the filtered artifact is not empty
+          ARTIFACTS_LENGTH=$(echo "$ARTIFACTS" | jq '.artifacts | length')
+          if [ "$ARTIFACTS_LENGTH" -eq 0 ]; then
+            echo "Warning: No matching branches found in the config."
           fi
 
           echo "tag=$TAG" >> "$GITHUB_OUTPUT"
-          echo "matrix=$MATRIX" >> "$GITHUB_OUTPUT"
+          echo "artifacts=$ARTIFACTS" >> "$GITHUB_OUTPUT"
 
   create-release:
     name: Create draft release
     needs: load-config
     runs-on: ubuntu-latest
+    # skip if validate only is enabled
+    if: ${{ inputs.validate-only != true }}
     outputs:
+      # URL for assets uploading
       upload_url: ${{ steps.cr.outputs.upload_url }}
       release_id: ${{ steps.cr.outputs.id }}
     steps:
       - name: Create draft release
         id: cr
-        uses: actions/create-release@v1
-        env:
-          GITHUB_TOKEN: ${{ github.token }}
+        uses: softprops/action-gh-release@v3
         with:
           tag_name: ${{ needs.load-config.outputs.tag }}
           release_name: ${{ needs.load-config.outputs.tag }}
@@ -109,7 +122,7 @@ jobs:
   per-branch:
     needs: [load-config, create-release]
     strategy:
-      matrix: ${{ fromJson(needs.load-config.outputs.matrix) }}
+      matrix: # ???
     # TODO: use workflow ref
     uses: lukaskabc/Minecraft-Mod-Publish-Workflows/.github/workflows/publish-worker.yml@main
     with:
