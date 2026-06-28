@@ -139,5 +139,5 @@ jobs:
       game_versions_json: ${{ toJson(matrix.artifact.game_versions) }}
       release_id: ${{ needs.create-release.outputs.release_id }}
       release_upload_url: ${{ needs.create-release.outputs.upload_url }}
-      gradle_version_property: ${{ matrix.artifact.gradle_version_property }}
+      version_properties_json: ${{ toJson(matrix.artifact.version_properties) }}
       java_version: ${{ matrix.artifact.java_version }}

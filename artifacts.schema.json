@@ -40,13 +40,30 @@
             },
             "uniqueItems": true
           },
-          "gradle_version_property": {
-            "type": "string",
-            "description": "The property name in gradle.properties in which the version should be set (default: mod_version)"
-          },
           "java_version": {
             "type": "string",
             "description": "The java version used to run the gradle build task"
+          },
+          "version_properties": {
+            "type": "array",
+            "description": "List of files and respective properties where the version should be set (default: mod_version in gradle.properties)",
+            "items": {
+              "type": "object",
+              "properties": {
+                "file": {
+                  "type": "string",
+                  "description": "The relative path to the file"
+                },
+                "property": {
+                  "type": "string",
+                  "description": "The name of the property which should be set to the version"
+                }
+              },
+              "required": [
+                "file",
+                "property"
+              ]
+            }
           }
         },
         "additionalProperties": false,
