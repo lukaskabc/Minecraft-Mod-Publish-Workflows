@@ -34,14 +34,14 @@ jobs:
     steps:
       - name: Checkout caller repository
         # Checksout the mod repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
         with:
           fetch-depth: 0
           path: repository
 
       - name: Checkout workflow repository
         # Checksout the repository of this workflow to use the files
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
         with:
           repository: lukaskabc/Minecraft-Mod-Publish-Workflows
           ref: ${{ inputs.workflow_ref }}
@@ -50,7 +50,7 @@ jobs:
 
       - name: Setup Node.js
         # setup nodejs for JSON schema validation with AJV
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v6
         with:
           node-version: "24"
 
