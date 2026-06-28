@@ -1,0 +1,185 @@
+name: Per-branch bump version, compile and upload to github release draft
+
+on:
+  workflow_call:
+    inputs:
+      version:
+        description: The new semantic version of the mod (e.g. 1.2.3)
+        required: true
+        type: string
+      tag_name:
+        description: Release tag name (e.g. v1.2.3)
+        required: true
+        type: string
+      branch:
+        description: Branch to build from and push to
+        required: true
+        type: string
+      loaders_json:
+        description: JSON array of loaders
+        required: true
+        type: string
+      game_versions_json:
+        description: JSON array of game versions
+        required: true
+        type: string
+      release_id:
+        description: GitHub release ID
+        required: true
+        type: string
+      release_upload_url:
+        description: GitHub release upload URL
+        required: true
+        type: string
+      version_properties_json:
+        description: JSON array [{file,property}] where version should be set; default to gradle.properties:mod_version when empty
+        required: false
+        type: string
+        default: "[]"
+      java_version:
+        description: Java version for Gradle build (e.g. 17, 21)
+        required: true
+        type: string
+
+permissions:
+  contents: write
+
+jobs:
+  build-and-upload:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout target branch
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.branch }}
+          fetch-depth: 0
+
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: ${{ inputs.java_version }}
+          cache: gradle
+
+      - name: Validate semantic version input
+        shell: bash
+        env:
+          INPUT_VERSION: ${{ inputs.version }}
+        run: |
+          set -euo pipefail
+          
+          # https://semver.org/
+          SEMVER_REGEX='^(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)(?:-((?:0|[1-9]\d*|\d*[a-zA-Z-][0-9a-zA-Z-]*)(?:\.(?:0|[1-9]\d*|\d*[a-zA-Z-][0-9a-zA-Z-]*))*))?(?:\+([0-9a-zA-Z-]+(?:\.[0-9a-zA-Z-]+)*))?$'
+          
+          # Using grep for regex extensions compatibility
+          if ! echo "$INPUT_VERSION" | grep -qP "$SEMVER_REGEX"; then
+            echo "Input version '$INPUT_VERSION' is not a valid semantic version."
+            exit 1
+          fi
+
+      - name: Configure git identity
+        # https://github.com/actions/checkout/pull/1707
+        # Official github actions bot account
+        run: |
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+      - name: Set release version
+        shell: bash
+        env:
+          INPUT_VERSION: ${{ inputs.version }}
+          INPUT_VERSION_PROPERTIES_JSON: ${{ inputs.version_properties_json }}
+        run: |
+          set -euo pipefail
+          cd repository
+          "../workflow/set-version.sh" \
+            "$INPUT_VERSION" \
+            "$INPUT_VERSION_PROPERTIES_JSON" \
+            "[chore(release)] set version to $INPUT_VERSION"
+
+      - name: Build with Gradle wrapper
+        shell: bash
+        run: |
+          set -euo pipefail
+          cd repository
+          chmod +x ./gradlew
+          ./gradlew build
+
+      - name: Compute next dev version
+        id: next
+        shell: bash
+        env:
+          INPUT_VERSION: ${{ inputs.version }}
+        run: |
+          set -euo pipefail
+          core="${INPUT_VERSION%%[-+]*}"
+          IFS='.' read -r major minor patch <<< "$core"
+          next_patch=$((patch + 1))
+          next_dev="${major}.${minor}.${next_patch}-alpha"
+          echo "next_dev=$next_dev" >> "$GITHUB_OUTPUT"
+
+      - name: Set next dev version
+        shell: bash
+        env:
+          NEXT_VERSION: ${{ steps.next.outputs.next_dev }}
+          INPUT_VERSION_PROPERTIES_JSON: ${{ inputs.version_properties_json }}
+        run: |
+          set -euo pipefail
+          cd repository
+          "../workflow/set-version.sh" \
+            "$NEXT_VERSION" \
+            "$INPUT_VERSION_PROPERTIES_JSON" \
+            "[chore(release)] set development version to $NEXT_VERSION"
+
+      - name: Build asset name
+        id: asset
+        shell: bash
+        env:
+          VERSION: ${{ inputs.version }}
+          LOADERS_JSON: ${{ inputs.loaders_json }}
+          GAME_VERSIONS_JSON: ${{ inputs.game_versions_json }}
+        run: |
+          set -euo pipefail
+          loaders=$(echo "$LOADERS_JSON" | jq -r 'join("-")')
+          games=$(echo "$GAME_VERSIONS_JSON" | jq -r 'join("-")')
+          echo "suffix=$VERSION-${games}-${loaders}" >> "$GITHUB_OUTPUT"
+
+      - name: Upload jars to release draft
+        shell: bash
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+          RELEASE_ID: ${{ inputs.release_id }}
+          SUFFIX: ${{ steps.asset.outputs.suffix }}
+          VERSION: ${{ steps.asset.outputs.version }}
+          REPO: ${{ github.repository }}
+        run: |
+          set -euo pipefail
+          shopt -s globstar nullglob
+          cd repository
+
+          files=(**/build/libs/*.jar)
+          if [[ ${#files[@]} -eq 0 ]]; then
+            echo "No JAR files found under **/build/libs/*.jar"
+            exit 1
+          fi
+
+          i=0
+          for f in "${files[@]}"; do
+            base="$(basename "$f")"
+            name="${base%.jar}-${SUFFIX}"
+            if [[ $i -gt 0 ]]; then
+              name="${name}-${i}"
+            fi
+            name="${name}.jar"
+
+            gh release upload "${inputs.tag_name}" "$f#${name}" --repo "$REPO"
+            i=$((i+1))
+          done
+
+      - name: Push branch changes
+        shell: bash
+        run: |
+          set -euo pipefail
+          cd repository
+          git push origin "HEAD:${{ inputs.branch }}"
