@@ -39,6 +39,10 @@
               "type": "string"
             },
             "uniqueItems": true
+          },
+          "gradle_version_property": {
+            "type": "string",
+            "description": "The property name in gradle.properties in which the version should be set"
           }
         },
         "additionalProperties": false,
