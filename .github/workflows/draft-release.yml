@@ -115,7 +115,7 @@ jobs:
         uses: softprops/action-gh-release@v3
         with:
           tag_name: ${{ needs.load-config.outputs.tag }}
-          release_name: ${{ needs.load-config.outputs.tag }}
+          name: ${{ needs.load-config.outputs.tag }}
           draft: true
           prerelease: false
 
