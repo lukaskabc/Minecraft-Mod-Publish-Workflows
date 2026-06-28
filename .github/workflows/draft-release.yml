@@ -2,6 +2,10 @@ name: Create draft release and compile artifacts
 on:
   workflow_call:
     inputs:
+      workflow_ref:
+        description: Reference for this workflow to pin version-dependent calls
+        required: true
+        type: string
       version:
         description: Version number
         required: true
@@ -16,6 +20,10 @@ on:
         type: boolean
         default: false
 
+# permissions required to write to the github release
+permissions:
+  contents: write
+
 jobs:
   load-config:
     name: Load and validate artifact configuration
@@ -23,7 +31,6 @@ jobs:
     outputs:
       tag: ${{ steps.export.outputs.tag }}
       artifacts: ${{ steps.export.outputs.artifacts }}
-      workflow_ref: ${{ steps.wfref.outputs.ref }}
     steps:
       - name: Checkout caller repository
         # Checksout the mod repository
@@ -31,19 +38,12 @@ jobs:
         with:
           path: repository
 
-      - name: Extract reusable workflow ref
-        # Extracts the used version of this workflow to pin subsequent calls
-        id: wfref
-        shell: bash
-        run: |
-          echo "ref=${GITHUB_WORKFLOW_REF##*@}" >> "$GITHUB_OUTPUT"
-
       - name: Checkout workflow repository
         # Checksout the repository of this workflow to use the files
         uses: actions/checkout@v4
         with:
           repository: lukaskabc/Minecraft-Mod-Publish-Workflows
-          ref: ${{ steps.wfref.outputs.ref }}
+          ref: ${{ inputs.workflow_ref }}
           path: workflow
 
       - name: Setup Node.js
@@ -119,20 +119,23 @@ jobs:
           draft: true
           prerelease: false
 
-  per-branch:
+  # Executed for each configured branch
+  build-artifact:
     name: Build artifact - ${{ matrix.artifact.branch }}
     needs: [load-config, create-release]
+    # skip if validate only is enabled
+    if: ${{ inputs.validate-only != true }}
     strategy:
       fail-fast: false
       matrix:
         artifact: ${{ fromJson(needs.load-config.outputs.artifacts) }}
 
-    uses: ./.github/workflows/compile.yml
+    uses: ./.github/workflows/per-branch-compile.yml
     with:
       version: ${{ inputs.version }}
-    #   tag_name: ${{ needs.load-config.outputs.tag }}
-    #   branch: ${{ matrix.artifact.branch }}
-    #   loaders_json: ${{ toJson(matrix.artifact.loaders) }}
-    #   game_versions_json: ${{ toJson(matrix.artifact.game_versions) }}
-    #   release_id: ${{ needs.create-release.outputs.release_id }}
-    #   release_upload_url: ${{ needs.create-release.outputs.upload_url }}
+      tag_name: ${{ needs.load-config.outputs.tag }}
+      branch: ${{ matrix.artifact.branch }}
+      loaders_json: ${{ toJson(matrix.artifact.loaders) }}
+      game_versions_json: ${{ toJson(matrix.artifact.game_versions) }}
+      release_id: ${{ needs.create-release.outputs.release_id }}
+      release_upload_url: ${{ needs.create-release.outputs.upload_url }}
