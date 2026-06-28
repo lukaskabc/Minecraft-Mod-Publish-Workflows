@@ -167,6 +167,19 @@ jobs:
           chmod +x ./gradlew
           ./gradlew build
 
+      - name: Build asset name
+        id: asset
+        shell: bash
+        env:
+          VERSION: ${{ inputs.version }}
+          LOADERS_JSON: ${{ inputs.loaders_json }}
+          GAME_VERSIONS_JSON: ${{ inputs.game_versions_json }}
+        run: |
+          set -euo pipefail
+          loaders=$(echo "$LOADERS_JSON" | jq -r 'join("-")')
+          games=$(echo "$GAME_VERSIONS_JSON" | jq -r 'join("-")')
+          echo "suffix=$VERSION-${games}-${loaders}" >> "$GITHUB_OUTPUT"
+
       - name: Upload jars to release draft
         shell: bash
         env:
