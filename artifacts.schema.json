@@ -42,14 +42,19 @@
           },
           "gradle_version_property": {
             "type": "string",
-            "description": "The property name in gradle.properties in which the version should be set"
+            "description": "The property name in gradle.properties in which the version should be set (default: mod_version)"
+          },
+          "java_version": {
+            "type": "string",
+            "description": "The java version used to run the gradle build task"
           }
         },
         "additionalProperties": false,
         "required": [
           "branch",
           "loaders",
-          "game_versions"
+          "game_versions",
+          "java_version"
         ]
       },
       "uniqueItems": true

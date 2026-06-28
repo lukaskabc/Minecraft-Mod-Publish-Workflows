@@ -140,3 +140,4 @@ jobs:
       release_id: ${{ needs.create-release.outputs.release_id }}
       release_upload_url: ${{ needs.create-release.outputs.upload_url }}
       gradle_version_property: ${{ matrix.artifact.gradle_version_property }}
+      java_version: ${{ matrix.artifact.java_version }}
