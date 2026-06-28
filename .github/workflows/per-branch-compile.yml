@@ -51,7 +51,7 @@ permissions:
 jobs:
   build-and-upload:
     runs-on: ubuntu-latest
-
+    name: Bump version, build artifact and upload to github release draft
     steps:
       - name: Checkout caller repository
         # Checksout the mod repository
@@ -69,14 +69,6 @@ jobs:
           ref: ${{ inputs.workflow_ref }}
           path: workflow
           fetch-depth: 0
-
-      - name: Setup Java
-        uses: actions/setup-java@v4
-        with:
-          distribution: temurin
-          java-version: ${{ inputs.java_version }}
-          cache: gradle
-          cache-dependency-path: repository/**/*.gradle*
 
       - name: Validate semantic version input
         shell: bash
@@ -102,6 +94,7 @@ jobs:
           git config --global user.email "41898282+github-actions[bot]@users.noreply.github.com"
 
       - name: Set release version
+        id: release_commit
         shell: bash
         env:
           INPUT_VERSION: ${{ inputs.version }}
@@ -113,14 +106,9 @@ jobs:
             "$INPUT_VERSION" \
             "$INPUT_VERSION_PROPERTIES_JSON" \
             "[chore(release)] set version to $INPUT_VERSION"
-
-      - name: Build with Gradle wrapper
-        shell: bash
-        run: |
-          set -euo pipefail
-          cd repository
-          chmod +x ./gradlew
-          ./gradlew build
+          
+          # Save the release commit hash to checkout later
+          echo "commit_hash=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
 
       - name: Compute next dev version
         id: next
@@ -148,6 +136,37 @@ jobs:
             "$INPUT_VERSION_PROPERTIES_JSON" \
             "[chore(release)] set development version to $NEXT_VERSION"
 
+      - name: Push branch changes
+        shell: bash
+        run: |
+          set -euo pipefail
+          cd repository
+          git push origin "HEAD:${{ inputs.branch }}"
+
+      - name: Checkout release commit
+        shell: bash
+        run: |
+          set -euo pipefail
+          cd repository
+          # Checking out the specific hash saved from the release commit
+          git checkout ${{ steps.release_commit.outputs.commit_hash }}
+
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: ${{ inputs.java_version }}
+          cache: gradle
+          cache-dependency-path: repository/**/*.gradle*
+
+      - name: Build with Gradle wrapper
+        shell: bash
+        run: |
+          set -euo pipefail
+          cd repository
+          chmod +x ./gradlew
+          ./gradlew build
+
       - name: Upload jars to release draft
         shell: bash
         env:
@@ -170,10 +189,3 @@ jobs:
           for f in "${files[@]}"; do
             gh release upload "${inputs.tag_name}" "$f"
           done
-
-      - name: Push branch changes
-        shell: bash
-        run: |
-          set -euo pipefail
-          cd repository
-          git push origin "HEAD:${{ inputs.branch }}"
