@@ -40,6 +40,10 @@ on:
         description: Java version for Gradle build (e.g. 17, 21)
         required: true
         type: string
+      workflow_ref:
+        description: Reference for this workflow to pin version-dependent calls
+        required: true
+        type: string
 
 permissions:
   contents: write
@@ -49,10 +53,21 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout target branch
+      - name: Checkout caller repository
+        # Checksout the mod repository
         uses: actions/checkout@v4
         with:
           ref: ${{ inputs.branch }}
+          fetch-depth: 0
+          path: repository
+
+      - name: Checkout workflow repository
+        # Checksout the repository of this workflow to use the files
+        uses: actions/checkout@v4
+        with:
+          repository: lukaskabc/Minecraft-Mod-Publish-Workflows
+          ref: ${{ inputs.workflow_ref }}
+          path: workflow
           fetch-depth: 0
 
       - name: Setup Java
@@ -61,6 +76,7 @@ jobs:
           distribution: temurin
           java-version: ${{ inputs.java_version }}
           cache: gradle
+          cache-dependency-path: repository/**/*.gradle*
 
       - name: Validate semantic version input
         shell: bash
@@ -132,49 +148,27 @@ jobs:
             "$INPUT_VERSION_PROPERTIES_JSON" \
             "[chore(release)] set development version to $NEXT_VERSION"
 
-      - name: Build asset name
-        id: asset
-        shell: bash
-        env:
-          VERSION: ${{ inputs.version }}
-          LOADERS_JSON: ${{ inputs.loaders_json }}
-          GAME_VERSIONS_JSON: ${{ inputs.game_versions_json }}
-        run: |
-          set -euo pipefail
-          loaders=$(echo "$LOADERS_JSON" | jq -r 'join("-")')
-          games=$(echo "$GAME_VERSIONS_JSON" | jq -r 'join("-")')
-          echo "suffix=$VERSION-${games}-${loaders}" >> "$GITHUB_OUTPUT"
-
       - name: Upload jars to release draft
         shell: bash
         env:
-          GITHUB_TOKEN: ${{ github.token }}
-          RELEASE_ID: ${{ inputs.release_id }}
           SUFFIX: ${{ steps.asset.outputs.suffix }}
-          VERSION: ${{ steps.asset.outputs.version }}
-          REPO: ${{ github.repository }}
+          # Used by the gh release
+          RELEASE_ID: ${{ inputs.release_id }}
+          GH_REPO: ${{ github.repository }}
+          GH_TOKEN: ${{ github.token }}
         run: |
           set -euo pipefail
           shopt -s globstar nullglob
           cd repository
-
-          files=(**/build/libs/*.jar)
+          
+          files=(**/build/libs/*"${SUFFIX}".jar)
           if [[ ${#files[@]} -eq 0 ]]; then
-            echo "No JAR files found under **/build/libs/*.jar"
+            echo "No JAR files found matching **/build/libs/*${SUFFIX}.jar"
             exit 1
           fi
-
-          i=0
+          
           for f in "${files[@]}"; do
-            base="$(basename "$f")"
-            name="${base%.jar}-${SUFFIX}"
-            if [[ $i -gt 0 ]]; then
-              name="${name}-${i}"
-            fi
-            name="${name}.jar"
-
-            gh release upload "${inputs.tag_name}" "$f#${name}" --repo "$REPO"
-            i=$((i+1))
+            gh release upload "${inputs.tag_name}" "$f"
           done
 
       - name: Push branch changes

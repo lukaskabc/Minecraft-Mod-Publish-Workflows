@@ -36,6 +36,7 @@ jobs:
         # Checksout the mod repository
         uses: actions/checkout@v4
         with:
+          fetch-depth: 0
           path: repository
 
       - name: Checkout workflow repository
@@ -45,6 +46,7 @@ jobs:
           repository: lukaskabc/Minecraft-Mod-Publish-Workflows
           ref: ${{ inputs.workflow_ref }}
           path: workflow
+          fetch-depth: 0
 
       - name: Setup Node.js
         # setup nodejs for JSON schema validation with AJV
@@ -141,3 +143,4 @@ jobs:
       release_upload_url: ${{ needs.create-release.outputs.upload_url }}
       version_properties_json: ${{ toJson(matrix.artifact.version_properties) }}
       java_version: ${{ matrix.artifact.java_version }}
+      workflow_ref: ${{ inputs.workflow_ref }}
