@@ -35,7 +35,7 @@
             "description": "Supported game versions for the artifact",
             "minItems": 1,
             "items": {
-              "pattern": "^\\d+(.\\d+)+$",
+              "pattern": "^\\d+(\\.\\d+)+$",
               "type": "string"
             },
             "uniqueItems": true
