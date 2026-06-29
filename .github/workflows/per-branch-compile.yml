@@ -114,6 +114,7 @@ jobs:
           # Outputs the commit hash as commit_hash
 
       - name: Compute next dev version
+        # TODO: fix incremental for 1.2.3-hotfix.1 versions
         id: next
         shell: bash
         env:
