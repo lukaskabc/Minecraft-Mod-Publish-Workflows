@@ -1,5 +1,5 @@
 {
-  "$schema": "http://json-schema.org/draft-07/schema",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
   "type": "object",
   "required": [
     "artifacts"
@@ -62,8 +62,14 @@
               "required": [
                 "file",
                 "property"
-              ]
+              ],
+              "additionalProperties": false
             }
+          },
+          "dependencies": {
+            "type": "object",
+            "description": "Dependencies for the artifact (merged with common dependencies)",
+            "$ref": "#/$defs/dependencies"
           }
         },
         "additionalProperties": false,
@@ -75,6 +81,99 @@
         ]
       },
       "uniqueItems": true
+    },
+    "common_dependencies": {
+      "type": "object",
+      "description": "Common dependencies for each artifact",
+      "$ref": "#/$defs/dependencies"
     }
+  },
+  "$defs": {
+    "dependencies": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "curseforge": {
+          "type": "array",
+          "description": "Dependencies for Curseforge deployment",
+          "items": {
+            "$ref": "#/$defs/cf_dependency"
+          }
+        },
+        "modrinth": {
+          "type": "array",
+          "description": "Common dependencies for all artifacts on Curseforge",
+          "items": {
+            "$ref": "#/$defs/mr_dependency"
+          }
+        }
+      }
+    },
+    "dependency_type": {
+      "type": "string",
+      "description": "Type of the dependency",
+      "enum": [
+        "required",
+        "optional",
+        "incompatible",
+        "embeds"
+      ]
+    },
+    "cf_dependency": {
+      "type": "object",
+      "description": "Dependency for curseforge",
+      "additionalProperties": false,
+      "properties": {
+        "slug": {
+          "type": "string",
+          "description": "Curseforge project slug"
+        },
+        "dependency_type": {
+          "type": "string",
+          "$ref": "#/$defs/dependency_type"
+        }
+      },
+      "required": [
+        "slug",
+        "dependency_type"
+      ]
+    },
+    "mr_dependency": {
+      "type": "object",
+      "description": "Dependency for Modrinth",
+      "additionalProperties": false,
+      "properties": {
+        "dependency_type": {
+          "type": "string",
+          "$ref": "#/$defs/dependency_type"
+        }
+      },
+      "oneOf": [
+        {
+          "type": "object",
+          "properties": {
+            "id": {
+              "type": "number",
+              "description": "ID of the modrinth project"
+            }
+          },
+          "required": ["id"]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "slug": {
+              "type": "string",
+              "description": "Slug of the modrinth project"
+            }
+          },
+          "required": ["slug"]
+        }
+      ]
+    },
+    "required": [
+      "identifier",
+      "dependency_type"
+    ]
   }
 }
