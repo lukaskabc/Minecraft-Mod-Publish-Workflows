@@ -7,8 +7,26 @@ Minecraft mod release cycle and publishing with CI/CD (GitHub Workflows)
 
 ___
 
-The automatic process consists of the following steps:
-- The release pipeline is manually triggered with version number
+The process consists of the following steps:
+1. The author manually triggers draft release pipeline with the version number
 - A GitHub release draft is created for the main branch
-- All branches are tagged
-- 
+- For each involved branch:
+  - The artifact is compiled
+  - 2 commits are pushed advancing the version set in the files
+    - 1.The version being published (e.g. 1.2.3)
+    - 2.The next development version (e.g. 1.2.4-alpha)
+  - The artifact is attached to the release draft
+  - (During the process, there must be no new commits added to the involved branches)
+
+2. The author fills the GitHub release draft description with the changelog
+3. The author can access the attached jars and test them locally if desired
+4. The author publishes the GitHub release
+5. The mod publish workflow is automatically triggered
+- JARs are downloaded from the GitHub release
+- They are published using the [Mod publish plugin created by Modmuss](https://github.com/modmuss50/mod-publish-plugin).
+- The workflow is configured for publishing to: (each step being optional)
+  - Modrinth
+  - Curseforge 
+  - and Discord
+
+## Setup
