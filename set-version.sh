@@ -76,8 +76,8 @@ while IFS= read -r row; do
 done < <(jq -c '.[]' <<<"$SPEC_JSON")
 
 # Only attempt Git operations if changes actually occurred
-if ! git diff --quiet "${modified_files[@]}"; then
-  git add "${modified_files[@]}"
+if ! git diff --quiet -- "${modified_files[@]}"; then
+  git add -- "${modified_files[@]}"
   git commit -m "$COMMIT_MESSAGE"
 else
   echo "No changes to commit for release version (${#modified_files[@]} target(s) processed)."
