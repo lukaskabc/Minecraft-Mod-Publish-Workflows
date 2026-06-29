@@ -93,6 +93,11 @@ jobs:
           git config --global user.name "github-actions[bot]"
           git config --global user.email "41898282+github-actions[bot]@users.noreply.github.com"
 
+      - name: Configure scripts
+        run: |
+          # make bash scripts executable
+          chmod +x ./workflow/*.sh
+
       - name: Set release version
         id: release_commit
         shell: bash
