@@ -68,7 +68,7 @@ jobs:
             --spec=draft7 \
             -c ajv-formats \
             --strict=true
-      
+
       - name: Export artifacts output
         id: export
         shell: bash
@@ -85,7 +85,7 @@ jobs:
           # Ensure the config file exists
           CONFIG_FILE="repository/publish.config.json"
           if [ ! -f "$CONFIG_FILE" ]; then
-            echo "Error: $CONFIG_FILE does not exist."
+            echo "::error::Error: $CONFIG_FILE does not exist."
             exit 1
           fi
           
@@ -95,7 +95,8 @@ jobs:
           # Ensure the filtered artifact is not empty
           ARTIFACTS_LENGTH=$(echo "$ARTIFACTS_ARRAY" | jq 'length')
           if [ "$ARTIFACTS_LENGTH" -eq 0 ]; then
-            echo "Warning: No matching branches found in the config."
+            echo "::error::No matching branches found in the config. Filter applied: ${INPUT_BRANCHES:-none}"
+            exit 1
           fi
 
           echo "tag=$TAG" >> "$GITHUB_OUTPUT"
