@@ -28,5 +28,6 @@ The process consists of the following steps:
   - Modrinth
   - Curseforge 
   - and Discord
+- Only a single configured artifact update will be published to discord (e.g. the main branch)
 
 ## Setup

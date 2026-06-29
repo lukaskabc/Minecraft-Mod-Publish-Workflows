@@ -2,16 +2,37 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "type": "object",
   "required": [
-    "artifacts"
+    "artifacts",
+    "client",
+    "server",
+    "curseforge_enabled",
+    "modrinth_enabled"
   ],
   "properties": {
     "client": {
       "type": "boolean",
-      "description": "Indicates if the mod is client-side"
+      "description": "Indicates if the mod is client-side",
+      "default": false
     },
     "server": {
       "type": "boolean",
-      "description": "Indicates if the mod is server-side"
+      "description": "Indicates if the mod is server-side",
+      "default": false
+    },
+    "curseforge_enabled": {
+      "type": "boolean",
+      "description": "Whether the artifact(s) should be published to Curseforge",
+      "default": false
+    },
+    "modrinth_enabled": {
+      "type": "boolean",
+      "description": "Whether the artifact(s) should be published to Modrinth",
+      "default": false
+    },
+    "discord_enabled": {
+      "type": "boolean",
+      "description": "Whether the artifact(s) should be published to Discord",
+      "default": false
     },
     "curseforge_project_slug": {
       "type": "string",
@@ -24,6 +45,10 @@
     "modrinth_project_id": {
       "type": "number",
       "description": "The Modrinth project ID"
+    },
+    "discord_branch": {
+      "type": "string",
+      "description": "Updates from which single branch should be published to discord"
     },
     "artifacts": {
       "type": "array",
@@ -113,6 +138,51 @@
       "$ref": "#/$defs/dependencies"
     }
   },
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "curseforge_enabled": {
+            "const": true
+          }
+        }
+      },
+      "then": {
+        "required": [
+          "curseforge_project_slug",
+          "curseforge_project_id"
+        ]
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "modrinth_enabled": {
+            "const": true
+          }
+        }
+      },
+      "then": {
+        "required": [
+          "modrinth_project_id"
+        ]
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "discord_enabled": {
+            "const": true
+          }
+        }
+      },
+      "then": {
+        "required": [
+          "discord_branch"
+        ]
+      }
+    }
+  ],
   "$defs": {
     "dependencies": {
       "type": "object",
@@ -168,6 +238,14 @@
       "description": "Dependency for Modrinth",
       "additionalProperties": false,
       "properties": {
+        "id": {
+          "type": "number",
+          "description": "ID of the modrinth project"
+        },
+        "slug": {
+          "type": "string",
+          "description": "Slug of the modrinth project"
+        },
         "dependency_type": {
           "type": "string",
           "$ref": "#/$defs/dependency_type"
@@ -176,22 +254,10 @@
       "oneOf": [
         {
           "type": "object",
-          "properties": {
-            "id": {
-              "type": "number",
-              "description": "ID of the modrinth project"
-            }
-          },
           "required": ["id"]
         },
         {
           "type": "object",
-          "properties": {
-            "slug": {
-              "type": "string",
-              "description": "Slug of the modrinth project"
-            }
-          },
           "required": ["slug"]
         }
       ]
