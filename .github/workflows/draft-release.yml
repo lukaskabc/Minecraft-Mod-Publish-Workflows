@@ -59,9 +59,29 @@ jobs:
 
       - name: Validate publish config
         run: |
-          test -f repository/publish.config.json
-          test -f workflow/artifacts.schema.json
-
+          # Verify directories exist
+          if [ ! -d "repository" ]; then
+            echo "::error::Directory 'repository' is missing! Check your caller repository checkout step." >&2
+            exit 1
+          fi
+          
+          if [ ! -d "workflow" ]; then
+            echo "::error::Directory 'workflow' is missing! Check your workflow repository checkout step." >&2
+            exit 1
+          fi
+          
+          # Verify files exist
+          if [ ! -f "repository/publish.config.json" ]; then
+            echo "::error::File 'repository/publish.config.json' is missing!" >&2
+            exit 1
+          fi
+          
+          if [ ! -f "workflow/artifacts.schema.json" ]; then
+            echo "::error::File 'workflow/artifacts.schema.json' is missing!" >&2
+            exit 1
+          fi
+          
+          # Run JSON schema validation
           ajv validate \
             -s workflow/artifacts.schema.json \
             -d repository/publish.config.json \
