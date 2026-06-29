@@ -124,6 +124,7 @@ jobs:
           echo "next_dev=$next_dev" >> "$GITHUB_OUTPUT"
 
       - name: Set next dev version
+        id: dev_commit
         shell: bash
         env:
           NEXT_VERSION: ${{ steps.next.outputs.next_dev }}
@@ -135,13 +136,9 @@ jobs:
             "$NEXT_VERSION" \
             "$INPUT_VERSION_PROPERTIES_JSON" \
             "[chore(release)] set development version to $NEXT_VERSION"
-
-      - name: Push branch changes
-        shell: bash
-        run: |
-          set -euo pipefail
-          cd repository
-          git push origin "HEAD:${{ inputs.branch }}"
+          
+          # Save the dev commit hash so we can push it after compilation
+          echo "commit_hash=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
 
       - name: Checkout release commit
         shell: bash
@@ -204,3 +201,12 @@ jobs:
           for f in "${files[@]}"; do
             gh release upload "${inputs.tag_name}" "$f"
           done
+
+      - name: Push branch changes
+        shell: bash
+        run: |
+          set -euo pipefail
+          cd repository
+          
+          # Push the dev version commit to the origin branch.
+          git push origin "${{ steps.dev_commit.outputs.commit_hash }}:${{ inputs.branch }}"
