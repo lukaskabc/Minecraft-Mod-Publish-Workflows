@@ -5,6 +5,26 @@
     "artifacts"
   ],
   "properties": {
+    "client": {
+      "type": "boolean",
+      "description": "Indicates if the mod is client-side"
+    },
+    "server": {
+      "type": "boolean",
+      "description": "Indicates if the mod is server-side"
+    },
+    "curseforge_project_slug": {
+      "type": "string",
+      "description": "The Curseforge project slug"
+    },
+    "curseforge_project_id": {
+      "type": "number",
+      "description": "The Curseforge project ID"
+    },
+    "modrinth_project_id": {
+      "type": "number",
+      "description": "The Modrinth project ID"
+    },
     "artifacts": {
       "type": "array",
       "description": "Configuration for artifacts that should be released",
@@ -12,6 +32,10 @@
       "items": {
         "type": "object",
         "properties": {
+          "file_glob": {
+            "type": "string",
+            "description": "The glob for the compiled artifact to be uploaded. Can use {version} which will be replaced with the current mod version. E.g. -1.21.1-neoforge-{version}.jar"
+          },
           "branch": {
             "type": "string",
             "description": "The name of the branch from which the artifact is compiled"
@@ -77,7 +101,8 @@
           "branch",
           "loaders",
           "game_versions",
-          "java_version"
+          "java_version",
+          "file_glob"
         ]
       },
       "uniqueItems": true

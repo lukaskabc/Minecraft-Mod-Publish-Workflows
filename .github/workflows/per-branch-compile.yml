@@ -44,6 +44,10 @@ on:
         description: Reference for this workflow to pin version-dependent calls
         required: true
         type: string
+      file_glob:
+        description: The glob for the compiled artifact to be uploaded. Can use {version} which will be replaced with the current mod version. E.g. -1.21.1-neoforge-{version}.jar
+        required: true
+        type: string
 
 permissions:
   contents: write
@@ -168,28 +172,26 @@ jobs:
           chmod +x ./gradlew
           ./gradlew build
 
-      - name: Build asset name and check files
+      - name: Check compiled artifact exists
         id: asset
         shell: bash
         env:
           VERSION: ${{ inputs.version }}
-          LOADERS_JSON: ${{ inputs.loaders_json }}
-          GAME_VERSIONS_JSON: ${{ inputs.game_versions_json }}
+          FILE_GLOB: ${{ inputs.file_glob }}
         run: |
           set -euo pipefail
-          loaders=$(echo "$LOADERS_JSON" | jq -r 'sort | join("-")')
-          games=$(echo "$GAME_VERSIONS_JSON" | jq -r 'join("-")')
+          shopt -s globstar nullglob
           
-          suffix="-${games}-${loaders}-$VERSION"
-          echo "suffix=${suffix}" >> "$GITHUB_OUTPUT"
+          # Replace the literal string "{version}" with the actual version value
+          EXPANDED_GLOB="${FILE_GLOB//\{version\}/$VERSION}"
+          echo "glob=$EXPANDED_GLOB" >> "$GITHUB_OUTPUT"
           
           # Check for file existence
-          shopt -s globstar nullglob
           cd repository
-          files=(**/build/libs/*"${suffix}".jar)
+          files=($EXPANDED_GLOB)
           
           if [[ ${#files[@]} -eq 0 ]]; then
-            echo "No JAR files found matching **/build/libs/*${suffix}.jar"
+            echo "No files found matching $EXPANDED_GLOB"
             exit 1
           fi
 
@@ -205,7 +207,7 @@ jobs:
       - name: Upload jars to release draft
         shell: bash
         env:
-          SUFFIX: ${{ steps.asset.outputs.suffix }}
+          GLOB: ${{ steps.asset.outputs.glob }}
           TAG_NAME: ${{ inputs.tag_name }}
           # Used by the gh release
           RELEASE_ID: ${{ inputs.release_id }}
@@ -216,7 +218,7 @@ jobs:
           shopt -s globstar nullglob
           cd repository
           
-          files=(**/build/libs/*"${SUFFIX}".jar)
+          files=("$GLOB")
           for f in "${files[@]}"; do
             # --clobber: if a re-run already uploaded this asset, overwrite
             # it instead of failing with "asset already exists".

@@ -64,6 +64,12 @@ publishMods {
 
             common_deps.curseforge.forEach(::configureDependency)
             artifact.dependencies.curseforge.forEach(::configureDependency)
+
+            client.set(publishConfig.client)
+            server.set(publishConfig.server)
+
+            projectSlug.set(publishConfig.curseforgeProjectSlug)
+            projectId.set(publishConfig.curseforgeProjectId.toString())
         }
     }
 

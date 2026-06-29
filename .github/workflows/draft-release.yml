@@ -170,4 +170,5 @@ jobs:
       release_upload_url: ${{ needs.create-release.outputs.upload_url }}
       version_properties_json: ${{ toJson(matrix.artifact.version_properties) }}
       java_version: ${{ matrix.artifact.java_version }}
+      file_glob: ${{ matrix.artifact.file_glob }}
       workflow_ref: ${{ inputs.workflow_ref }}

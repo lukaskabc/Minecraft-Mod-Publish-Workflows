@@ -5,9 +5,7 @@ class ConfigHelpers {
 
     companion object {
         fun jarNameGlob(artifact: Artifact, modVersion: String): String {
-            val mcVersion = artifact.gameVersions.joinToString("-")
-            val loaders = artifact.loaders.sorted().joinToString("-")
-            return "*${mcVersion}-${loaders}-${modVersion}.jar"
+            return artifact.fileGlob.replace("{version}", modVersion)
         }
 
         fun mapDependencyType(type: CfDependency.DependencyType): PlatformDependency.DependencyType {
