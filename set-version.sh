@@ -69,6 +69,7 @@ fi
 # Array to track exactly which files we modified
 declare -a modified_files=()
 
+# Loop over configured property files and perform version replacement
 echo "$SPEC_JSON" | jq -c '.[]' | while IFS= read -r row; do
   file=$(echo "$row" | jq -r '.file')
   prop=$(echo "$row" | jq -r '.property')
@@ -98,6 +99,7 @@ echo "$SPEC_JSON" | jq -c '.[]' | while IFS= read -r row; do
       print
     }
     END {
+      # If matching property was not found, append new one
       if (!found) print prop "=" ver
     }
   ' "$file" > "${file}.tmp" && mv "${file}.tmp" "$file"
