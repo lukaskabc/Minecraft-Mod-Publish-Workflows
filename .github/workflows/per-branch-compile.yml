@@ -68,7 +68,7 @@ jobs:
           repository: lukaskabc/Minecraft-Mod-Publish-Workflows
           ref: ${{ inputs.workflow_ref }}
           path: workflow
-          fetch-depth: 0
+          fetch-depth: 1
 
       - name: Validate semantic version input
         shell: bash
@@ -106,9 +106,7 @@ jobs:
             "$INPUT_VERSION" \
             "$INPUT_VERSION_PROPERTIES_JSON" \
             "[chore(release)] set version to $INPUT_VERSION"
-          
-          # Save the release commit hash to checkout later
-          echo "commit_hash=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
+          # Outputs the commit hash as commit_hash
 
       - name: Compute next dev version
         id: next
@@ -136,9 +134,7 @@ jobs:
             "$NEXT_VERSION" \
             "$INPUT_VERSION_PROPERTIES_JSON" \
             "[chore(release)] set development version to $NEXT_VERSION"
-          
-          # Save the dev commit hash so we can push it after compilation
-          echo "commit_hash=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
+          # Outputs the commit hash as commit_hash
 
       - name: Checkout release commit
         shell: bash
@@ -183,6 +179,7 @@ jobs:
         shell: bash
         env:
           SUFFIX: ${{ steps.asset.outputs.suffix }}
+          TAG_NAME: ${{ inputs.tag_name }}
           # Used by the gh release
           RELEASE_ID: ${{ inputs.release_id }}
           GH_REPO: ${{ github.repository }}
@@ -199,7 +196,9 @@ jobs:
           fi
           
           for f in "${files[@]}"; do
-            gh release upload "${inputs.tag_name}" "$f"
+            # --clobber: if a re-run already uploaded this asset, overwrite
+            # it instead of failing with "asset already exists".
+            gh release upload "$TAG_NAME" "$f" --clobber
           done
 
       - name: Push branch changes

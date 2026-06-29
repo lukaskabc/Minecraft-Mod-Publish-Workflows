@@ -36,7 +36,7 @@ jobs:
         # Checksout the mod repository
         uses: actions/checkout@v7
         with:
-          fetch-depth: 0
+          fetch-depth: 1
           path: repository
 
       - name: Checkout workflow repository
@@ -46,7 +46,7 @@ jobs:
           repository: lukaskabc/Minecraft-Mod-Publish-Workflows
           ref: ${{ inputs.workflow_ref }}
           path: workflow
-          fetch-depth: 0
+          fetch-depth: 1
 
       - name: Setup Node.js
         # setup nodejs for JSON schema validation with AJV
