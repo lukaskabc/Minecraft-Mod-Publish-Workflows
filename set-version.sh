@@ -78,13 +78,23 @@ while IFS= read -r row; do
   fi
 
   awk -v prop="$prop" -v ver="$VERSION" '
+    BEGIN {
+      # Safely escape dots in case the property is something like "mod.version"
+      safe_prop = prop
+      gsub(/\./, "\\.", safe_prop)
+
+      # Match leading spaces, property name, spaces, equals, and trailing spaces
+      pattern = "^[[:space:]]*" safe_prop "[[:space:]]*=[[:space:]]*"
+    }
+    match($0, pattern) {
+      # Extract the exact matched string (everything up to where the value starts)
+      prefix = substr($0, 1, RLENGTH)
+      print prefix ver
+      found = 1
+      next
+    }
     {
-      if (index($0, prop "=") == 1) {
-        print prop "=" ver
-        found = 1
-      } else {
-        print
-      }
+      print
     }
     END {
       if (!found) print prop "=" ver
