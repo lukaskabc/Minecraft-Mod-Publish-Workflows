@@ -59,25 +59,31 @@ jobs:
 
       - name: Validate publish config
         run: |
+          # Verify file existence and validate JSON
+          
           # Verify directories exist
           if [ ! -d "repository" ]; then
             echo "::error::Directory 'repository' is missing! Check your caller repository checkout step." >&2
+            ls -l
             exit 1
           fi
           
           if [ ! -d "workflow" ]; then
             echo "::error::Directory 'workflow' is missing! Check your workflow repository checkout step." >&2
+            ls -l
             exit 1
           fi
           
           # Verify files exist
           if [ ! -f "repository/publish.config.json" ]; then
             echo "::error::File 'repository/publish.config.json' is missing!" >&2
+            ls -l repository
             exit 1
           fi
           
           if [ ! -f "workflow/artifacts.schema.json" ]; then
             echo "::error::File 'workflow/artifacts.schema.json' is missing!" >&2
+            ls -l workflow
             exit 1
           fi
           
