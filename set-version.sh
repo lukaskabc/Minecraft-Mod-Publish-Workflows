@@ -13,7 +13,7 @@
 # Arguments:
 #   version                   The version string to write, e.g. "1.2.3".
 #   version_properties_json   JSON array of {"file":"...","property":"..."}.
-#                               If empty or "[]", defaults to:
+#                               If empty, "[]", or "null", defaults to:
 #                               [{"file":"gradle.properties","property":"mod_version"}]
 #   commit_message            Commit message to use. Must be unique per distinct version bump.
 #                               Used for deduplication.
@@ -24,6 +24,7 @@
 #
 
 set -euo pipefail
+shopt -s lastpipe
 
 usage() {
   echo "Usage: $0 <version> <version_properties_json> <commit_message>" >&2
@@ -61,16 +62,16 @@ fi
 DEFAULT_SPEC='[{"file":"gradle.properties","property":"mod_version"}]'
 SPEC_JSON="${SPEC_JSON_INPUT:-}"
 
-if [[ -z "$SPEC_JSON" || "$SPEC_JSON" == "[]" ]]; then
+if [[ -z "$SPEC_JSON" || "$SPEC_JSON" == "[]" || "$SPEC_JSON" == "null" ]]; then
   SPEC_JSON="$DEFAULT_SPEC"
 fi
 
 # Array to track exactly which files we modified
 declare -a modified_files=()
 
-while IFS= read -r row; do
-  file=$(jq -r '.file' <<<"$row")
-  prop=$(jq -r '.property' <<<"$row")
+echo "$SPEC_JSON" | jq -c '.[]' | while IFS= read -r row; do
+  file=$(echo "$row" | jq -r '.file')
+  prop=$(echo "$row" | jq -r '.property')
 
   if [[ ! -f "$file" ]]; then
     echo "::error::Missing file: $file" >&2
@@ -103,7 +104,7 @@ while IFS= read -r row; do
 
   modified_files+=("$file")
   echo "Set ${prop}=${VERSION} in ${file}"
-done < <(jq -c '.[]' <<<"$SPEC_JSON")
+done
 
 # Only attempt Git operations if changes actually occurred
 if ! git diff --quiet "${modified_files[@]}"; then
