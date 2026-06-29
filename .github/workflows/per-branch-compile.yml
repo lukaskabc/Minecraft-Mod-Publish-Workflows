@@ -167,7 +167,7 @@ jobs:
           chmod +x ./gradlew
           ./gradlew build
 
-      - name: Build asset name
+      - name: Build asset name and check files
         id: asset
         shell: bash
         env:
@@ -178,7 +178,28 @@ jobs:
           set -euo pipefail
           loaders=$(echo "$LOADERS_JSON" | jq -r 'sort | join("-")')
           games=$(echo "$GAME_VERSIONS_JSON" | jq -r 'join("-")')
-          echo "suffix=-${games}-${loaders}-$VERSION" >> "$GITHUB_OUTPUT"
+          
+          suffix="-${games}-${loaders}-$VERSION"
+          echo "suffix=${suffix}" >> "$GITHUB_OUTPUT"
+          
+          # Check for file existence
+          shopt -s globstar nullglob
+          cd repository
+          files=(**/build/libs/*"${suffix}".jar)
+          
+          if [[ ${#files[@]} -eq 0 ]]; then
+            echo "No JAR files found matching **/build/libs/*${suffix}.jar"
+            exit 1
+          fi
+
+      - name: Push branch changes
+        shell: bash
+        run: |
+          set -euo pipefail
+          cd repository
+          
+          # Push the dev version commit to the origin branch.
+          git push origin "${{ steps.dev_commit.outputs.commit_hash }}:${{ inputs.branch }}"
 
       - name: Upload jars to release draft
         shell: bash
@@ -195,22 +216,8 @@ jobs:
           cd repository
           
           files=(**/build/libs/*"${SUFFIX}".jar)
-          if [[ ${#files[@]} -eq 0 ]]; then
-            echo "No JAR files found matching **/build/libs/*${SUFFIX}.jar"
-            exit 1
-          fi
-          
           for f in "${files[@]}"; do
             # --clobber: if a re-run already uploaded this asset, overwrite
             # it instead of failing with "asset already exists".
             gh release upload "$TAG_NAME" "$f" --clobber
           done
-
-      - name: Push branch changes
-        shell: bash
-        run: |
-          set -euo pipefail
-          cd repository
-          
-          # Push the dev version commit to the origin branch.
-          git push origin "${{ steps.dev_commit.outputs.commit_hash }}:${{ inputs.branch }}"
