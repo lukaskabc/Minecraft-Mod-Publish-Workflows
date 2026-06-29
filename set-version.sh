@@ -3,6 +3,10 @@
 # Sets a version value in one or more "key=value" property files, then commits
 # the changes (if any).
 #
+# If a commit with the exact given commit_message already exists in the current branch's history, this script
+# assumes that bump was already performed (e.g. by an earlier, possibly re-run, CI attempt)
+# and reuses that commit instead of creating a duplicate one.
+#
 # Usage:
 #   set-version.sh <version> <version_properties_json> <commit_message>
 #
@@ -11,12 +15,13 @@
 #   version_properties_json   JSON array of {"file":"...","property":"..."}.
 #                               If empty or "[]", defaults to:
 #                               [{"file":"gradle.properties","property":"mod_version"}]
-#   commit_message            Commit message to use.
+#   commit_message            Commit message to use. Must be unique per distinct version bump.
+#                               Used for deduplication.
 #
-# Example:
-#   ./set-version.sh "1.2.3" \
-#       '[{"file":"gradle.properties","property":"mod_version"}]' \
-#       "[chore(release)] set version to 1.2.3"
+# Output:
+#   Writes the resulting commit hash (existing or newly created) to the GitHub Actions
+#   $GITHUB_OUTPUT environment file under the key 'commit_hash'.
+#
 
 set -euo pipefail
 
@@ -38,6 +43,21 @@ if [[ -z "$VERSION" ]]; then
   exit 1
 fi
 
+if [[ -z "${GITHUB_OUTPUT:-}" ]]; then
+  echo "::error::GITHUB_OUTPUT environment variable is not set. Are you running this in GitHub Actions?" >&2
+  exit 1
+fi
+
+# If a commit with this exact message already exists in the current branch's history,
+# this exact bump was already performed.
+# Reuse it instead of touching any files or creating a duplicate commit.
+EXISTING_HASH="$(git log --fixed-strings --grep="$COMMIT_MESSAGE" --format=%H -n 1 || true)"
+if [[ -n "$EXISTING_HASH" ]]; then
+  echo "Commit '$COMMIT_MESSAGE' already exists ($EXISTING_HASH), reusing it." >&2
+  echo "commit_hash=$EXISTING_HASH" >> "$GITHUB_OUTPUT"
+  exit 0
+fi
+
 DEFAULT_SPEC='[{"file":"gradle.properties","property":"mod_version"}]'
 SPEC_JSON="${SPEC_JSON_INPUT:-}"
 
@@ -53,7 +73,7 @@ while IFS= read -r row; do
   prop=$(jq -r '.property' <<<"$row")
 
   if [[ ! -f "$file" ]]; then
-    echo "::error::Missing file: $file"
+    echo "::error::Missing file: $file" >&2
     exit 1
   fi
 
@@ -76,9 +96,11 @@ while IFS= read -r row; do
 done < <(jq -c '.[]' <<<"$SPEC_JSON")
 
 # Only attempt Git operations if changes actually occurred
-if ! git diff --quiet -- "${modified_files[@]}"; then
-  git add -- "${modified_files[@]}"
+if ! git diff --quiet "${modified_files[@]}"; then
+  git add "${modified_files[@]}"
   git commit -m "$COMMIT_MESSAGE"
 else
   echo "No changes to commit for release version (${#modified_files[@]} target(s) processed)."
 fi
+
+echo "commit_hash=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
