@@ -6,7 +6,9 @@ import org.gradle.internal.extensions.stdlib.toDefaultLowerCase
 
 class ModrinthConfigurer(configuration: PlatformConfiguration, modrinthApiKeyProvider: Provider<String>) :
     PlatformConfigurer<ModrinthDependency, MrDependency>(configuration, modrinthApiKeyProvider) {
+
     override fun isEnabled(): Boolean = publishConfig.modrinthEnabled
+
     override fun extractDependencies(deps: Dependencies): List<MrDependency>? = deps.modrinth
 
     override fun configureDependency(
@@ -46,14 +48,11 @@ class ModrinthConfigurer(configuration: PlatformConfiguration, modrinthApiKeyPro
                 2 -> ModrinthEnvironment.SERVER_ONLY
                 3 -> ModrinthEnvironment.CLIENT_AND_SERVER
                 else -> {
-                    logger.error("Unexpected side configuration: server ${publishConfig.server} | client ${publishConfig.client}")
-                    null
+                    throw Exception("Unexpected side configuration: server ${publishConfig.server} | client ${publishConfig.client}")
                 }
             }
 
-            if (env != null) {
-                environment.set(env)
-            }
+            environment.set(env)
 
             projectId.set(publishConfig.modrinthProjectId.toString())
         }

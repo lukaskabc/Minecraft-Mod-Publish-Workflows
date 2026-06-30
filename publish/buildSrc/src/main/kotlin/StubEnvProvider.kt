@@ -1,4 +1,3 @@
-import org.gradle.api.provider.Provider
 import org.gradle.api.provider.ProviderFactory
 
 class StubEnvProvider(providers: ProviderFactory) : EnvProvider(providers) {

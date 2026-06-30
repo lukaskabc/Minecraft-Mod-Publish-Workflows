@@ -7,6 +7,8 @@ plugins {
     id("me.modmuss50.mod-publish-plugin") // version defined in buildSrc
 }
 
+logger.lifecycle("Initializing release configuration")
+
 val envProvider = ConfigHelpers.createEnvProvider(providers)
 
 val mapper: JsonMapper = JsonMapper.builder()
@@ -21,6 +23,10 @@ val publishConfig: ArtifactsSchema = mapper.readValue(
     ArtifactsSchema::class.java
 )
 
+/**
+ * When `true` the discord announcement is enabled
+ * but the configured discord branch is not being published during this run.
+ */
 val discordBranchMissing = publishConfig.discordEnabled && publishConfig.artifacts.stream()
     .filter { it.branch.equals(publishConfig.discordBranch) }
     .findAny()
@@ -30,6 +36,8 @@ if (discordBranchMissing) {
 }
 
 publishMods {
+    logger.lifecycle("Configuring mod publishing")
+
     if (envProvider.isGithubWorkflow() && publishConfig.artifacts.isEmpty()) {
         println("No artifacts configured")
         exitProcess(1)
@@ -49,13 +57,17 @@ publishMods {
     displayName.set("v${modVersion}")
 
     publishConfig.artifacts.forEach { artifact ->
+        logger.lifecycle("Configuring release for branch ${artifact.branch}")
         if (publishConfig.curseforgeEnabled) {
+            logger.lifecycle("- curseforge")
             cfConfigurer.configure(artifact)
         }
         if (publishConfig.modrinthEnabled) {
+            logger.lifecycle("- modrinth")
             mrConfigurer.configure(artifact)
         }
         if (publishConfig.discordEnabled && !discordBranchMissing && publishConfig.discordBranch.equals(artifact.branch)) {
+            logger.lifecycle("- discord")
             discord {
                 webhookUrl.set(envProvider.discordWebhookUrl())
                 username.set("Test username")

@@ -4,14 +4,12 @@ import me.modmuss50.mpp.PlatformDependencyContainer
 import org.gradle.api.Project
 import org.gradle.api.provider.Provider
 import java.io.File
-import org.gradle.api.logging.Logger
 
 abstract class PlatformConfigurer<PD : PlatformDependency, D> {
     protected val project: Project
     protected val context: ModPublishExtension
     protected val modVersion: String
     protected val publishConfig: ArtifactsSchema
-    protected val logger: Logger
 
     protected val accessToken: String
 
@@ -20,7 +18,6 @@ abstract class PlatformConfigurer<PD : PlatformDependency, D> {
         this.context = configuration.context
         this.modVersion = configuration.modVersion
         this.publishConfig = configuration.publishConfig
-        this.logger = configuration.logger
         this.accessToken = if (isEnabled()) accessTokenProvider.get() else "Platform disabled"
     }
 

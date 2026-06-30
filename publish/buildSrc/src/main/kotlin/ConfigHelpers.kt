@@ -1,5 +1,4 @@
 import me.modmuss50.mpp.PlatformDependency
-import org.gradle.api.internal.provider.Providers
 import org.gradle.api.provider.ProviderFactory
 
 class ConfigHelpers {
