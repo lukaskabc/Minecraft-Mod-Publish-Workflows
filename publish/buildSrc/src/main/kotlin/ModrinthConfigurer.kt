@@ -1,10 +1,12 @@
-import me.modmuss50.mpp.ModPublishExtension
 import me.modmuss50.mpp.platforms.modrinth.ModrinthDependencyContainer
 import me.modmuss50.mpp.platforms.modrinth.ModrinthEnvironment
+import org.gradle.api.provider.Provider
 import org.gradle.internal.extensions.stdlib.toDefaultLowerCase
 
 
-class ModrinthConfigurer(configuration: PlatformConfiguration, modrinthApiKey: String) : PlatformConfigurer<ModrinthDependencyContainer, MrDependency>(configuration, modrinthApiKey) {
+class ModrinthConfigurer(configuration: PlatformConfiguration, modrinthApiKeyProvider: Provider<String>) : PlatformConfigurer<ModrinthDependencyContainer, MrDependency>(configuration, modrinthApiKeyProvider) {
+    override fun isEnabled(): Boolean = publishConfig.modrinthEnabled
+
     override fun configure(artifact: Artifact) {
         context.modrinth("modrinth-${artifact.branch}") {
             accessToken.set(accessToken)

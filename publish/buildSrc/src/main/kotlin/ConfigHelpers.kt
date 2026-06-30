@@ -1,4 +1,6 @@
 import me.modmuss50.mpp.PlatformDependency
+import org.gradle.api.internal.provider.Providers
+import org.gradle.api.provider.ProviderFactory
 
 class ConfigHelpers {
     private constructor()
@@ -15,6 +17,13 @@ class ConfigHelpers {
                 CfDependency.DependencyType.INCOMPATIBLE -> PlatformDependency.DependencyType.INCOMPATIBLE
                 CfDependency.DependencyType.EMBEDS -> PlatformDependency.DependencyType.EMBEDDED
             }
+        }
+
+        fun createEnvProvider(providers: ProviderFactory): EnvProvider {
+            val envProvider = EnvProvider(providers)
+            if (envProvider.isGithubWorkflow())
+                return envProvider
+            return StubEnvProvider(providers)
         }
     }
 }

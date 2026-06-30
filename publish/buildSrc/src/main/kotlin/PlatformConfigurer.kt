@@ -1,7 +1,7 @@
 import me.modmuss50.mpp.ModPublishExtension
-import me.modmuss50.mpp.PlatformDependency
 import me.modmuss50.mpp.PlatformDependencyContainer
 import org.gradle.api.Project
+import org.gradle.api.provider.Provider
 import java.io.File
 import org.gradle.api.logging.Logger
 
@@ -14,14 +14,16 @@ abstract class PlatformConfigurer<C : PlatformDependencyContainer<*>, D> {
 
     protected val accessToken: String
 
-    constructor(configuration: PlatformConfiguration, accessToken: String) {
+    constructor(configuration: PlatformConfiguration, accessTokenProvider: Provider<String>) {
         this.project = configuration.project
         this.context = configuration.context
         this.modVersion = configuration.modVersion
         this.publishConfig = configuration.publishConfig
         this.logger = configuration.logger
-        this.accessToken = accessToken
+        this.accessToken = if (isEnabled()) accessTokenProvider.get() else "Platform disabled"
     }
+
+    abstract fun isEnabled(): Boolean
 
     abstract fun configure(artifact: Artifact)
     abstract fun configureDependency(depContainer: C, dep: D)

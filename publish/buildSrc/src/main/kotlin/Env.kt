@@ -1,0 +1,9 @@
+object Env {
+    const val CURSEFORGE_API_KEY = "CURSEFORGE_API_KEY"
+    const val MODRINTH_API_KEY = "MODRINTH_API_KEY"
+    const val DISCORD_WEBHOOK_URL = "DISCORD_WEBHOOK_URL"
+    const val GITHUB_ACTIONS = "GITHUB_ACTIONS"
+    const val DRY_RUN = "DRY_RUN"
+    const val VERSION = "VERSION"
+    const val ARTIFACTS_JSON = "ARTIFACTS_JSON"
+}

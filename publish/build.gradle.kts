@@ -1,26 +1,13 @@
-import me.modmuss50.mpp.platforms.modrinth.ModrinthEnvironment
-import org.gradle.internal.extensions.stdlib.toDefaultLowerCase
 import tools.jackson.databind.json.JsonMapper
 import tools.jackson.databind.DeserializationFeature
 import tools.jackson.module.kotlin.kotlinModule
 import kotlin.system.exitProcess
 
-// ENV values
-val CURSEFORGE_API_KEY = "CURSEFORGE_API_KEY"
-val MODRINTH_API_KEY = "MODRINTH_API_KEY"
-val DISCORD_WEBHOOK_URL = "DISCORD_WEBHOOK_URL"
-
 plugins {
     id("me.modmuss50.mod-publish-plugin") // version defined in buildSrc
 }
 
-val isGithubWorkflow = System.getenv("GITHUB_ACTIONS") == "true"
-
-/**
- * Reflects the `DRY_RUN` env variable.
- * Implicitly `true` when not running in github workflow.
- */
-val dryRunEnabled = providers.environmentVariable("DRY_RUN").orNull == "true" || !isGithubWorkflow
+val envProvider = ConfigHelpers.createEnvProvider(providers)
 
 val mapper: JsonMapper = JsonMapper.builder()
     .addModule(kotlinModule())
@@ -28,34 +15,11 @@ val mapper: JsonMapper = JsonMapper.builder()
     .build()
 
 val changelogFile = file("changelog.md")
-val modVersion = providers.environmentVariable("VERSION").orElse("0.0.1").get()
 
 val publishConfig: ArtifactsSchema = mapper.readValue(
-    providers.environmentVariable("ARTIFACTS_JSON").orElse("{}").get(),
+    envProvider.publishConfig(),
     ArtifactsSchema::class.java
 )
-
-val curseforgeToken = providers.environmentVariable(CURSEFORGE_API_KEY).orElse(provider {
-    if (publishConfig.curseforgeEnabled) {
-        throw Exception("Environment variable $CURSEFORGE_API_KEY is not set")
-    }
-    return@provider "Curseforge disabled"
-}).get()
-
-val modrinthToken = providers.environmentVariable(MODRINTH_API_KEY).orElse(provider {
-    if (publishConfig.modrinthEnabled) {
-        throw Exception("Environment variable $MODRINTH_API_KEY is not set")
-    }
-    return@provider "Modrinth disabled"
-}).get()
-
-val discordWebhookUrl = providers.environmentVariable(DISCORD_WEBHOOK_URL).orElse(provider {
-    if (publishConfig.discordEnabled) {
-        throw Exception("Environment variable $DISCORD_WEBHOOK_URL is not set")
-    }
-    return@provider "Discord disabled"
-}).get()
-
 
 val discordBranchMissing = publishConfig.discordEnabled && publishConfig.artifacts.stream()
     .filter { it.branch.equals(publishConfig.discordBranch) }
@@ -65,22 +29,19 @@ if (discordBranchMissing) {
     logger.warn("Skipping discord publication, discord branch '${publishConfig.discordBranch}' is not being published!")
 }
 
-logger
-
 publishMods {
-    val commonDeps = publishConfig.commonDependencies
-
-    if (isGithubWorkflow && publishConfig.artifacts.isEmpty()) {
+    if (envProvider.isGithubWorkflow() && publishConfig.artifacts.isEmpty()) {
         println("No artifacts configured")
         exitProcess(1)
     }
 
+    val modVersion = envProvider.modVersion();
     val configuration = PlatformConfiguration(project, this, modVersion, publishConfig, logger)
 
-    val cfConfigurer = CurseforgeConfigurer(configuration, curseforgeToken)
-    val mrConfigurer = ModrinthConfigurer(configuration, modrinthToken)
+    val cfConfigurer = CurseforgeConfigurer(configuration, provider<String>(envProvider::curseforgeToken))
+    val mrConfigurer = ModrinthConfigurer(configuration, provider<String>(envProvider::modrinthToken))
 
-    dryRun.set(dryRunEnabled)
+    dryRun.set(envProvider.isDryRun())
 
     type.set(STABLE)
     changelog.set(changelogFile.readText())
@@ -96,7 +57,7 @@ publishMods {
         }
         if (publishConfig.discordEnabled && !discordBranchMissing && publishConfig.discordBranch.equals(artifact.branch)) {
             discord {
-                webhookUrl.set(discordWebhookUrl)
+                webhookUrl.set(envProvider.discordWebhookUrl())
                 username.set("Test username")
                 content.set(changelog.map { "# v${modVersion} released!\n" + it }.get())
                 style {

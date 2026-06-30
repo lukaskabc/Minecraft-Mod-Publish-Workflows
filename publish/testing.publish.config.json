@@ -1,0 +1,35 @@
+{
+  "client": false,
+  "server": true,
+  "curseforge_enabled": false,
+  "modrinth_enabled": false,
+  "discord_enabled": false,
+  "artifacts": [
+    {
+      "file_glob": "build/libs/*-1.21.1-neoforge-{version}.jar",
+      "branch": "main",
+      "loaders": [
+        "neoforge"
+      ],
+      "game_versions": [
+        "1.21.1"
+      ],
+      "java_version": "21",
+      "version_properties": [],
+      "dependencies": {
+        "curseforge": [
+          {
+            "slug": "stellarview",
+            "dependency_type": "required"
+          }
+        ],
+        "modrinth": [
+          {
+            "slug": "stellarview",
+            "dependency_type": "required"
+          }
+        ]
+      }
+    }
+  ]
+}

@@ -1,12 +1,13 @@
-import me.modmuss50.mpp.ModPublishExtension
-import me.modmuss50.mpp.platforms.curseforge.Curseforge
-import me.modmuss50.mpp.platforms.curseforge.CurseforgeDependency
 import me.modmuss50.mpp.platforms.curseforge.CurseforgeDependencyContainer
 import org.gradle.api.JavaVersion
+import org.gradle.api.provider.Provider
 import org.gradle.internal.extensions.stdlib.toDefaultLowerCase
 
 
-class CurseforgeConfigurer(configuration: PlatformConfiguration, curseforgeApiKey: String) : PlatformConfigurer<CurseforgeDependencyContainer, CfDependency>(configuration, curseforgeApiKey) {
+class CurseforgeConfigurer(configuration: PlatformConfiguration, curseforgeApiKeyProvider: Provider<String>) :
+    PlatformConfigurer<CurseforgeDependencyContainer, CfDependency>(configuration, curseforgeApiKeyProvider) {
+
+    override fun isEnabled(): Boolean = publishConfig.curseforgeEnabled
 
     override fun configureDependency(
         depContainer: CurseforgeDependencyContainer,
