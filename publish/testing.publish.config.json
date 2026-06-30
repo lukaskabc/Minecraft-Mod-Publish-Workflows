@@ -1,12 +1,16 @@
 {
   "client": false,
   "server": true,
-  "curseforge_enabled": false,
-  "modrinth_enabled": false,
-  "discord_enabled": false,
+  "curseforge_enabled": true,
+  "modrinth_enabled": true,
+  "discord_enabled": true,
+  "curseforge_project_slug": "test-cf-slug",
+  "curseforge_project_id": 123,
+  "modrinth_project_id": 321,
+  "discord_branch": "main",
   "artifacts": [
     {
-      "file_glob": "build/libs/*-1.21.1-neoforge-{version}.jar",
+      "file_glob": "build/libs/*-1.21.1-NeoForge-{version}.jar",
       "branch": "main",
       "loaders": [
         "neoforge"

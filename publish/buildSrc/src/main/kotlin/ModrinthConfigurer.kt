@@ -1,15 +1,32 @@
-import me.modmuss50.mpp.platforms.modrinth.ModrinthDependencyContainer
+import me.modmuss50.mpp.platforms.modrinth.ModrinthDependency
 import me.modmuss50.mpp.platforms.modrinth.ModrinthEnvironment
 import org.gradle.api.provider.Provider
 import org.gradle.internal.extensions.stdlib.toDefaultLowerCase
 
 
-class ModrinthConfigurer(configuration: PlatformConfiguration, modrinthApiKeyProvider: Provider<String>) : PlatformConfigurer<ModrinthDependencyContainer, MrDependency>(configuration, modrinthApiKeyProvider) {
+class ModrinthConfigurer(configuration: PlatformConfiguration, modrinthApiKeyProvider: Provider<String>) :
+    PlatformConfigurer<ModrinthDependency, MrDependency>(configuration, modrinthApiKeyProvider) {
     override fun isEnabled(): Boolean = publishConfig.modrinthEnabled
+    override fun extractDependencies(deps: Dependencies): List<MrDependency>? = deps.modrinth
+
+    override fun configureDependency(
+        platformDep: ModrinthDependency,
+        dep: MrDependency
+    ) {
+        if (dep.id != null) {
+            platformDep.id.set(dep.id.toString())
+        } else if (dep.slug != null) {
+            platformDep.slug.set(dep.slug)
+        } else {
+            throw Exception("No ID either slug configured for Modrinth dependency")
+        }
+    }
+
+    override fun getDependencyType(dep: MrDependency): CfDependency.DependencyType = dep.dependencyType
 
     override fun configure(artifact: Artifact) {
         context.modrinth("modrinth-${artifact.branch}") {
-            accessToken.set(accessToken)
+            accessToken.set(this@ModrinthConfigurer.accessToken)
 
             // the artifact to upload
             file.set(artifactFile(artifact))
@@ -19,11 +36,7 @@ class ModrinthConfigurer(configuration: PlatformConfiguration, modrinthApiKeyPro
             }
             minecraftVersions.addAll(artifact.gameVersions)
 
-            sequenceOf(publishConfig.commonDependencies, artifact.dependencies)
-                .flatMap { it.modrinth }
-                .forEach {
-                    configureDependency(this, it)
-                }
+            configureDependencies(this, artifact)
 
             val clientBit = if(publishConfig.client) 1 else 0
             val serverBit = if(publishConfig.server) 2 else 0
@@ -43,20 +56,6 @@ class ModrinthConfigurer(configuration: PlatformConfiguration, modrinthApiKeyPro
             }
 
             projectId.set(publishConfig.modrinthProjectId.toString())
-        }
-    }
-
-    override fun configureDependency(
-        depContainer: ModrinthDependencyContainer,
-        dep: MrDependency
-    ) {
-        val depType = ConfigHelpers.mapDependencyType(dep.dependencyType)
-        depContainer.addInternal(depType) {
-            if (dep.id != null) {
-                id.set(dep.id.toString())
-            } else if (dep.slug != null) {
-                slug.set(dep.slug)
-            }
         }
     }
 }

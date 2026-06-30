@@ -1,28 +1,28 @@
-import me.modmuss50.mpp.platforms.curseforge.CurseforgeDependencyContainer
+import me.modmuss50.mpp.platforms.curseforge.CurseforgeDependency
 import org.gradle.api.JavaVersion
 import org.gradle.api.provider.Provider
 import org.gradle.internal.extensions.stdlib.toDefaultLowerCase
 
 
 class CurseforgeConfigurer(configuration: PlatformConfiguration, curseforgeApiKeyProvider: Provider<String>) :
-    PlatformConfigurer<CurseforgeDependencyContainer, CfDependency>(configuration, curseforgeApiKeyProvider) {
+    PlatformConfigurer<CurseforgeDependency, CfDependency>(configuration, curseforgeApiKeyProvider) {
 
     override fun isEnabled(): Boolean = publishConfig.curseforgeEnabled
 
     override fun configureDependency(
-        depContainer: CurseforgeDependencyContainer,
+        platformDep: CurseforgeDependency,
         dep: CfDependency
     ) {
-        val depType = ConfigHelpers.mapDependencyType(dep.dependencyType)
-
-        depContainer.addInternal(depType) {
-            slug.set(dep.slug)
-        }
+        platformDep.slug.set(dep.slug)
     }
+
+    override fun getDependencyType(dep: CfDependency): CfDependency.DependencyType = dep.dependencyType
+
+    override fun extractDependencies(deps: Dependencies): List<CfDependency>? = deps.curseforge
 
     override fun configure(artifact: Artifact) {
         context.curseforge("curseforge-${artifact.branch}") {
-            accessToken.set(accessToken)
+            accessToken.set(this@CurseforgeConfigurer.accessToken)
 
             // the artifact to upload
             file.set(artifactFile(artifact))
@@ -32,12 +32,7 @@ class CurseforgeConfigurer(configuration: PlatformConfiguration, curseforgeApiKe
             }
             minecraftVersions.addAll(artifact.gameVersions)
 
-
-            sequenceOf(publishConfig.commonDependencies, artifact.dependencies)
-                .flatMap { it.curseforge }
-                .forEach {
-                    configureDependency(this, it)
-                }
+            configureDependencies(this, artifact)
 
             client.set(publishConfig.client)
             server.set(publishConfig.server)
