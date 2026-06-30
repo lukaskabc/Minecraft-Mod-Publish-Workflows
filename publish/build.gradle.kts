@@ -65,19 +65,7 @@ if (discordBranchMissing) {
     logger.warn("Skipping discord publication, discord branch '${publishConfig.discordBranch}' is not being published!")
 }
 
-
-
-/**
- * Resolves an artifact jar file from `./artifacts` directory
- */
-fun artifactFile(artifact: Artifact): File {
-    val glob = ConfigHelpers.jarNameGlob(artifact, modVersion)
-    val artifacts = fileTree("./artifacts") {
-        include(glob)
-    }
-    return artifacts.files.firstOrNull() ?: throw Exception("Failed to match artifact file for $glob")
-}
-
+logger
 
 publishMods {
     val commonDeps = publishConfig.commonDependencies
@@ -87,85 +75,10 @@ publishMods {
         exitProcess(1)
     }
 
-    fun configureCurseforge(artifact: Artifact) {
-        curseforge("curseforge-${artifact.branch}") {
-            fun configureDependency(dep: CfDependency) {
-                val depType = ConfigHelpers.mapDependencyType(dep.dependencyType)
-                addInternal(depType) {
-                    slug = dep.slug
-                }
-            }
+    val configuration = PlatformConfiguration(project, this, modVersion, publishConfig, logger)
 
-            accessToken.set(curseforgeToken)
-
-            // the artifact to upload
-            file.set(artifactFile(artifact))
-
-            artifact.loaders.forEach {
-                modLoaders.add(it.name.toDefaultLowerCase())
-            }
-            minecraftVersions.addAll(artifact.gameVersions)
-
-            commonDeps.curseforge.forEach(::configureDependency)
-            artifact.dependencies.curseforge.forEach(::configureDependency)
-
-            client.set(publishConfig.client)
-            server.set(publishConfig.server)
-
-            projectSlug.set(publishConfig.curseforgeProjectSlug)
-            projectId.set(publishConfig.curseforgeProjectId.toString())
-            changelogType.set("markdown")
-
-            javaVersions.add(JavaVersion.toVersion(artifact.javaVersion))
-        }
-    }
-
-    fun configureModrinth(artifact: Artifact) {
-        modrinth("modrinth-${artifact.branch}") {
-            fun configureDependency(dep: MrDependency) {
-                val depType = ConfigHelpers.mapDependencyType(dep.dependencyType)
-                addInternal(depType) {
-                    if (dep.id != null) {
-                        id.set(dep.id.toString())
-                    } else if (dep.slug != null) {
-                        slug.set(dep.slug)
-                    }
-                }
-            }
-
-            accessToken.set(modrinthToken)
-
-            // the artifact to upload
-            file.set(artifactFile(artifact))
-
-            artifact.loaders.forEach {
-                modLoaders.add(it.name.toDefaultLowerCase())
-            }
-            minecraftVersions.addAll(artifact.gameVersions)
-
-            commonDeps.modrinth.forEach(::configureDependency)
-            artifact.dependencies.modrinth.forEach(::configureDependency)
-
-            val clientBit = if(publishConfig.client) 1 else 0
-            val serverBit = if(publishConfig.server) 2 else 0
-
-            val env: ModrinthEnvironment? = when (clientBit or serverBit) {
-                1 -> CLIENT_ONLY
-                2 -> SERVER_ONLY
-                3 -> CLIENT_AND_SERVER
-                else -> {
-                    logger.error("Unexpected side configuration: server ${publishConfig.server} | client ${publishConfig.client}")
-                    null
-                }
-            }
-
-            if (env != null) {
-                environment.set(env)
-            }
-
-            projectId.set(publishConfig.modrinthProjectId.toString())
-        }
-    }
+    val cfConfigurer = CurseforgeConfigurer(configuration, curseforgeToken)
+    val mrConfigurer = ModrinthConfigurer(configuration, modrinthToken)
 
     dryRun.set(dryRunEnabled)
 
@@ -176,12 +89,12 @@ publishMods {
 
     publishConfig.artifacts.forEach { artifact ->
         if (publishConfig.curseforgeEnabled) {
-            configureCurseforge(artifact)
+            cfConfigurer.configure(artifact)
         }
         if (publishConfig.modrinthEnabled) {
-            configureModrinth(artifact)
+            mrConfigurer.configure(artifact)
         }
-        if (publishConfig.discordEnabled && !discordBranchMissing) {
+        if (publishConfig.discordEnabled && !discordBranchMissing && publishConfig.discordBranch.equals(artifact.branch)) {
             discord {
                 webhookUrl.set(discordWebhookUrl)
                 username.set("Test username")
