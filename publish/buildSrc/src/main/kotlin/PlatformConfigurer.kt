@@ -5,6 +5,13 @@ import org.gradle.api.Project
 import org.gradle.api.provider.Provider
 import java.io.File
 
+
+fun Artifact.jarNameGlob(modVersion: String): String {
+    return fileGlob.replace("{version}", modVersion)
+}
+
+fun CfDependency.DependencyType.asPlatform() = PlatformDependency.DependencyType.valueOf(name)
+
 abstract class PlatformConfigurer<PD : PlatformDependency, D> {
     protected val project: Project
     protected val context: ModPublishExtension
@@ -36,7 +43,7 @@ abstract class PlatformConfigurer<PD : PlatformDependency, D> {
             .mapNotNull(this::extractDependencies)
             .flatten()
             .forEach { dep: D ->
-                val depType = ConfigHelpers.mapDependencyType(getDependencyType(dep))
+                val depType = getDependencyType(dep).asPlatform()
                 depContainer.addInternal(depType) {
                     configureDependency(this, dep)
                 }
@@ -47,7 +54,7 @@ abstract class PlatformConfigurer<PD : PlatformDependency, D> {
      * Resolves an artifact jar file from `./artifacts` directory
      */
     fun artifactFile(artifact: Artifact): File {
-        val glob = ConfigHelpers.jarNameGlob(artifact, modVersion)
+        val glob = artifact.jarNameGlob(modVersion)
         val artifacts = project.fileTree("./artifacts") {
             include(glob)
         }

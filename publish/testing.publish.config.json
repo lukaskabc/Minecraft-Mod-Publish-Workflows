@@ -30,7 +30,7 @@
         "modrinth": [
           {
             "slug": "stellarview",
-            "dependency_type": "required"
+            "dependency_type": "embedded"
           }
         ]
       }

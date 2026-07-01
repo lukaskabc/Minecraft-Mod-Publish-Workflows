@@ -9,7 +9,14 @@ plugins {
 
 logger.lifecycle("Initializing release configuration")
 
-val envProvider = ConfigHelpers.createEnvProvider(providers)
+fun createEnvProvider(providers: ProviderFactory): EnvProvider {
+    val envProvider = EnvProvider(providers)
+    if (envProvider.isGithubWorkflow())
+        return envProvider
+    return StubEnvProvider(providers)
+}
+
+val envProvider = createEnvProvider(providers)
 
 val mapper: JsonMapper = JsonMapper.builder()
     .addModule(kotlinModule())
@@ -27,10 +34,10 @@ val publishConfig: ArtifactsSchema = mapper.readValue(
  * When `true` the discord announcement is enabled
  * but the configured discord branch is not being published during this run.
  */
-val discordBranchMissing = publishConfig.discordEnabled && publishConfig.artifacts.stream()
-    .filter { it.branch.equals(publishConfig.discordBranch) }
-    .findAny()
-    .isEmpty
+val discordBranchMissing = publishConfig.discordEnabled
+        && publishConfig.artifacts
+    .none { it.branch == publishConfig.discordBranch }
+
 if (discordBranchMissing) {
     logger.warn("Skipping discord publication, discord branch '${publishConfig.discordBranch}' is not being published!")
 }

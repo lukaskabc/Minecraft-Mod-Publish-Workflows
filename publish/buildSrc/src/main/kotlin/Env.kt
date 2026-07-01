@@ -15,7 +15,8 @@ object Env {
     const val DRY_RUN = "DRY_RUN"
 
     /**
-     * Version of the mod that is being published
+     * Version of the mod that is being published without `v` prefix.
+     * E.g. `1.2.3`
      */
     const val VERSION = "VERSION"
 

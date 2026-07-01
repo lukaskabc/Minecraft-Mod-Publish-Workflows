@@ -211,7 +211,7 @@
         "required",
         "optional",
         "incompatible",
-        "embeds"
+        "embedded"
       ]
     },
     "cf_dependency": {
