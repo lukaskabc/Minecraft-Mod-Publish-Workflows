@@ -1,5 +1,5 @@
 {
-  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Publication config",
   "type": "object",
   "required": [
     "artifacts",
@@ -12,62 +12,80 @@
     "client": {
       "type": "boolean",
       "description": "Indicates if the mod is client-side",
+      "title": "Client side",
       "default": false
     },
     "server": {
       "type": "boolean",
       "description": "Indicates if the mod is server-side",
+      "title": "Server side",
       "default": false
     },
     "curseforge_enabled": {
       "type": "boolean",
       "description": "Whether the artifact(s) should be published to Curseforge",
+      "title": "Deploy to Curseforge",
       "default": false
     },
     "modrinth_enabled": {
       "type": "boolean",
       "description": "Whether the artifact(s) should be published to Modrinth",
+      "title": "Deploy to Modrinth",
       "default": false
     },
     "discord_enabled": {
       "type": "boolean",
       "description": "Whether the artifact(s) should be published to Discord",
+      "title": "Announce on Discord",
       "default": false
     },
     "curseforge_project_slug": {
       "type": "string",
-      "description": "The Curseforge project slug"
+      "description": "The Curseforge project slug",
+      "title": "Curseforge project slug",
+      "pattern": "\\S"
     },
     "curseforge_project_id": {
       "type": "number",
-      "description": "The Curseforge project ID"
+      "description": "The Curseforge project ID (number)",
+      "title": "Curseforge project ID"
     },
     "modrinth_project_id": {
       "type": "number",
-      "description": "The Modrinth project ID"
+      "description": "The Modrinth project ID",
+      "title": "Modrinth project ID"
     },
     "discord_branch": {
       "type": "string",
-      "description": "Updates from which single branch should be published to discord"
+      "description": "Updates from which single branch should be published to discord",
+      "title": "Discord branch",
+      "pattern": "\\S"
     },
     "artifacts": {
+      "title": "Artifacts / Branches",
       "type": "array",
       "description": "Configuration for artifacts that should be released",
       "minItems": 1,
       "items": {
+        "title": "Artifact / Branch",
         "type": "object",
         "properties": {
           "file_glob": {
+            "title": "File glob",
             "type": "string",
-            "description": "The glob for the compiled artifact to be uploaded. Can use {version} which will be replaced with the current mod version. E.g. -1.21.1-neoforge-{version}.jar"
+            "description": "The glob for the compiled artifact to be uploaded. Can use {version} which will be replaced with the current mod version. E.g. -1.21.1-neoforge-{version}.jar",
+            "pattern": "\\S"
           },
           "branch": {
+            "title": "Git Branch",
             "type": "string",
-            "description": "The name of the branch from which the artifact is compiled"
+            "description": "The name of the branch from which the artifact is compiled",
+            "pattern": "\\S"
           },
           "loaders": {
+            "title": "Mod loaders",
             "type": "array",
-            "description": "Mod loaders that can load the artifact (neoforge, forge, fabric)",
+            "description": "Mod loaders that can load the artifact",
             "minItems": 1,
             "items": {
               "type": "string",
@@ -80,32 +98,43 @@
             "uniqueItems": true
           },
           "game_versions": {
+            "title": "Game versions",
             "type": "array",
-            "description": "Supported game versions for the artifact",
+            "description": "Supported game versions for the artifact (e.g. 1.21.1)",
             "minItems": 1,
             "items": {
+              "title": "Game Version",
               "pattern": "^\\d+(\\.\\d+)+$",
-              "type": "string"
+              "type": "string",
+              "minLength": 1
             },
             "uniqueItems": true
           },
           "java_version": {
+            "title": "Java version",
             "type": "string",
-            "description": "The java version used to run the gradle build task"
+            "description": "The java version required to build the branch and run the mod (e.g. 17)",
+            "pattern": "\\S"
           },
           "version_properties": {
+            "title": "File version replacements",
             "type": "array",
-            "description": "List of files and respective properties where the version should be set (default: mod_version in gradle.properties)",
+            "description": "List of files and respective properties where the version should be set (default: mod_version in gradle.properties). Only supports properties format (property=value).",
             "items": {
+              "title": "Property file",
               "type": "object",
               "properties": {
                 "file": {
+                  "title": "File path",
                   "type": "string",
-                  "description": "The relative path to the file"
+                  "description": "The exact relative path to the file (e.g. gradle.properties)",
+                  "pattern": "\\S"
                 },
                 "property": {
+                  "title": "Property name",
                   "type": "string",
-                  "description": "The name of the property which should be set to the version"
+                  "description": "The name of the property which should be set to the version (e.g. mod_version)",
+                  "pattern": "\\S"
                 }
               },
               "required": [
@@ -133,8 +162,9 @@
       "uniqueItems": true
     },
     "common_dependencies": {
+      "title": "Common dependencies",
       "type": "object",
-      "description": "Common dependencies for each artifact",
+      "description": "Common dependencies for each artifact (all branches)",
       "$ref": "#/$defs/dependencies"
     }
   },
@@ -185,10 +215,12 @@
   ],
   "$defs": {
     "dependencies": {
+      "title": "Dependencies",
       "type": "object",
       "additionalProperties": false,
       "properties": {
         "curseforge": {
+          "title": "Curseforge dependencies",
           "type": "array",
           "description": "Dependencies for Curseforge deployment",
           "items": {
@@ -196,8 +228,9 @@
           }
         },
         "modrinth": {
+          "title": "Modrinth dependencies",
           "type": "array",
-          "description": "Common dependencies for all artifacts on Curseforge",
+          "description": "Dependencies for Modrinth deployment",
           "items": {
             "$ref": "#/$defs/mr_dependency"
           }
@@ -205,6 +238,7 @@
       }
     },
     "dependency_type": {
+      "title": "Dependency type",
       "type": "string",
       "description": "Type of the dependency",
       "enum": [
@@ -215,13 +249,15 @@
       ]
     },
     "cf_dependency": {
+      "title": "Curseforge dependency",
       "type": "object",
-      "description": "Dependency for curseforge",
       "additionalProperties": false,
       "properties": {
         "slug": {
+          "title": "Slug",
           "type": "string",
-          "description": "Curseforge project slug"
+          "description": "Curseforge project slug",
+          "pattern": "\\S"
         },
         "dependency_type": {
           "type": "string",
@@ -234,17 +270,20 @@
       ]
     },
     "mr_dependency": {
+      "title": "Modrinth dependency",
       "type": "object",
-      "description": "Dependency for Modrinth",
       "additionalProperties": false,
       "properties": {
         "id": {
+          "title": "ID",
           "type": "number",
           "description": "ID of the modrinth project"
         },
         "slug": {
+          "title": "Slug",
           "type": "string",
-          "description": "Slug of the modrinth project"
+          "description": "Slug of the modrinth project",
+          "pattern": "\\S"
         },
         "dependency_type": {
           "type": "string",
@@ -253,10 +292,12 @@
       },
       "oneOf": [
         {
+          "title": "Required ID",
           "type": "object",
           "required": ["id"]
         },
         {
+          "title": "Required Slug",
           "type": "object",
           "required": ["slug"]
         }
