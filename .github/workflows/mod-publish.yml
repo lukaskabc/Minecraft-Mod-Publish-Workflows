@@ -1,0 +1,72 @@
+name: Publish mod to several platforms
+on:
+  workflow_dispatch:
+    inputs:
+      workflow_ref:
+        description: Reference for this workflow to pin version-dependent calls
+        required: true
+        type: string
+      release_tag:
+        description: The tag with associated release (e.g. v1.2.3)
+        required: true
+        type: string
+
+jobs:
+  publish-artifacts:
+    runs-on: ubuntu-latest
+    name: Download artifacts from the release and publish them to configured platforms
+    steps:
+      - name: Checkout caller repository
+        # Checksout the mod repository
+        uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+          path: repository
+
+      - name: Checkout workflow repository
+        # Checksout the repository of this workflow to use the files
+        uses: actions/checkout@v7
+        with:
+          repository: lukaskabc/Minecraft-Mod-Publish-Workflows
+          ref: ${{ inputs.workflow_ref }}
+          path: workflow
+          fetch-depth: 1
+
+      - name: Extract version without 'v' prefix
+        id: extract_version
+        run: |
+          TAG="${{ inputs.release_tag }}"
+          echo "version=${TAG#v}" >> "$GITHUB_OUTPUT"
+
+      - name: Download release assets
+        env:
+          GH_REPO: ${{ github.repository }}
+          GH_TOKEN: ${{ github.token }}
+          TARGET_DIR: 'workflow/publish/artifacts'
+        run: |
+          gh release download "${{ inputs.release_tag }}" --dir "$TARGET_DIR" --pattern "*.jar"
+          ls -la $TARGET_DIR
+
+      - name: Setup Java
+        uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: 25
+
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v6
+
+      - name: Build with Gradle wrapper
+        shell: bash
+        env:
+          CURSEFORGE_API_KEY: ${{ secrets.CURSEFORGE_API_KEY }}
+          MODRINTH_API_KEY: ${{ secrets.MODRINTH_API_KEY }}
+          DISCORD_WEBHOOK_URL: ${{ secrets.DISCORD_WEBHOOK_URL }}
+          DRY_RUN: true
+          VERSION: ${{ steps.extract_version.outputs.version }}
+        run: |
+          set -euo pipefail
+          export ARTIFACTS_JSON=$(cat repository/publish.config.json)
+          cd workflow/publish
+          chmod +x ./gradlew
+          ./gradlew publishMods

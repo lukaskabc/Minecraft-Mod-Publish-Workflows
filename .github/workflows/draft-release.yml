@@ -10,10 +10,6 @@ on:
         description: Version number
         required: true
         type: string
-      branches:
-        description: Comma-delimited list of branch names that should be included in the release, leave empty to release all configured branches.
-        required: false
-        type: string
       validate-only:
         description: Only parse and validate the file publish.config.json
         required: true
@@ -99,14 +95,10 @@ jobs:
         id: export
         shell: bash
         env:
-          INPUT_BRANCHES: ${{ inputs.branches }}
           INPUT_VERSION: ${{ inputs.version }}
         run: |
           # Prepend "v" to the version for the tag name
           TAG="v${INPUT_VERSION#v}"
-
-          # Normalizes and converts input branch filter to a JSON array using only jq
-          FILTER_JSON=$(jq -R -c 'split(",") | map(gsub("^\\s+|\\s+$"; "")) | map(select(length>0))' <<< "$INPUT_BRANCHES")
           
           # Ensure the config file exists
           CONFIG_FILE="repository/publish.config.json"
@@ -115,13 +107,13 @@ jobs:
             exit 1
           fi
           
-          # Applies filter if it is not empty
-          ARTIFACTS_ARRAY=$(jq -c --argjson filter "$FILTER_JSON" '[ .artifacts[] | select(($filter | length == 0) or (.branch as $b | $filter | index($b))) ]' "$CONFIG_FILE")
+          # Extract all artifacts
+          ARTIFACTS_ARRAY=$(jq -c '.artifacts' "$CONFIG_FILE")
           
-          # Ensure the filtered artifact is not empty
+          # Ensure the artifacts array is not empty
           ARTIFACTS_LENGTH=$(echo "$ARTIFACTS_ARRAY" | jq 'length')
           if [ "$ARTIFACTS_LENGTH" -eq 0 ]; then
-            echo "::error::No matching branches found in the config. Filter applied: ${INPUT_BRANCHES:-none}"
+            echo "::error::No artifacts found in the config."
             exit 1
           fi
 

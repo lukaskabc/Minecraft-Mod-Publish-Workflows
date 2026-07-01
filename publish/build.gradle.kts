@@ -39,7 +39,7 @@ val discordBranchMissing = publishConfig.discordEnabled
     .none { it.branch == publishConfig.discordBranch }
 
 if (discordBranchMissing) {
-    logger.warn("Skipping discord publication, discord branch '${publishConfig.discordBranch}' is not being published!")
+    throw Exception("Unable to configure Discord publication, discord branch '${publishConfig.discordBranch}' is not being published!")
 }
 
 publishMods {
@@ -73,7 +73,7 @@ publishMods {
             logger.lifecycle("- modrinth")
             mrConfigurer.configure(artifact)
         }
-        if (publishConfig.discordEnabled && !discordBranchMissing && publishConfig.discordBranch.equals(artifact.branch)) {
+        if (publishConfig.discordEnabled && publishConfig.discordBranch == artifact.branch) {
             logger.lifecycle("- discord")
             discord {
                 webhookUrl.set(envProvider.discordWebhookUrl())
