@@ -72,6 +72,7 @@ export default function App() {
         ↓
       </button>
     ),
+    SubmitButton: () => null
   };
 
   const jsonResult = useMemo(() => {
@@ -112,6 +113,8 @@ export default function App() {
             onChange={(e) => setFormData(e.formData)}
             onSubmit={(e) => setFormData(e.formData)}
             templates={{ ButtonTemplates: customButtonTemplates }}
+            liveValidate
+
           />
 
           <div>
