@@ -1,11 +1,11 @@
 # Publishing Minecraft mod workflows
 This repository contains reusable GitHub Action workflows that allows to automatically compile and publish minecraft mod to Github release, Curseforge, Modrinth and even Discord.
 Internally uses [Mod publish plugin created by Modmuss](https://github.com/modmuss50/mod-publish-plugin).
-The workflows are written with support for multi-branch releases for releasing different jars for different versions and mod loaders.
-
-Minecraft mod release cycle and publishing with CI/CD (GitHub Workflows)
+The workflows are written with support for multi-branch releases for publishing different jars for different versions and mod loaders.
 
 ___
+
+## Publication process
 
 The process consists of the following steps:
 1. The author manually triggers draft release pipeline with the version number
@@ -31,3 +31,5 @@ The process consists of the following steps:
 - Only a single configured artifact update will be published to discord (e.g. the main branch)
 
 ## Setup
+
+
