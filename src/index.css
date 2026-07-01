@@ -1,0 +1,95 @@
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+}
+
+.app-shell {
+  margin: 0 auto;
+  padding: 2rem 1.5rem 4rem;
+}
+
+.schema-source {
+  font-size: 0.85rem;
+  opacity: 0.7;
+  margin: 0.5rem 0 1.5rem;
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.loading {
+  display: flex;
+  align-items: center;
+  padding: 2rem 0;
+}
+
+.content-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1.5rem;
+  align-items: start;
+}
+
+@media (max-width: 800px) {
+  .content-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.error-message {
+  background-color: rgba(255, 0, 0, 0.25);
+  padding: 1rem;
+}
+
+/* --- Minimal styling for the plain RJSF (core/html5) form fields --- */
+.rjsf .form-group {
+  margin-bottom: 1rem;
+}
+
+.rjsf label {
+  display: block;
+  font-weight: 600;
+  margin-bottom: 0.25rem;
+  font-size: 0.9rem;
+}
+
+.rjsf input[type='text'],
+.rjsf input[type='number'],
+.rjsf input[type='email'],
+.rjsf select,
+.rjsf textarea {
+  width: 100%;
+  padding: 0.5rem 0.6rem;
+  border: 1px solid #cbd5e1;
+  border-radius: 6px;
+  font-size: 0.95rem;
+  font-family: inherit;
+}
+
+.rjsf .field-description {
+  font-size: 0.8rem;
+  opacity: 0.7;
+  margin: 0.15rem 0 0.35rem;
+}
+
+.rjsf .btn {
+  padding: 0.5rem 1.1rem;
+  border-radius: 6px;
+  border: none;
+  background: var(--primary-color, #f97316);
+  color: #fff;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.rjsf .array-item {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 0.4rem;
+}
