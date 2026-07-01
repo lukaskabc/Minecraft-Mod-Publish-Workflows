@@ -118,17 +118,13 @@ jobs:
           # Outputs the commit hash as commit_hash
 
       - name: Compute next dev version
-        # TODO: fix incremental for 1.2.3-hotfix.1 versions
         id: next
         shell: bash
         env:
           INPUT_VERSION: ${{ inputs.version }}
         run: |
           set -euo pipefail
-          core="${INPUT_VERSION%%[-+]*}"
-          IFS='.' read -r major minor patch <<< "$core"
-          next_patch=$((patch + 1))
-          next_dev="${major}.${minor}.${next_patch}-alpha"
+          next_dev=$(./workflow/increment-version.sh)
           echo "next_dev=$next_dev" >> "$GITHUB_OUTPUT"
 
       - name: Set next dev version
