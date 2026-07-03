@@ -1,0 +1,204 @@
+# Builds the branch, tagging the version with the current date time.
+# The artifact is uploaded as result of the workflow and the download link is announced to Discord webhook.
+
+name: Nightly build
+on:
+  workflow_call:
+    inputs:
+      workflow_ref:
+        description: "Reference for this workflow to pin version-dependent calls"
+        required: true
+        type: string
+      discord_enabled:
+        description: "Whether the discord announcement is enabled"
+        required: true
+        type: boolean
+        default: false
+    secrets:
+      DISCORD_WEBHOOK_URL:
+        description: "Discord webhook URL to post the nightly build announcement to, required if the discord is enabled."
+        required: false
+
+jobs:
+  resolve-default-branch:
+    name: Resolve repository default branch
+    runs-on: ubuntu-latest
+    outputs:
+      default_branch: ${{ steps.default_branch.outputs.branch }}
+    steps:
+      - name: Get default branch
+        id: default_branch
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+        run: |
+          set -euo pipefail
+          BRANCH=$(gh repo view "$GH_REPO" --json "defaultBranchRef" -q ".defaultBranchRef.name")
+          echo "branch=$BRANCH" >> "$GITHUB_OUTPUT"
+
+  load-config:
+    name: Load and validate artifact configuration
+    needs: resolve-default-branch
+    uses: ./.github/workflows/load-config.yml
+    with:
+      repository_ref: ${{ needs.resolve-default-branch.outputs.default_branch }}
+      workflow_ref: ${{ inputs.workflow_ref }}
+
+  select-artifacts:
+    name: Select artifacts for the triggering branch
+    needs: load-config
+    runs-on: ubuntu-latest
+    outputs:
+      artifacts: ${{ steps.filter.outputs.artifacts }}
+    steps:
+      - name: Filter config to the current branch
+        id: filter
+        shell: bash
+        env:
+          CONFIG: ${{ needs.load-config.outputs.config }}
+          BRANCH: ${{ github.ref_name }}
+        run: |
+          set -euo pipefail
+
+          ARTIFACTS=$(echo "$CONFIG" | jq -c --arg branch "$BRANCH" '[.artifacts[] | select(.branch == $branch)]')
+          COUNT=$(echo "$ARTIFACTS" | jq 'length')
+
+          if [[ "$COUNT" -eq 0 ]]; then
+            echo "::error::No artifact configuration found for branch '$BRANCH'."
+            exit 1
+          fi
+
+          echo "artifacts=$ARTIFACTS" >> "$GITHUB_OUTPUT"
+
+  compile-artifact:
+    name: Build artifact - ${{ matrix.artifact.branch }}
+    needs: select-artifacts
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        # Only the artifact entries matching the triggering branch
+        artifact: ${{ fromJson(needs.select-artifacts.outputs.artifacts) }}
+
+    steps:
+      - name: Checkout caller repository
+        uses: actions/checkout@v7
+        with:
+          ref: ${{ github.ref }}
+          fetch-depth: 1
+          path: repository
+
+      - name: Checkout workflow repository
+        uses: actions/checkout@v7
+        with:
+          repository: lukaskabc/Minecraft-Mod-Publish-Workflows
+          ref: ${{ inputs.workflow_ref }}
+          path: workflow
+          fetch-depth: 1
+
+      - name: Setup Java
+        uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: ${{ matrix.artifact.java_version }}
+
+      - name: Configure git identity
+        # Official github actions bot account required by set-version.sh altough not used to push
+        run: |
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+      - name: Configure scripts
+        run: |
+          # make bash scripts executable
+          chmod +x ./workflow/*.sh
+
+      - name: Extend version with datetime
+        id: version
+        shell: bash
+        env:
+          VERSION_PROPS_JSON: ${{ toJson(matrix.artifact.version_properties) }}
+        run: |
+          set -euo pipefail
+          cd repository
+
+          CURRENT_VERSION=$(../workflow/read-version.sh "$VERSION_PROPS_JSON")
+
+          DATETIME=$(date +'%Y-%m-%d-%H-%M-%S')
+          NEW_VERSION="${CURRENT_VERSION}-${DATETIME}"
+
+          echo "datetime=$DATETIME" >> "$GITHUB_OUTPUT"
+          echo "new_version=$NEW_VERSION" >> "$GITHUB_OUTPUT"
+
+          "../workflow/set-version.sh" \
+            "$NEW_VERSION" \
+            "$VERSION_PROPS_JSON" \
+            "[chore] update nightly version to $NEW_VERSION"
+
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v6
+
+      - name: Build with Gradle wrapper
+        shell: bash
+        run: |
+          set -euo pipefail
+          cd repository
+          chmod +x ./gradlew
+          ./gradlew build
+
+      - name: Check compiled artifact exists
+        id: asset
+        shell: bash
+        env:
+          VERSION: ${{ steps.version.outputs.new_version }}
+          FILE_GLOB: ${{ matrix.artifact.file_glob }}
+        run: |
+          set -euo pipefail
+          shopt -s globstar nullglob
+
+          # Replace the literal string "{version}" with the new nightly version
+          EXPANDED_GLOB="${FILE_GLOB//\{version\}/$VERSION}"
+          echo "glob=$EXPANDED_GLOB" >> "$GITHUB_OUTPUT"
+
+          # Check for file existence
+          cd repository
+          files=($EXPANDED_GLOB)
+
+          if [[ ${#files[@]} -eq 0 ]]; then
+            echo "No files found matching $EXPANDED_GLOB"
+            exit 1
+          fi
+
+      - name: Upload jar as artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: nightly-build-${{ matrix.artifact.branch }}-${{ steps.version.outputs.datetime }}
+          path: repository/${{ steps.asset.outputs.glob }}
+          if-no-files-found: error
+
+  notify-discord:
+    name: Post download link to Discord
+    needs: compile-artifact
+    runs-on: ubuntu-latest
+    steps:
+      - name: Send Webhook
+        shell: bash
+        env:
+          DISCORD_WEBHOOK_URL: ${{ secrets.DISCORD_WEBHOOK_URL }}
+        run: |
+          set -euo pipefail
+
+          if [[ -z "$DISCORD_WEBHOOK_URL" ]]; then
+            echo "No DISCORD_WEBHOOK_URL secret configured, skipping Discord notification."
+            exit 0
+          fi
+
+          # Construct the URL pointing directly to the workflow run containing the uploaded artifacts.
+          # GitHub Actions artifacts require an authenticated download (there's no stable public
+          # direct-download URL), so the run page - where all of them are listed - is the link.
+          WORKFLOW_URL="https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+
+          curl -H "Content-Type: application/json" \
+               -d "{\"content\": \"**Nightly Build Successful!** :new_moon:\nDownload the compiled jar artifacts here: $WORKFLOW_URL\"}" \
+               "$DISCORD_WEBHOOK_URL"
