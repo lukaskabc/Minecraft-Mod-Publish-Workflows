@@ -2,6 +2,7 @@ import tools.jackson.databind.json.JsonMapper
 import tools.jackson.databind.DeserializationFeature
 import tools.jackson.module.kotlin.kotlinModule
 import kotlin.system.exitProcess
+import kotlin.text.replace
 
 plugins {
     id("me.modmuss50.mod-publish-plugin") // version defined in buildSrc
@@ -36,10 +37,18 @@ val publishConfig: PublishConfigSchema = mapper.readValue(
  */
 val discordBranchMissing = publishConfig.discordEnabled
         && publishConfig.artifacts
-    .none { it.branch == publishConfig.discordBranch }
+    .none { it.branch == publishConfig.discordWebhook.discordBranch }
 
 if (discordBranchMissing) {
-    throw Exception("Unable to configure Discord publication, discord branch '${publishConfig.discordBranch}' is not being published!")
+    throw Exception("Unable to configure Discord publication, discord branch '${publishConfig.discordWebhook.discordBranch}' is not being published!")
+}
+
+fun createDiscordReleaseContent(modVersion: String): String {
+    val content = publishConfig.discordWebhook.content ?: "v{version} was released!"
+    return content
+        .replace("{version}", modVersion, ignoreCase = true)
+        .removeSuffix("\n")
+        .plus("\n")
 }
 
 publishMods {
@@ -59,6 +68,7 @@ publishMods {
     dryRun.set(envProvider.isDryRun())
 
     type.set(STABLE)
+//    TODO make workflow save the github release text as changelog !
     changelog.set(changelogFile.readText())
     version.set(modVersion)
     displayName.set("v${modVersion}")
@@ -73,15 +83,34 @@ publishMods {
             logger.lifecycle("- modrinth")
             mrConfigurer.configure(artifact)
         }
-        if (publishConfig.discordEnabled && publishConfig.discordBranch == artifact.branch) {
+        if (publishConfig.discordEnabled && publishConfig.discordWebhook.discordBranch == artifact.branch) {
             logger.lifecycle("- discord")
+            val discordWebhook = publishConfig.discordWebhook
             discord {
                 webhookUrl.set(envProvider.discordWebhookUrl())
-                username.set("Test username")
-                content.set(changelog.map { "# v${modVersion} released!\n" + it }.get())
+
+                if (discordWebhook.username != null) {
+                    username.set(discordWebhook.username)
+                }
+
+                if (discordWebhook.avatarUrl != null) {
+                    avatarUrl.set(discordWebhook.avatarUrl)
+                }
+
+                var contentText = createDiscordReleaseContent(modVersion)
+                content.set(changelog.map { contentText + "\n" + it }.get())
+
                 style {
                     look.set("MODERN")
                     link.set("BUTTON")
+
+                    if (discordWebhook.thumbnailUrl != null) {
+                        thumbnailUrl.set(discordWebhook.thumbnailUrl)
+                    }
+
+                    if (discordWebhook.embedColor != null) {
+                        color.set(discordWebhook.embedColor)
+                    }
                 }
             }
         }

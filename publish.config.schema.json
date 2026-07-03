@@ -55,11 +55,46 @@
       "description": "The Modrinth project ID",
       "title": "Modrinth project ID"
     },
-    "discord_branch": {
-      "type": "string",
-      "description": "Updates from which single branch should be published to discord",
-      "title": "Discord branch",
-      "pattern": "\\S"
+    "discord_webhook": {
+      "type": "object",
+      "properties": {
+        "discord_branch": {
+          "type": "string",
+          "description": "Updates from which single branch should be published to discord",
+          "title": "Discord branch",
+          "pattern": "\\S"
+        },
+        "username": {
+          "type": "string",
+          "description": "Username used to send the webhook, defaults to \"Mod Publish Plugin\"",
+          "title": "Username"
+        },
+        "avatar_url": {
+          "type": "string",
+          "title": "Avatar URL",
+          "description": "Avatar image URL for the webhook, defaults to none"
+        },
+        "content": {
+          "type": "string",
+          "title": "Content message",
+          "description": "Set the content message, changelog is always appended after this content. Use {version} as a placeholder for the released version. Defaults to 'v{version} was released!"
+        },
+        "thumbnail_url": {
+          "type": "string",
+          "title": "Thumbnail URL",
+          "description": "Image URL for the discord embeds thumbnail, e.g. Mod's logo"
+        },
+        "embed_color": {
+          "type": "string",
+          "title": "Embed color",
+          "description": "Color of the left line used in the discord embed. Full 'RRGGBB' hex color prefixed with a '#'.",
+          "pattern": "^#[0-9a-fA-F]{6}$"
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "discord_branch"
+      ]
     },
     "artifacts": {
       "title": "Artifacts / Branches",
@@ -208,7 +243,7 @@
       },
       "then": {
         "required": [
-          "discord_branch"
+          "discord_webhook"
         ]
       }
     }
