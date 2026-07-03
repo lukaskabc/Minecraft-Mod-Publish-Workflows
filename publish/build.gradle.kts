@@ -101,7 +101,10 @@ publishMods {
 
                 style {
                     look.set("MODERN")
-                    link.set("BUTTON")
+                    link.set("EMBED")
+                    // "BUTTON" requires application owned webhooks, which are hard to create
+                    // In the future it may be done if this issue is resolved
+                    // https://github.com/modmuss50/mod-publish-plugin/issues/84
 
                     if (discordWebhook.thumbnailUrl != null) {
                         thumbnailUrl.set(discordWebhook.thumbnailUrl)
