@@ -321,25 +321,18 @@
           "title": "Slug",
           "type": "string",
           "description": "Slug of the modrinth project",
-          "pattern": "\\S"
         },
         "dependency_type": {
           "type": "string",
           "$ref": "#/$defs/dependency_type"
         }
       },
-      "oneOf": [
-        {
-          "title": "Required ID",
-          "type": "object",
-          "required": ["id"]
-        },
-        {
-          "title": "Required Slug",
-          "type": "object",
-          "required": ["slug"]
-        }
-      ]
+      "if": {
+        "not": { "required": ["id"] }
+      },
+      "then": {
+        "required": ["slug"]
+      }
     },
     "required": [
       "identifier",
