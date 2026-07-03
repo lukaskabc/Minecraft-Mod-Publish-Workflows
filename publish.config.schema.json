@@ -91,11 +91,22 @@
           "title": "Embed color",
           "description": "Color of the left line used in the discord embed. Full `RRGGBB` hex color prefixed with a `#`.",
           "pattern": "^#[0-9a-fA-F]{6}$"
+        },
+        "announce_nightly_builds": {
+          "title": "Announce nightly builds",
+          "type": "boolean",
+          "description": "Whether nightly builds should be announced to the nightly webhook"
+        },
+        "nightly_content": {
+          "type": "string",
+          "title": "Content message for Nightly build",
+          "description": "Set the content message, the commit message is **always appended** after this content. Use `{version}` as a placeholder for the nightly version. Defaults to \n`v{version} Nightly build available!`"
         }
       },
       "additionalProperties": false,
       "required": [
-        "discord_branch"
+        "discord_branch",
+        "announce_nightly_builds"
       ]
     },
     "artifacts": {
