@@ -57,6 +57,7 @@ jobs:
           
       - name: Save release description to changelog.md
         env:
+          GH_REPO: ${{ github.repository }}
           GH_TOKEN: ${{ github.token }}
         run: |
           gh release view ${{ inputs.release_tag }} --json body --jq '.body' > workflow/publish/changelog.md
