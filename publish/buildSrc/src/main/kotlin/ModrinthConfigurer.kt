@@ -54,7 +54,7 @@ class ModrinthConfigurer(configuration: PlatformConfiguration, modrinthApiKeyPro
 
             environment.set(env)
 
-            projectId.set(publishConfig.modrinthProjectId.toString())
+            projectId.set(publishConfig.modrinthProjectId)
         }
     }
 }

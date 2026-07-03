@@ -38,7 +38,7 @@ class CurseforgeConfigurer(configuration: PlatformConfiguration, curseforgeApiKe
             server.set(publishConfig.server)
 
             projectSlug.set(publishConfig.curseforgeProjectSlug)
-            projectId.set(publishConfig.curseforgeProjectId.toString())
+            projectId.set(publishConfig.curseforgeProjectId)
             changelogType.set("markdown")
 
             javaVersions.add(JavaVersion.toVersion(artifact.javaVersion))

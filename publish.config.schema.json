@@ -46,38 +46,40 @@
       "pattern": "\\S"
     },
     "curseforge_project_id": {
-      "type": "number",
-      "description": "The Curseforge project ID (number)",
-      "title": "Curseforge project ID"
+      "type": "string",
+      "description": "The Curseforge project ID",
+      "title": "Curseforge project ID",
+      "pattern": "\\d+"
     },
     "modrinth_project_id": {
-      "type": "number",
+      "type": "string",
       "description": "The Modrinth project ID",
       "title": "Modrinth project ID"
     },
     "discord_webhook": {
       "type": "object",
+      "title": "Discord Webhook",
       "properties": {
         "discord_branch": {
           "type": "string",
-          "description": "Updates from which single branch should be published to discord",
+          "description": "Updates from which **single** branch should be published to discord. What branch contains the **\"main\"** version of the mod? Enter the **exact** branch name.",
           "title": "Discord branch",
           "pattern": "\\S"
         },
         "username": {
           "type": "string",
-          "description": "Username used to send the webhook, defaults to \"Mod Publish Plugin\"",
+          "description": "Username used to send the webhook, defaults to `Mod Publish Plugin`",
           "title": "Username"
         },
         "avatar_url": {
           "type": "string",
           "title": "Avatar URL",
-          "description": "Avatar image URL for the webhook, defaults to none"
+          "description": "Avatar image URL for the webhook, defaults to `none`"
         },
         "content": {
           "type": "string",
           "title": "Content message",
-          "description": "Set the content message, changelog is always appended after this content. Use {version} as a placeholder for the released version. Defaults to 'v{version} was released!"
+          "description": "Set the content message, changelog is **always appended** after this content. Use `{version}` as a placeholder for the released version. Defaults to \n`v{version} was released!`"
         },
         "thumbnail_url": {
           "type": "string",
@@ -87,7 +89,7 @@
         "embed_color": {
           "type": "string",
           "title": "Embed color",
-          "description": "Color of the left line used in the discord embed. Full 'RRGGBB' hex color prefixed with a '#'.",
+          "description": "Color of the left line used in the discord embed. Full `RRGGBB` hex color prefixed with a `#`.",
           "pattern": "^#[0-9a-fA-F]{6}$"
         }
       },
@@ -108,7 +110,7 @@
           "file_glob": {
             "title": "File glob",
             "type": "string",
-            "description": "The glob for the compiled artifact to be uploaded. Can use {version} which will be replaced with the current mod version. E.g. -1.21.1-neoforge-{version}.jar",
+            "description": "The glob for the compiled artifact to be uploaded. Can use `{version}` which will be replaced with the current mod version. E.g. \n`build/libs/*-1.21.1-neoforge-{version}.jar`",
             "pattern": "\\S"
           },
           "branch": {
@@ -135,7 +137,7 @@
           "game_versions": {
             "title": "Game versions",
             "type": "array",
-            "description": "Supported game versions for the artifact (e.g. 1.21.1)",
+            "description": "Supported game versions for the artifact (e.g. `1.21.1`)",
             "minItems": 1,
             "items": {
               "title": "Game Version",
@@ -148,13 +150,13 @@
           "java_version": {
             "title": "Java version",
             "type": "string",
-            "description": "The java version required to build the branch and run the mod (e.g. 17)",
+            "description": "The java version required to build the branch and run the mod (e.g. `17`)",
             "pattern": "\\S"
           },
           "version_properties": {
             "title": "File version replacements",
             "type": "array",
-            "description": "List of files and respective properties where the version should be set (default: mod_version in gradle.properties). Only supports properties format (property=value).",
+            "description": "List of files and respective properties where the version should be set. Only supports properties format (`property=value`). Use your gradle build script to distribute the value to other files. If none is supplied, defaults to `mod_version` in `gradle.properties`.",
             "items": {
               "title": "Property file",
               "type": "object",
@@ -162,13 +164,13 @@
                 "file": {
                   "title": "File path",
                   "type": "string",
-                  "description": "The exact relative path to the file (e.g. gradle.properties)",
+                  "description": "The exact relative path to the file (e.g. `gradle.properties`)",
                   "pattern": "\\S"
                 },
                 "property": {
                   "title": "Property name",
                   "type": "string",
-                  "description": "The name of the property which should be set to the version (e.g. mod_version)",
+                  "description": "The name of the property which should be set to the version (e.g. `mod_version`)",
                   "pattern": "\\S"
                 }
               },
@@ -181,7 +183,7 @@
           },
           "dependencies": {
             "type": "object",
-            "description": "Dependencies for the artifact (merged with common dependencies)",
+            "description": "Dependencies for the artifact (merged with **common dependencies**)",
             "$ref": "#/$defs/dependencies"
           }
         },
@@ -199,7 +201,7 @@
     "common_dependencies": {
       "title": "Common dependencies",
       "type": "object",
-      "description": "Common dependencies for each artifact (all branches)",
+      "description": "Common dependencies for **each artifact** (all branches)",
       "$ref": "#/$defs/dependencies"
     }
   },
@@ -308,6 +310,7 @@
       "title": "Modrinth dependency",
       "type": "object",
       "additionalProperties": false,
+      "description": "Dependency on Modrinth platform. Only one, either ID or slug can be provided, you need to pick which value should be required. If you provide both values, ID takes priority and slug is not used.",
       "properties": {
         "id": {
           "title": "ID",
