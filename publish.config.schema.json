@@ -314,7 +314,7 @@
       "properties": {
         "id": {
           "title": "ID",
-          "type": "number",
+          "type": "string",
           "description": "ID of the modrinth project"
         },
         "slug": {
