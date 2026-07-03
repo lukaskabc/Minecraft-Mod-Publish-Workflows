@@ -8,6 +8,12 @@ import docco from 'react-syntax-highlighter/dist/esm/styles/hljs/docco';
 
 SyntaxHighlighter.registerLanguage('json', json);
 
+const uiSchema = {
+  "ui:globalOptions": {
+    "enableMarkdownInDescription": true
+  }
+}
+
 export default function App() {
 
   const [schema, setSchema] = useState(null);
@@ -108,6 +114,7 @@ export default function App() {
         <main className="content-grid">
           <Form
             schema={schema}
+            uiSchema={uiSchema}
             validator={validator}
             formData={formData}
             onChange={(e) => setFormData(e.formData)}
