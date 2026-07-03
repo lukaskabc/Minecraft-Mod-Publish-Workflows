@@ -1,6 +1,6 @@
 name: Publish mod to several platforms
 on:
-  workflow_dispatch:
+  workflow_call:
     inputs:
       workflow_ref:
         description: Reference for this workflow to pin version-dependent calls
