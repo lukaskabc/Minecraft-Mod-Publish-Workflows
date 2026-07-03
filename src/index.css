@@ -41,9 +41,17 @@ body {
   }
 }
 
-.error-message {
+.error-message, .text-danger {
   background-color: rgba(255, 0, 0, 0.25);
-  padding: 1rem;
+  padding: 0.5rem;
+}
+
+li.text-danger {
+  list-style-type: '[!] ';
+}
+
+li.text-danger::marker {
+  color: red;
 }
 
 /* --- Minimal styling for the plain RJSF (core/html5) form fields --- */
