@@ -55,9 +55,11 @@ abstract class PlatformConfigurer<PD : PlatformDependency, D> {
      */
     fun artifactFile(artifact: Artifact): File {
         val glob = artifact.jarNameGlob(modVersion)
+        val fileNameGlob = glob.substringAfterLast('/')
         val artifacts = project.fileTree("./artifacts") {
-            include(glob)
+            include(fileNameGlob)
         }
-        return artifacts.files.firstOrNull() ?: throw Exception("Failed to match artifact file for $glob")
+        return artifacts.files.firstOrNull()
+            ?: throw Exception("Failed to match artifact file for $fileNameGlob (original glob: $glob)")
     }
 }
