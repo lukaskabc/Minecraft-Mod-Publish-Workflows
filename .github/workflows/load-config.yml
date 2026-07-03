@@ -2,9 +2,9 @@ name: Validates and loads the artifacts from the config file
 on:
   workflow_call:
     outputs:
-      artifacts:
-        description: "The validated artifacts JSON array"
-        value: ${{ jobs.load-artifacts.outputs.artifacts }}
+      config:
+        description: "The validated config JSON"
+        value: ${{ jobs.load-config.outputs.config }}
 
     inputs:
       workflow_ref:
@@ -17,11 +17,11 @@ on:
 
 
 jobs:
-  load-artifacts:
-    name: Load and validate artifact configuration
+  load-config:
+    name: Load and validate the configuration
     runs-on: ubuntu-latest
     outputs:
-      artifacts: ${{ steps.export.outputs.artifacts }}
+      config: ${{ steps.export.outputs.config }}
     steps:
       - name: Checkout caller repository
         # Checksout the mod repository
@@ -87,7 +87,7 @@ jobs:
             -c ajv-formats \
             --strict=false
 
-      - name: Export artifacts output
+      - name: Export config output
         id: export
         shell: bash
         run: |
@@ -99,13 +99,13 @@ jobs:
           fi
           
           # Extract all artifacts
-          ARTIFACTS_ARRAY=$(jq -c '.artifacts' "$CONFIG_FILE")
+          CONFIG=$(jq -c . "$CONFIG_FILE")
           
           # Ensure the artifacts array is not empty
-          ARTIFACTS_LENGTH=$(echo "$ARTIFACTS_ARRAY" | jq 'length')
+          ARTIFACTS_LENGTH=$(echo "$CONFIG" | jq -c '.artifacts | length')
           if [ "$ARTIFACTS_LENGTH" -eq 0 ]; then
             echo "::error::No artifacts found in the config."
             exit 1
           fi
 
-          echo "artifacts=$ARTIFACTS_ARRAY" >> "$GITHUB_OUTPUT"
+          echo "config=$CONFIG" >> "$GITHUB_OUTPUT"

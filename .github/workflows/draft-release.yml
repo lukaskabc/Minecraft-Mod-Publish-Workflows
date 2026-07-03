@@ -21,18 +21,20 @@ permissions:
   contents: write
 
 jobs:
-  load-artifacts:
-    name: Load and validate artifact configuration
-    uses: ./.github/workflows/load-artifacts.yml
+  load-config:
+    name: Load and validate configuration
+    uses: ./.github/workflows/load-config.yml
     with:
+      # use the current reference to which the tag and draft is being created
+      # this branch is expected to be the main branch with the configuration file
       repository_ref: ${{ github.ref }}
       workflow_ref: ${{ inputs.workflow_ref }}
-    # outputs.artifacts
+    # outputs.config
 
 
   create-release:
     name: Create draft release
-    needs: load-artifacts
+    needs: load-config
     runs-on: ubuntu-latest
     # skip if validate only is enabled
     if: ${{ inputs.validate-only != true }}
@@ -64,13 +66,14 @@ jobs:
   # Executed for each configured branch
   build-artifact:
     name: Build artifact - ${{ matrix.artifact.branch }}
-    needs: [load-artifacts, create-release]
+    needs: [load-config, create-release]
     # skip if validate only is enabled
     if: ${{ inputs.validate-only != true }}
     strategy:
       fail-fast: false
       matrix:
-        artifact: ${{ fromJson(needs.load-artifacts.outputs.artifacts) }}
+        # Parse the full config JSON and extract only the artifacts array
+        artifact: ${{ fromJson(needs.load-config.outputs.config).artifacts }}
 
     uses: ./.github/workflows/per-branch-compile.yml
     with:
