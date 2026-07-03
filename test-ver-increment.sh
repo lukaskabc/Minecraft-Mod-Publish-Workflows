@@ -5,6 +5,10 @@ versions=(
     "0.0.4"
     "1.2.3"
     "10.20.30"
+    "1.2.3-hotfix6.7"
+    "1.2.3-hotfix1"
+    "1.2.3-hotfix123"
+    "1.2.3-1.hotfix-21"
     "1.1.2-prerelease+meta"
     "1.1.2+meta"
     "1.1.2+meta-valid"
@@ -33,17 +37,21 @@ versions=(
     "1.0.0+0.build.1-rc.10000aaa-kk-0.1"
     "99999999999999999999999.999999999999999999.99999999999999999"
     "1.0.0-0A.is.legal"
-    "1.2.3-hotfix6.7"
-    "1.2.3-hotfix1"
-    "1.2.3-hotfix123"
-    "1.2.3-1.hotfix-21"
 )
+
+SEMVER_REGEX="^(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)(?:-((?:0|[1-9]\d*|\d*[a-zA-Z-][0-9a-zA-Z-]*)(?:\.(?:0|[1-9]\d*|\d*[a-zA-Z-][0-9a-zA-Z-]*))*))?(?:\+([0-9a-zA-Z-]+(?:\.[0-9a-zA-Z-]+)*))?$"
 
 # Loop through each version in the array
 for val in "${versions[@]}"; do
     # Run test.sh and pass the value via the INPUT_VERSION env var
-    echo "$val"
-    INPUT_VERSION="$val" ./increment-version.sh
+    echo "Released version: $val"
+    result=$(INPUT_VERSION="$val" ./increment-version.sh)
+    echo "Next development: $result"
 
-    echo "----------------------------------------"
+    if echo "$result" | grep -Pq "$SEMVER_REGEX"; then
+        echo "----------------------------------------"
+    else
+        echo "INVALID semantic version"
+        exit 1
+    fi
 done

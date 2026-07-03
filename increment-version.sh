@@ -34,7 +34,7 @@ else
     # no numeric part to bump (e.g. "alpha") -> start a counter
     next_prerelease="${prerelease}.1"
   fi
-  next_dev="${major}.${minor}.${patch}-${next_prerelease}"
+  next_dev="${major}.${minor}.${patch}-${next_prerelease}-alpha"
 fi
 
 echo $next_dev
