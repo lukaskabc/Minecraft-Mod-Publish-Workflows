@@ -23,7 +23,7 @@ open class EnvProvider(private val providers: ProviderFactory) {
     fun discordWebhookUrl() = envRequired(Env.DISCORD_WEBHOOK_URL)
 
     protected fun env(varName: String): Provider<String> {
-        return providers.environmentVariable("DRY_RUN")
+        return providers.environmentVariable(varName)
     }
 
     protected fun envRequired(varName: String): String {
