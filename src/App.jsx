@@ -2,7 +2,7 @@ import {useEffect, useMemo, useState} from "react";
 import Form from "@rjsf/core";
 import validator from "@rjsf/validator-ajv8";
 import {CopyToClipboard} from 'react-copy-to-clipboard';
-import { Light as SyntaxHighlighter } from 'react-syntax-highlighter';
+import {Light as SyntaxHighlighter} from 'react-syntax-highlighter';
 import json from 'react-syntax-highlighter/dist/esm/languages/hljs/json.js';
 import docco from 'react-syntax-highlighter/dist/esm/styles/hljs/docco';
 
@@ -15,7 +15,6 @@ const uiSchema = {
 }
 
 export default function App() {
-
   const [schema, setSchema] = useState(null);
   const [loadError, setLoadError] = useState(null);
   const [formData, setFormData] = useState({});
@@ -85,16 +84,39 @@ export default function App() {
     return JSON.stringify(formData, null, 2)
   }, [formData]);
 
+  const handleFileSelect = (event) => {
+    const file = event.target.files[0];
+
+    // Exit if no file was selected
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      const content = e.target.result;
+
+      try {
+        const parsedJson = JSON.parse(content);
+        setFormData(parsedJson);
+      } catch (err) {
+        alert('Error: The uploaded file does not contain valid JSON. Details printed to console.');
+        console.error(err)
+      }
+    };
+
+    // Read the file as text
+    reader.readAsText(file);
+  };
+
   return (
     <div className="app-shell">
       <div className="schema-source">
         Schema loaded from:
         <input
-            type={"text"}
-            value={schemaUrl}
-            onChange={e => setSchemaUrl(e.target.value)}
-            className="p-inputtext p-component"
-            style={{ flex: 1, padding: '0.5rem', width: 'auto', maxWidth: '100%' }}
+          type={"text"}
+          value={schemaUrl}
+          onChange={e => setSchemaUrl(e.target.value)}
+          className="p-inputtext p-component"
+          style={{flex: 1, padding: '0.5rem', width: 'auto', maxWidth: '100%'}}
         />
       </div>
 
@@ -121,16 +143,20 @@ export default function App() {
             onSubmit={(e) => setFormData(e.formData)}
             templates={{ ButtonTemplates: customButtonTemplates }}
             liveValidate
-
           />
 
-          <div>
+          <div style={{display: 'flex', flexDirection: 'column', gap: '10px'}}>
             <SyntaxHighlighter language={"json"} style={docco}>
-              {jsonResult}
+                {jsonResult}
             </SyntaxHighlighter>
             <CopyToClipboard text={jsonResult}>
               <button>Copy to clipboard</button>
             </CopyToClipboard>
+            <input
+              type={"file"}
+              accept={"application/json"}
+              onChange={handleFileSelect}
+            />
           </div>
         </main>
       )}
