@@ -21,108 +21,18 @@ permissions:
   contents: write
 
 jobs:
-  load-config:
+  load-artifacts:
     name: Load and validate artifact configuration
-    runs-on: ubuntu-latest
-    outputs:
-      tag: ${{ steps.export.outputs.tag }}
-      artifacts: ${{ steps.export.outputs.artifacts }}
-    steps:
-      - name: Checkout caller repository
-        # Checksout the mod repository
-        uses: actions/checkout@v7
-        with:
-          fetch-depth: 1
-          path: repository
+    uses: ./.github/workflows/load-artifacts.yml
+    with:
+      repository_ref: ${{ github.ref }}
+      workflow_ref: ${{ inputs.workflow_ref }}
+    # outputs.artifacts
 
-      - name: Checkout workflow repository
-        # Checksout the repository of this workflow to use the files
-        uses: actions/checkout@v7
-        with:
-          repository: lukaskabc/Minecraft-Mod-Publish-Workflows
-          ref: ${{ inputs.workflow_ref }}
-          path: workflow
-          fetch-depth: 1
-
-      - name: Setup Node.js
-        # setup nodejs for JSON schema validation with AJV
-        uses: actions/setup-node@v6
-        with:
-          node-version: "24"
-
-      - name: Install JSON schema validator
-        run: npm install --ignore-scripts -g ajv-cli ajv-formats
-
-      - name: Validate publish config
-        run: |
-          # Verify file existence and validate JSON
-          
-          # Verify directories exist
-          if [ ! -d "repository" ]; then
-            echo "::error::Directory 'repository' is missing! Check your caller repository checkout step." >&2
-            ls -l
-            exit 1
-          fi
-          
-          if [ ! -d "workflow" ]; then
-            echo "::error::Directory 'workflow' is missing! Check your workflow repository checkout step." >&2
-            ls -l
-            exit 1
-          fi
-          
-          # Verify files exist
-          if [ ! -f "repository/publish.config.json" ]; then
-            echo "::error::File 'repository/publish.config.json' is missing!" >&2
-            ls -l repository
-            exit 1
-          fi
-          
-          if [ ! -f "workflow/publish.config.schema.json" ]; then
-            echo "::error::File 'workflow/publish.config.schema.json' is missing!" >&2
-            ls -l workflow
-            exit 1
-          fi
-          
-          # Run JSON schema validation
-          ajv validate \
-            -s workflow/publish.config.schema.json \
-            -d repository/publish.config.json \
-            --spec=draft7 \
-            -c ajv-formats \
-            --strict=false
-
-      - name: Export artifacts output
-        id: export
-        shell: bash
-        env:
-          INPUT_VERSION: ${{ inputs.version }}
-        run: |
-          # Prepend "v" to the version for the tag name
-          TAG="v${INPUT_VERSION#v}"
-          
-          # Ensure the config file exists
-          CONFIG_FILE="repository/publish.config.json"
-          if [ ! -f "$CONFIG_FILE" ]; then
-            echo "::error::Error: $CONFIG_FILE does not exist."
-            exit 1
-          fi
-          
-          # Extract all artifacts
-          ARTIFACTS_ARRAY=$(jq -c '.artifacts' "$CONFIG_FILE")
-          
-          # Ensure the artifacts array is not empty
-          ARTIFACTS_LENGTH=$(echo "$ARTIFACTS_ARRAY" | jq 'length')
-          if [ "$ARTIFACTS_LENGTH" -eq 0 ]; then
-            echo "::error::No artifacts found in the config."
-            exit 1
-          fi
-
-          echo "tag=$TAG" >> "$GITHUB_OUTPUT"
-          echo "artifacts=$ARTIFACTS_ARRAY" >> "$GITHUB_OUTPUT"
 
   create-release:
     name: Create draft release
-    needs: load-config
+    needs: load-artifacts
     runs-on: ubuntu-latest
     # skip if validate only is enabled
     if: ${{ inputs.validate-only != true }}
@@ -130,31 +40,42 @@ jobs:
       # URL for assets uploading
       upload_url: ${{ steps.cr.outputs.upload_url }}
       release_id: ${{ steps.cr.outputs.id }}
+      tag: ${{ steps.tag_name.outputs.tag }}
     steps:
+      - name: Construct tag name
+        id: tag_name
+        shell: bash
+        env:
+          INPUT_VERSION: ${{ inputs.version }}
+        run: |
+          # Prepend "v" to the version for the tag name
+          TAG="v${INPUT_VERSION#v}"
+          echo "tag=$TAG" >> "$GITHUB_OUTPUT"
+
       - name: Create draft release
         id: cr
         uses: softprops/action-gh-release@v3
         with:
-          tag_name: ${{ needs.load-config.outputs.tag }}
-          name: ${{ needs.load-config.outputs.tag }}
+          tag_name: ${{ steps.tag_name.outputs.tag }}
+          name: ${{ steps.tag_name.outputs.tag }}
           draft: true
           prerelease: false
 
   # Executed for each configured branch
   build-artifact:
     name: Build artifact - ${{ matrix.artifact.branch }}
-    needs: [load-config, create-release]
+    needs: [load-artifacts, create-release]
     # skip if validate only is enabled
     if: ${{ inputs.validate-only != true }}
     strategy:
       fail-fast: false
       matrix:
-        artifact: ${{ fromJson(needs.load-config.outputs.artifacts) }}
+        artifact: ${{ fromJson(needs.load-artifacts.outputs.artifacts) }}
 
     uses: ./.github/workflows/per-branch-compile.yml
     with:
       version: ${{ inputs.version }}
-      tag_name: ${{ needs.load-config.outputs.tag }}
+      tag_name: ${{ needs.create-release.outputs.tag }}
       branch: ${{ matrix.artifact.branch }}
       loaders_json: ${{ toJson(matrix.artifact.loaders) }}
       game_versions_json: ${{ toJson(matrix.artifact.game_versions) }}

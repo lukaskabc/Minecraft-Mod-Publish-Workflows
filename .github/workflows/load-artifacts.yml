@@ -1,0 +1,111 @@
+name: Validates and loads the artifacts from the config file
+on:
+  workflow_call:
+    outputs:
+      artifacts:
+        description: "The validated artifacts JSON array"
+        value: ${{ jobs.load-artifacts.outputs.artifacts }}
+
+    inputs:
+      workflow_ref:
+        description: "Reference for this workflow to pin version-dependent calls"
+        type: string
+        required: true
+      repository_ref:
+        type: string
+        required: true
+
+
+jobs:
+  load-artifacts:
+    name: Load and validate artifact configuration
+    runs-on: ubuntu-latest
+    outputs:
+      artifacts: ${{ steps.export.outputs.artifacts }}
+    steps:
+      - name: Checkout caller repository
+        # Checksout the mod repository
+        uses: actions/checkout@v7
+        with:
+          ref: ${{ inputs.repository_ref }}
+          fetch-depth: 1
+          path: repository
+
+      - name: Checkout workflow repository
+        # Checksout the repository of this workflow to use the files
+        uses: actions/checkout@v7
+        with:
+          repository: lukaskabc/Minecraft-Mod-Publish-Workflows
+          ref: ${{ inputs.workflow_ref }}
+          path: workflow
+          fetch-depth: 1
+
+      - name: Setup Node.js
+        # setup nodejs for JSON schema validation with AJV
+        uses: actions/setup-node@v6
+        with:
+          node-version: "24"
+
+      - name: Install JSON schema validator
+        run: npm install --ignore-scripts -g ajv-cli ajv-formats
+
+      - name: Validate publish config
+        run: |
+          # Verify file existence and validate JSON
+          
+          # Verify directories exist
+          if [ ! -d "repository" ]; then
+            echo "::error::Directory 'repository' is missing! Check your caller repository checkout step." >&2
+            ls -l
+            exit 1
+          fi
+          
+          if [ ! -d "workflow" ]; then
+            echo "::error::Directory 'workflow' is missing! Check your workflow repository checkout step." >&2
+            ls -l
+            exit 1
+          fi
+          
+          # Verify files exist
+          if [ ! -f "repository/publish.config.json" ]; then
+            echo "::error::File 'repository/publish.config.json' is missing!" >&2
+            ls -l repository
+            exit 1
+          fi
+          
+          if [ ! -f "workflow/publish.config.schema.json" ]; then
+            echo "::error::File 'workflow/publish.config.schema.json' is missing!" >&2
+            ls -l workflow
+            exit 1
+          fi
+          
+          # Run JSON schema validation
+          ajv validate \
+            -s workflow/publish.config.schema.json \
+            -d repository/publish.config.json \
+            --spec=draft7 \
+            -c ajv-formats \
+            --strict=false
+
+      - name: Export artifacts output
+        id: export
+        shell: bash
+        run: |
+          # Ensure the config file exists
+          CONFIG_FILE="repository/publish.config.json"
+          if [ ! -f "$CONFIG_FILE" ]; then
+            echo "::error::Error: $CONFIG_FILE does not exist."
+            exit 1
+          fi
+          
+          # Extract all artifacts
+          ARTIFACTS_ARRAY=$(jq -c '.artifacts' "$CONFIG_FILE")
+          
+          # Ensure the artifacts array is not empty
+          ARTIFACTS_LENGTH=$(echo "$ARTIFACTS_ARRAY" | jq 'length')
+          if [ "$ARTIFACTS_LENGTH" -eq 0 ]; then
+            echo "::error::No artifacts found in the config."
+            exit 1
+          fi
+
+          echo "artifacts=$ARTIFACTS_ARRAY" >> "$GITHUB_OUTPUT"
