@@ -15,13 +15,6 @@ on:
         required: true
         type: boolean
         default: false
-    secrets:
-      CURSEFORGE_API_KEY:
-        required: false
-      MODRINTH_API_KEY:
-        required: false
-      DISCORD_WEBHOOK_URL:
-        required: false
 
 # permissions required to write to the github release
 permissions:
