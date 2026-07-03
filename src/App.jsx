@@ -14,7 +14,7 @@ export default function App() {
   const [loadError, setLoadError] = useState(null);
   const [formData, setFormData] = useState({});
 
-  const [schemaUrl, setSchemaUrl] = useState("https://raw.githubusercontent.com/lukaskabc/Minecraft-Mod-Publish-Workflows/refs/heads/main/artifacts.schema.json")
+  const [schemaUrl, setSchemaUrl] = useState("https://raw.githubusercontent.com/lukaskabc/Minecraft-Mod-Publish-Workflows/refs/heads/main/publish.config.schema.json")
 
   useEffect(() => {
     let cancelled = false;
