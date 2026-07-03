@@ -1,16 +1,21 @@
 {
-  "client": false,
-  "server": true,
+  "client": true,
+  "server": false,
   "curseforge_enabled": true,
   "modrinth_enabled": true,
   "discord_enabled": true,
-  "curseforge_project_slug": "test-cf-slug",
-  "curseforge_project_id": 123,
-  "modrinth_project_id": 321,
-  "discord_branch": "main",
+  "curseforge_project_slug": "stellar-view-mixin-renderer",
+  "curseforge_project_id": "1474053",
+  "modrinth_project_id": "gJ5LPGfO",
+  "discord_webhook": {
+    "discord_branch": "main",
+    "username": "Super publish bot",
+    "content": "Hey! New version v{version} was just released!",
+    "embed_color": "#47d378"
+  },
   "artifacts": [
     {
-      "file_glob": "build/libs/*-1.21.1-NeoForge-{version}.jar",
+      "file_glob": "build/libs/*-1.21.1-neoforge-{version}.jar",
       "branch": "main",
       "loaders": [
         "neoforge"
@@ -19,21 +24,21 @@
         "1.21.1"
       ],
       "java_version": "21",
-      "version_properties": [],
-      "dependencies": {
-        "curseforge": [
-          {
-            "slug": "stellarview",
-            "dependency_type": "required"
-          }
-        ],
-        "modrinth": [
-          {
-            "slug": "stellarview",
-            "dependency_type": "embedded"
-          }
-        ]
-      }
+      "dependencies": {}
     }
-  ]
+  ],
+  "common_dependencies": {
+    "curseforge": [
+      {
+        "slug": "stellarview",
+        "dependency_type": "required"
+      }
+    ],
+    "modrinth": [
+      {
+        "dependency_type": "required",
+        "slug": "stellarview"
+      }
+    ]
+  }
 }
