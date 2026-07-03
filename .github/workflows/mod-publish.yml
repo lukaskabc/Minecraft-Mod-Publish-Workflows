@@ -10,6 +10,11 @@ on:
         description: The tag with associated release (e.g. v1.2.3)
         required: true
         type: string
+      dry_run:
+        description: If true, the files wont be published and the configuration will be logged instead.
+        required: false
+        default: false
+        type: boolean
     secrets:
       CURSEFORGE_API_KEY:
         required: false
@@ -77,7 +82,7 @@ jobs:
           CURSEFORGE_API_KEY: ${{ secrets.CURSEFORGE_API_KEY }}
           MODRINTH_API_KEY: ${{ secrets.MODRINTH_API_KEY }}
           DISCORD_WEBHOOK_URL: ${{ secrets.DISCORD_WEBHOOK_URL }}
-          DRY_RUN: true
+          DRY_RUN: ${{ inputs.dry_run }}
           VERSION: ${{ steps.extract_version.outputs.version }}
         run: |
           set -euo pipefail
