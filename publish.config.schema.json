@@ -320,7 +320,7 @@
         "slug": {
           "title": "Slug",
           "type": "string",
-          "description": "Slug of the modrinth project",
+          "description": "Slug of the modrinth project"
         },
         "dependency_type": {
           "type": "string",
