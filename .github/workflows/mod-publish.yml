@@ -16,10 +16,11 @@ jobs:
     runs-on: ubuntu-latest
     name: Download artifacts from the release and publish them to configured platforms
     steps:
-      - name: Checkout caller repository
-        # Checksout the mod repository
+      - name: Checkout the main branch in caller repository
+        # Checksout the mod repository at the release tag - this will provide the configuration
         uses: actions/checkout@v7
         with:
+          ref: ${{ inputs.release_tag }}
           fetch-depth: 0
           path: repository
 

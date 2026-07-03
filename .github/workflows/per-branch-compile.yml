@@ -1,3 +1,6 @@
+# This workflow is being run on a specific branch
+# the branch may not be the main one, hence the workflow MUST NOT work with the configuration file
+
 name: Per-branch bump version, compile and upload to github release draft
 
 on:

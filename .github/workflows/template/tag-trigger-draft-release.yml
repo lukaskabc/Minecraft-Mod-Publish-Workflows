@@ -1,0 +1,49 @@
+# Copy this file to your repository's /.github/workflows/ directory
+# To trigger this workflow, create a new tag following the format "vX.Y.Z"
+#   The format is semantic version (https://semver.org/) prefixed with "v"
+#
+# This is an ALTERNATIVE to the manual-trigger-draft-release.yml
+#
+# Recommended: change the reference to specific version of the workflow called in draft-release job
+
+name: Draft new GitHub release (tag push)
+on:
+  push:
+    tags:
+      - 'v[0-9]+.[0-9]+.[0-9]+*'
+      # Note that this is not regex, it is a pattern that matches something that looks like semantic versioning
+      # https://docs.github.com/en/actions/reference/workflows-and-actions/workflow-syntax#filter-pattern-cheat-sheet
+      # The version will be validated by the workflow itself once run and will fail if the format is invalid https://semver.org/
+
+# permissions required to create the GitHub release draft and to commit version bumps to the repository
+permissions:
+  contents: write
+
+jobs:
+  # Extracts only the version (strips leading "v") from the tag name
+  extract-version:
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.strip-v.outputs.version }}
+    steps:
+      - name: Strip leading "v" from tag name
+        id: strip-v
+        env:
+          TAG: ${{ github.ref_name }}
+        run: |
+          echo "version=${TAG#v}" >> "$GITHUB_OUTPUT"
+
+  draft-release:
+    needs: extract-version
+    # Recommended: change the reference to a specific version of the reusable workflow
+    # Using a specific version prevents breaking your workflow when a breaking change is introduced
+    # If a specific commit hash is used, improves security
+    # The reference must be changed at TWO places                                       ↓ change this
+    uses: lukaskabc/Minecraft-Mod-Publish-Workflows/.github/workflows/draft-release.yml@main
+    with:
+      # CHANGE THIS REFERENCE AS WELL
+      # This value must match the reference used in the "uses:" parameter (the value after "@")
+      workflow_ref: "main"
+
+      version: ${{ needs.extract-version.outputs.version }}
+      validate-only: false
