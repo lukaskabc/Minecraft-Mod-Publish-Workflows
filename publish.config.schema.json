@@ -310,7 +310,7 @@
       "title": "Modrinth dependency",
       "type": "object",
       "additionalProperties": false,
-      "description": "Dependency on Modrinth platform. Only one, either ID or slug can be provided.",
+      "description": "Dependency on Modrinth platform. Only one, either ID or slug can be provided, you need to pick which value should be required. If you provide both values, ID takes priority and slug is not used.",
       "properties": {
         "id": {
           "title": "ID",
@@ -329,8 +329,16 @@
         }
       },
       "oneOf": [
-        { "required": ["id"] },
-        { "required": ["slug"] }
+        {
+          "title": "Required ID",
+          "type": "object",
+          "required": ["id"]
+        },
+        {
+          "title": "Required Slug",
+          "type": "object",
+          "required": ["slug"]
+        }
       ]
     },
     "required": [
