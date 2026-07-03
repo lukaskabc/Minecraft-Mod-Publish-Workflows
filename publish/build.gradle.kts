@@ -68,7 +68,6 @@ publishMods {
     dryRun.set(envProvider.isDryRun())
 
     type.set(STABLE)
-//    TODO make workflow save the github release text as changelog !
     changelog.set(changelogFile.readText())
     version.set(modVersion)
     displayName.set("v${modVersion}")

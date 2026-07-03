@@ -47,6 +47,12 @@ jobs:
         run: |
           gh release download "${{ inputs.release_tag }}" --dir "$TARGET_DIR" --pattern "*.jar"
           ls -la $TARGET_DIR
+          
+      - name: Save release description to changelog.md
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release view ${{ inputs.release_tag }} --json body --jq '.body' > workflow/publish/changelog.md
 
       - name: Setup Java
         uses: actions/setup-java@v5

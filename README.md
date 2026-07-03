@@ -77,8 +77,6 @@ Based on platforms you enabled in the configuration file, create the following *
   - Choose `Copy Webhook URL` to get the URL and set it as the value of the GitHub repository secret
   - Note that the image and name of the webhook needs to be configured in the `publish.config.json` file
 
-[//]: # (TODO: discord webhook configuration)
-
 ## Comparison of popular tools
 
 The goal of this repository is to provide reusable workflows for my (and possibly others) mods.
