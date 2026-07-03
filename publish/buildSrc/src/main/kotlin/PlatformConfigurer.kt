@@ -16,7 +16,7 @@ abstract class PlatformConfigurer<PD : PlatformDependency, D> {
     protected val project: Project
     protected val context: ModPublishExtension
     protected val modVersion: String
-    protected val publishConfig: ArtifactsSchema
+    protected val publishConfig: PublishConfigSchema
 
     protected val accessToken: String
 

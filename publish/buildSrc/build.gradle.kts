@@ -24,7 +24,7 @@ dependencies {
  * Generates classes from the configuration schema
  */
 jsonSchema2Pojo {
-    setSource(files("../../artifacts.schema.json"))
+    setSource(files("../../publish.config.schema.json"))
     setSourceType("jsonSchema")
     setAnnotationStyle("jackson3")
     includeAdditionalProperties = false

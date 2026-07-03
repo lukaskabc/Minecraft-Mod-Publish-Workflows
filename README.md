@@ -47,7 +47,7 @@ In your repository create directory `/.github/workflows/` and copy files from th
 In your repository, in the root directory, create file named `publish.config.json`.
 This file has to be on the default branch (where release tags will be created) and contains configuration describing each involved branch.
 
-The config must follow the [`artifacts.schema.json`](artifacts.schema.json) JSON schema.
+The config must follow the [`publish.config.schema.json`](publish.config.schema.json) JSON schema.
 
 You can use https://lukaskabc.github.io/Minecraft-Mod-Publish-Workflows/ to create the config contents.
 If you are using a specific version of the workflow, you need to update the link to the schema there to respect your exact version.

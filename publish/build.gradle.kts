@@ -25,9 +25,9 @@ val mapper: JsonMapper = JsonMapper.builder()
 
 val changelogFile = file("changelog.md")
 
-val publishConfig: ArtifactsSchema = mapper.readValue(
+val publishConfig: PublishConfigSchema = mapper.readValue(
     envProvider.publishConfig(),
-    ArtifactsSchema::class.java
+    PublishConfigSchema::class.java
 )
 
 /**

@@ -77,15 +77,15 @@ jobs:
             exit 1
           fi
           
-          if [ ! -f "workflow/artifacts.schema.json" ]; then
-            echo "::error::File 'workflow/artifacts.schema.json' is missing!" >&2
+          if [ ! -f "workflow/publish.config.schema.json" ]; then
+            echo "::error::File 'workflow/publish.config.schema.json' is missing!" >&2
             ls -l workflow
             exit 1
           fi
           
           # Run JSON schema validation
           ajv validate \
-            -s workflow/artifacts.schema.json \
+            -s workflow/publish.config.schema.json \
             -d repository/publish.config.json \
             --spec=draft7 \
             -c ajv-formats \

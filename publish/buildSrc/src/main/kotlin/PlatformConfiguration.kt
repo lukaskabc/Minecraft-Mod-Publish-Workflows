@@ -6,6 +6,6 @@ data class PlatformConfiguration(
     val project: Project,
     val context: ModPublishExtension,
     val modVersion: String,
-    val publishConfig: ArtifactsSchema,
+    val publishConfig: PublishConfigSchema,
     val logger: Logger
 )
