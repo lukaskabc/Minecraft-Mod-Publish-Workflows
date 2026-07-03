@@ -1,0 +1,3 @@
+root = true
+[*.jsx]
+indent_size = 2
