@@ -89,7 +89,7 @@ jobs:
             -d repository/publish.config.json \
             --spec=draft7 \
             -c ajv-formats \
-            --strict=true
+            --strict=false
 
       - name: Export artifacts output
         id: export

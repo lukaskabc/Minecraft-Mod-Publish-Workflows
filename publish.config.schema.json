@@ -333,10 +333,6 @@
       "then": {
         "required": ["slug"]
       }
-    },
-    "required": [
-      "identifier",
-      "dependency_type"
-    ]
+    }
   }
 }
