@@ -10,6 +10,13 @@ on:
         description: The tag with associated release (e.g. v1.2.3)
         required: true
         type: string
+    secrets:
+      CURSEFORGE_API_KEY:
+        required: false
+      MODRINTH_API_KEY:
+        required: false
+      DISCORD_WEBHOOK_URL:
+        required: false
 
 jobs:
   publish-artifacts:
