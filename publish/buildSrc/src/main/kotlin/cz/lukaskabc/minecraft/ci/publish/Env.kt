@@ -1,3 +1,5 @@
+package cz.lukaskabc.minecraft.ci.publish
+
 object Env {
     const val CURSEFORGE_API_KEY = "CURSEFORGE_API_KEY"
     const val MODRINTH_API_KEY = "MODRINTH_API_KEY"

@@ -1,3 +1,9 @@
+package cz.lukaskabc.minecraft.ci.publish.configurer
+
+
+import cz.lukaskabc.minecraft.ci.publish.schema.Artifact
+import cz.lukaskabc.minecraft.ci.publish.schema.CfDependency
+import cz.lukaskabc.minecraft.ci.publish.schema.Dependencies
 import me.modmuss50.mpp.platforms.curseforge.CurseforgeDependency
 import org.gradle.api.JavaVersion
 import org.gradle.api.provider.Provider

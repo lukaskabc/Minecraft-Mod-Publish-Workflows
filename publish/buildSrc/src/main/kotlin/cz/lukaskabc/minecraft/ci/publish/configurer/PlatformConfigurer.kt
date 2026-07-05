@@ -1,3 +1,9 @@
+package cz.lukaskabc.minecraft.ci.publish.configurer
+
+import cz.lukaskabc.minecraft.ci.publish.schema.Artifact
+import cz.lukaskabc.minecraft.ci.publish.schema.CfDependency
+import cz.lukaskabc.minecraft.ci.publish.schema.Dependencies
+import cz.lukaskabc.minecraft.ci.publish.schema.PublishConfigSchema
 import me.modmuss50.mpp.ModPublishExtension
 import me.modmuss50.mpp.PlatformDependency
 import me.modmuss50.mpp.PlatformDependencyContainer
@@ -7,7 +13,7 @@ import java.io.File
 
 
 fun Artifact.jarNameGlob(modVersion: String): String {
-    return fileGlob.replace("{version}", modVersion)
+    return this.fileGlob.replace("{version}", modVersion)
 }
 
 fun CfDependency.DependencyType.asPlatform() = PlatformDependency.DependencyType.valueOf(name)

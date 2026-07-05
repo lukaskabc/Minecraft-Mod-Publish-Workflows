@@ -31,6 +31,7 @@ jsonSchema2Pojo {
     includeGetters = true
     includeSetters = true
     includeJsr305Annotations = true
+    targetPackage = "cz.lukaskabc.minecraft.ci.publish.schema"
 }
 
 sourceSets {

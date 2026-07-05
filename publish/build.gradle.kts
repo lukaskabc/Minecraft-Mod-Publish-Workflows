@@ -3,6 +3,9 @@ import tools.jackson.databind.DeserializationFeature
 import tools.jackson.module.kotlin.kotlinModule
 import kotlin.system.exitProcess
 import kotlin.text.replace
+import cz.lukaskabc.minecraft.ci.publish.*
+import cz.lukaskabc.minecraft.ci.publish.schema.*
+import cz.lukaskabc.minecraft.ci.publish.configurer.*
 
 plugins {
     id("me.modmuss50.mod-publish-plugin") // version defined in buildSrc

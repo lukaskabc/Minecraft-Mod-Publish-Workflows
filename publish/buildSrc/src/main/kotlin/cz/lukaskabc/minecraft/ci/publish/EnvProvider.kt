@@ -1,3 +1,5 @@
+package cz.lukaskabc.minecraft.ci.publish
+
 import org.gradle.api.provider.Provider
 import org.gradle.api.provider.ProviderFactory
 
