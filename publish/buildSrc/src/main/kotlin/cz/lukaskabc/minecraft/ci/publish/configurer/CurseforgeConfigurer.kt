@@ -27,7 +27,7 @@ class CurseforgeConfigurer(configuration: PlatformConfiguration, curseforgeApiKe
     override fun extractDependencies(deps: Dependencies): List<CfDependency>? = deps.curseforge
 
     override fun configure(artifact: Artifact) {
-        context.curseforge("curseforge-${artifact.branch}") {
+        context.curseforge("curseforge-${artifact.id}") {
             accessToken.set(this@CurseforgeConfigurer.accessToken)
 
             // the artifact to upload

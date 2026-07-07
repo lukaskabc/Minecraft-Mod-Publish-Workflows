@@ -23,10 +23,19 @@ on:
       DISCORD_WEBHOOK_URL:
         required: false
 
+env:
+  MOD_PUBLISH_JAVA_VERSION: 25
+
 jobs:
-  publish-artifacts:
+  prepare:
     runs-on: ubuntu-latest
-    name: Download artifacts from the release and publish them to configured platforms
+    name: Checkout repositories, download release assets and compute the publish matrix
+    outputs:
+      version: ${{ steps.extract_version.outputs.version }}
+      branches: ${{ steps.matrix.outputs.branches }}
+      curseforge_enabled: ${{ steps.matrix.outputs.curseforge_enabled }}
+      modrinth_enabled: ${{ steps.matrix.outputs.modrinth_enabled }}
+      discord_enabled: ${{ steps.matrix.outputs.discord_enabled }}
     steps:
       - name: Checkout the main branch in caller repository
         # Checksout the mod repository at the release tag - this will provide the configuration
@@ -59,7 +68,7 @@ jobs:
         run: |
           gh release download "${{ inputs.release_tag }}" --dir "$TARGET_DIR" --pattern "*.jar"
           ls -la $TARGET_DIR
-          
+
       - name: Save release description to changelog.md
         env:
           GH_REPO: ${{ github.repository }}
@@ -67,26 +76,142 @@ jobs:
         run: |
           gh release view ${{ inputs.release_tag }} --json body --jq '.body' > workflow/publish/changelog.md
 
+      - name: Prepare gradle wrapper
+        run: chmod +x workflow/publish/gradlew
+
+      - name: Compute branch matrix and enabled platforms
+        id: matrix
+        run: |
+          set -euo pipefail
+          CONFIG=repository/publish.config.json
+          echo "branches=$(jq -c '[.artifacts[].branch]' "$CONFIG")" >> "$GITHUB_OUTPUT"
+          echo "curseforge_enabled=$(jq -r '.curseforge_enabled' "$CONFIG")" >> "$GITHUB_OUTPUT"
+          echo "modrinth_enabled=$(jq -r '.modrinth_enabled' "$CONFIG")" >> "$GITHUB_OUTPUT"
+          echo "discord_enabled=$(jq -r '.discord_enabled' "$CONFIG")" >> "$GITHUB_OUTPUT"
+
+      - name: Upload publish workspace
+        # Give access to files for upcoming jobs
+        uses: actions/upload-artifact@v7
+        with:
+          name: publish-workspace
+          path: |
+            workflow/publish
+            repository/publish.config.json
+          retention-days: 1
+
+  publish-curseforge:
+    needs: prepare
+    if: needs.prepare.outputs.curseforge_enabled == 'true'
+    runs-on: ubuntu-latest
+    name: ${{ matrix.id }} - Publish to CurseForge
+    strategy:
+      # Allow some tasks to succeed and do not cancel others if one fails
+      fail-fast: false
+      matrix:
+        branch: ${{ fromJson(needs.prepare.outputs.branches) }}
+    steps:
+      - name: Download publish workspace
+        uses: actions/download-artifact@v8
+        with:
+          name: publish-workspace
+
       - name: Setup Java
         uses: actions/setup-java@v5
         with:
           distribution: temurin
-          java-version: 25
+          java-version: ${{ env.MOD_PUBLISH_JAVA_VERSION }}
 
       - name: Setup Gradle
         uses: gradle/actions/setup-gradle@v6
 
-      - name: Upload files with Gradle plugin
+      - name: Publish CurseForge branch
         shell: bash
         env:
           CURSEFORGE_API_KEY: ${{ secrets.CURSEFORGE_API_KEY }}
-          MODRINTH_API_KEY: ${{ secrets.MODRINTH_API_KEY }}
-          DISCORD_WEBHOOK_URL: ${{ secrets.DISCORD_WEBHOOK_URL }}
           DRY_RUN: ${{ inputs.dry_run }}
-          VERSION: ${{ steps.extract_version.outputs.version }}
+          VERSION: ${{ needs.prepare.outputs.version }}
         run: |
           set -euo pipefail
           export ARTIFACTS_JSON=$(cat repository/publish.config.json)
+          chmod +x workflow/publish/gradlew
           cd workflow/publish
-          chmod +x ./gradlew
-          ./gradlew publishMods
+          ./gradlew "publishCurseforge-${{ matrix.id }}"
+
+  publish-modrinth:
+    needs: prepare
+    if: needs.prepare.outputs.modrinth_enabled == 'true'
+    runs-on: ubuntu-latest
+    name: ${{ matrix.id }} - Publish to Modrinth
+    strategy:
+      fail-fast: false
+      matrix:
+        branch: ${{ fromJson(needs.prepare.outputs.branches) }}
+    steps:
+      - name: Download publish workspace
+        uses: actions/download-artifact@v8
+        with:
+          name: publish-workspace
+
+      - name: Setup Java
+        uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: ${{ env.MOD_PUBLISH_JAVA_VERSION }}
+
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v6
+
+      - name: Publish Modrinth branch
+        shell: bash
+        env:
+          MODRINTH_API_KEY: ${{ secrets.MODRINTH_API_KEY }}
+          DRY_RUN: ${{ inputs.dry_run }}
+          VERSION: ${{ needs.prepare.outputs.version }}
+        run: |
+          set -euo pipefail
+          export ARTIFACTS_JSON=$(cat repository/publish.config.json)
+          chmod +x workflow/publish/gradlew
+          cd workflow/publish
+          ./gradlew publishModrinth-${{ matrix.id }}
+
+  announce-discord:
+    needs: [prepare, publish-curseforge, publish-modrinth]
+    # !cancelled() - run always even if a dependency "failed (checked later)" or was skipped (disabled)
+    # Check that prepare job succeeded
+    # Check that discord is enabled
+    # Check that both modrinth and curseforge jobs succeeded
+    if: |
+      !cancelled() &&
+      needs.prepare.result == 'success' &&
+      needs.prepare.outputs.discord_enabled == 'true' &&
+      (needs.publish-curseforge.result == 'success' || needs.publish-curseforge.result == 'skipped') &&
+      (needs.publish-modrinth.result == 'success' || needs.publish-modrinth.result == 'skipped')
+    runs-on: ubuntu-latest
+    name: Send Discord announcement
+    steps:
+      - name: Download publish workspace
+        uses: actions/download-artifact@v8
+        with:
+          name: publish-workspace
+
+      - name: Setup Java
+        uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: ${{ env.MOD_PUBLISH_JAVA_VERSION }}
+
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v6
+
+      - name: Announce on Discord
+        shell: bash
+        env:
+          DISCORD_WEBHOOK_URL: ${{ secrets.DISCORD_WEBHOOK_URL }}
+          DRY_RUN: ${{ inputs.dry_run }}
+          VERSION: ${{ needs.prepare.outputs.version }}
+        run: |
+          set -euo pipefail
+          export ARTIFACTS_JSON=$(cat repository/publish.config.json)
+          chmod +x workflow/publish/gradlew
+          cd workflow/publish
+          ./gradlew announceDiscord

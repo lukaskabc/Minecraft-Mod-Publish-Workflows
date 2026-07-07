@@ -6,6 +6,7 @@ import kotlin.text.replace
 import cz.lukaskabc.minecraft.ci.publish.*
 import cz.lukaskabc.minecraft.ci.publish.schema.*
 import cz.lukaskabc.minecraft.ci.publish.configurer.*
+import org.hibernate.validator.HibernateValidator
 
 plugins {
     id("me.modmuss50.mod-publish-plugin") // version defined in buildSrc
@@ -17,7 +18,7 @@ fun createEnvProvider(providers: ProviderFactory): EnvProvider {
     val envProvider = EnvProvider(providers)
     if (envProvider.isGithubWorkflow())
         return envProvider
-    return StubEnvProvider(providers)
+    return StubEnvProvider(project)
 }
 
 val envProvider = createEnvProvider(providers)
@@ -33,6 +34,8 @@ val publishConfig: PublishConfigSchema = mapper.readValue(
     envProvider.publishConfig(),
     PublishConfigSchema::class.java
 )
+
+JakartaValidator.validate(publishConfig)
 
 /**
  * When `true` the discord announcement is enabled
@@ -76,7 +79,7 @@ publishMods {
     displayName.set("v${modVersion}")
 
     publishConfig.artifacts.forEach { artifact ->
-        logger.lifecycle("Configuring release for branch ${artifact.branch}")
+        logger.lifecycle("Configuring release for branch ${artifact.branch} with artifact id ${artifact.id}")
         if (publishConfig.curseforgeEnabled) {
             logger.lifecycle("- curseforge")
             cfConfigurer.configure(artifact)
@@ -88,7 +91,7 @@ publishMods {
         if (publishConfig.discordEnabled && publishConfig.discordWebhook.discordBranch == artifact.branch) {
             logger.lifecycle("- discord")
             val discordWebhook = publishConfig.discordWebhook
-            discord {
+            discord("announceDiscord") {
                 webhookUrl.set(envProvider.discordWebhookUrl())
 
                 if (discordWebhook.username != null) {
@@ -120,5 +123,4 @@ publishMods {
             }
         }
     }
-
 }

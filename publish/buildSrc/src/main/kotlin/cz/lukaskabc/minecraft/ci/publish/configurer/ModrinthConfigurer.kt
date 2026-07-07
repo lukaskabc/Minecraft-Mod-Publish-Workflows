@@ -33,7 +33,7 @@ class ModrinthConfigurer(configuration: PlatformConfiguration, modrinthApiKeyPro
     override fun getDependencyType(dep: MrDependency): CfDependency.DependencyType = dep.dependencyType
 
     override fun configure(artifact: Artifact) {
-        context.modrinth("modrinth-${artifact.branch}") {
+        context.modrinth("modrinth-${artifact.id}") {
             accessToken.set(this@ModrinthConfigurer.accessToken)
 
             // the artifact to upload

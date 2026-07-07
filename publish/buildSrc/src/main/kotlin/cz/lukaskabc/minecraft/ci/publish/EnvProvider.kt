@@ -5,7 +5,7 @@ import org.gradle.api.provider.ProviderFactory
 
 const val TRUE = "true"
 
-open class EnvProvider(private val providers: ProviderFactory) {
+open class EnvProvider(protected val providers: ProviderFactory) {
     fun isGithubWorkflow() = env(Env.GITHUB_ACTIONS).getOrElse("") == TRUE
 
     /**

@@ -65,7 +65,7 @@ jobs:
 
   # Executed for each configured branch
   build-artifact:
-    name: Build artifact - ${{ matrix.artifact.branch }}
+    name: Build artifact - ${{ matrix.artifact.id }}
     needs: [load-config, create-release]
     # skip if validate only is enabled
     if: ${{ inputs.validate-only != true }}

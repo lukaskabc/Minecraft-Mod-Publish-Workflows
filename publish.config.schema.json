@@ -43,7 +43,7 @@
       "type": "string",
       "description": "The Curseforge project slug",
       "title": "Curseforge project slug",
-      "pattern": "\\S"
+      "pattern": "\\S+"
     },
     "curseforge_project_id": {
       "type": "string",
@@ -64,7 +64,7 @@
           "type": "string",
           "description": "Updates from which **single** branch should be published to discord. What branch contains the **\"main\"** version of the mod? Enter the **exact** branch name.",
           "title": "Discord branch",
-          "pattern": "\\S"
+          "pattern": "\\S+"
         },
         "username": {
           "type": "string",
@@ -95,7 +95,8 @@
         "announce_nightly_builds": {
           "title": "Announce nightly builds",
           "type": "boolean",
-          "description": "Whether nightly builds should be announced to the nightly webhook"
+          "description": "Whether nightly builds should be announced to the nightly webhook",
+          "default": false
         },
         "nightly_content": {
           "type": "string",
@@ -118,17 +119,23 @@
         "title": "Artifact / Branch",
         "type": "object",
         "properties": {
+          "id": {
+            "title": "Identifier",
+            "type": "string",
+            "description": "Unique identifier of the artifact for purposes of this workflow. The name must be complaint with gradle task naming rules. Must not use `<space>` `/` `\\` `:` `<` `>` `\"` `?` `*` `|`. You should also not use `.` as a leading or trailing character.",
+            "pattern": "^([^ \\/\\\\:<>\"?*|.]|[^ \\/\\\\:<>\"?*|.][^ \\/\\\\:<>\"?*|]*[^ \\/\\\\:<>\"?*|.])$"
+          },
           "file_glob": {
             "title": "File glob",
             "type": "string",
             "description": "The glob for the compiled artifact to be uploaded. Can use `{version}` which will be replaced with the current mod version. E.g. \n`build/libs/*-1.21.1-neoforge-{version}.jar`",
-            "pattern": "\\S"
+            "pattern": "\\S+"
           },
           "branch": {
             "title": "Git Branch",
             "type": "string",
             "description": "The name of the branch from which the artifact is compiled",
-            "pattern": "\\S"
+            "pattern": "\\S+"
           },
           "loaders": {
             "title": "Mod loaders",
@@ -162,7 +169,7 @@
             "title": "Java version",
             "type": "string",
             "description": "The java version required to build the branch and run the mod (e.g. `17`)",
-            "pattern": "\\S"
+            "pattern": "\\S+"
           },
           "version_properties": {
             "title": "File version replacements",
@@ -176,13 +183,13 @@
                   "title": "File path",
                   "type": "string",
                   "description": "The exact relative path to the file (e.g. `gradle.properties`)",
-                  "pattern": "\\S"
+                  "pattern": "\\S+"
                 },
                 "property": {
                   "title": "Property name",
                   "type": "string",
                   "description": "The name of the property which should be set to the version (e.g. `mod_version`)",
-                  "pattern": "\\S"
+                  "pattern": "\\S+"
                 }
               },
               "required": [
@@ -200,6 +207,7 @@
         },
         "additionalProperties": false,
         "required": [
+          "id",
           "branch",
           "loaders",
           "game_versions",
@@ -305,7 +313,7 @@
           "title": "Slug",
           "type": "string",
           "description": "Curseforge project slug",
-          "pattern": "\\S"
+          "pattern": "\\S+"
         },
         "dependency_type": {
           "type": "string",
