@@ -1,4 +1,4 @@
-name: Validates and loads the artifacts from the config file
+name: Validates and loads the config file
 on:
   workflow_call:
     outputs:
