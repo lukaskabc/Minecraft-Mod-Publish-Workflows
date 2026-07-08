@@ -3,11 +3,15 @@ This repository contains reusable GitHub Action workflows that allows to automat
 Internally uses [Mod publish plugin created by Modmuss](https://github.com/modmuss50/mod-publish-plugin).
 The workflows are written with support for multi-branch releases for publishing different jars for different versions and mod loaders.
 
+Available workflows:
+- Release a new version, upload it to Curseforge, Modrinth, Github release and send announcement to Discord webhook
+- Build a nightly (preview) jar and optionally post it to Discord webhook
+
 ___
 
 ## Publication process
 
-The process consists of the following steps:
+The process to release a new version consists of the following steps:
 1. The author manually triggers draft release pipeline with the **version number**
 - A GitHub release draft is created for the main branch
 - For each involved branch:
@@ -32,50 +36,22 @@ The process consists of the following steps:
   Otherwise each released artifact would be announced to the discord, 
   each with the same changelog resulting in spam, which is not desired.
 
-## Setup
+## Release version setup
+Described in [MAIN-RELEASE](./MAIN-RELEASE.md) file
 
-### 1. Create GitHub workflows in your repository
+## Nightly (preview) builds
+Optionally, in addition to the main release workflow, there is pipeline for building preview jars.
 
-In your repository create directory `/.github/workflows/` and copy files from this repository from [`/.github/workflows/template`](.github/workflows/template).
+First configure the main release workflow and include the options for nightly builds in the same configuration file.
 
-- Copy the [`release-trigger-mod-publish.yml`](.github/workflows/template/release-trigger-mod-publish.yml)
-- Choose and copy **ONE OF** [`tag-trigger-draft-release.yml`](.github/workflows/template/tag-trigger-draft-release.yml) or [`manual-trigger-draft-release.yml`](.github/workflows/template/manual-trigger-draft-release.yml)
-- Choose a specific version/ref from this repository (or rather a specific commit hash) and update **BOTH** copied files with the chosen version/hash/ref
+1. Add [keyword-nightly-build.yml](./.github/workflows/template/keyword-nightly-build.yml) to your repository workflows.
+2. Configure the branches and commit keywords that should trigger the nightly build
+3. At the bottom of the file, pin the workflow version and configure the file upload limit for your discord server
+- If the compiled file has bigger size than the configured value, the upload job will be skipped.
+- The downside of not uploading to discord is, that the user needs to be logged in to download the build from GitHub.
 
-### 2. Create a configuration file
-
-In your repository, in the root directory, create file named `publish.config.json`.
-This file has to be on the default branch (where release tags will be created) and contains configuration describing each involved branch.
-
-The config must follow the [`publish.config.schema.json`](publish.config.schema.json) JSON schema.
-
-You can use https://lukaskabc.github.io/Minecraft-Mod-Publish-Workflows/ to create the config contents.
-If you are using a specific version of the workflow, you need to update the link to the schema there to respect your exact version.
-The page must not show any errors, otherwise the config is invalid and the pipeline will fail.
-
-### 3. Setup secrets
-
-Go to your GitHub repository > Settings > Secrets and variables > Actions > **Repository secrets**
-
-Based on platforms you enabled in the configuration file, create the following **Repository secrets**:
-
-- `CURSEFORGE_API_KEY` 
-  - You can create the API key in [account settings at Curseforge](https://legacy.curseforge.com/account/api-tokens).  
-  - Example: `d6bf5492-ac5f-4ee4-ad2d-f863d24ef859`
-- `MODRINTH_API_KEY` 
-  - You can create personal access token in [account settings at Modrinth](https://modrinth.com/settings/pats).
-  - The token MUST have the following scopes:
-    - `Create versions`
-    - `Read versions`
-    - `Write versions`
-    - You should not allow any other scopes
-    - Make sure to not set too short expiration period, after that date, the token will no longer work!
-- `DISCORD_WEBHOOK_URL`
-  - On your discord server pick a channel in which you want the announcements to be posted
-  - Text channel > Edit channel > Integrations > Webhooks
-    - Or server settings > Integrations > Webhooks 
-  - Choose `Copy Webhook URL` to get the URL and set it as the value of the GitHub repository secret
-  - Note that the image and name of the webhook needs to be configured in the `publish.config.json` file
+4. Configure nightly webhook secret (see [MAIN-RELEASE](./MAIN-RELEASE.md) for detailed instructions)
+- `DISCORD_NIGHTLY_WEBHOOK_URL` the webhook URL to which nightly builds should be announced and uploaded
 
 ## Comparison of popular tools
 
