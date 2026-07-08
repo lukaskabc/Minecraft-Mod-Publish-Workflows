@@ -262,4 +262,4 @@ jobs:
           set -euo pipefail
           chmod +x workflow/publish/gradlew
           cd workflow/publish
-          ./gradlew uploadDiscordNightlyFile
+          ./gradlew uploadDiscordNightlyFile -PnightlyUpload=true
