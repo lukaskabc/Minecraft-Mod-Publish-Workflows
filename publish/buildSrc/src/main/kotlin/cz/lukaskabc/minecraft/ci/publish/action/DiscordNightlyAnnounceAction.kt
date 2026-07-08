@@ -62,6 +62,7 @@ class DiscordNightlyAnnounceAction(configuration: ProjectConfiguration) : Projec
         val jobRunUrl = "https://github.com/${envProvider.githubRepository()}/actions/runs/${envProvider.githubRunId()}"
         val title = publishConfig.discordWebhook.nightlyLinkTitle ?: "Download from GitHub"
         val result = GithubPublishResult(envProvider.githubRepository(), -1, jobRunUrl, title)
+        destFile.asFile.parentFile?.mkdirs()
         destFile.asFile.writeText(
             Json.encodeToString(result)
         )
