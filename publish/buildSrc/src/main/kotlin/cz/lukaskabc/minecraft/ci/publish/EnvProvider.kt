@@ -32,10 +32,7 @@ open class EnvProvider(protected val providers: ProviderFactory) {
     open fun nightlyArtifactDir() = envRequired(Env.NIGHTLY_ARTIFACTS_DIR)
 
     open fun execTask(): ExecTask {
-        if (isPropertyEnabled("nightly")) {
-            return ExecTask.NIGHTLY_DISCORD_ANNOUNCE
-        }
-        return ExecTask.PUBLISH_MODS
+        return ExecTask.entries.firstOrNull { isPropertyEnabled(it.propertyName) } ?: ExecTask.PUBLISH_MODS
     }
 
     protected fun isPropertyEnabled(propName: String): Boolean {
