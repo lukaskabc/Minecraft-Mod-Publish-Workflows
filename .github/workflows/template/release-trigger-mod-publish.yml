@@ -1,8 +1,8 @@
 # Copy this file to your repository to /.github/workflows/ directory
 # This workflow is automatically triggered once a GitHub release is RELEASED
-# The workflow will only trigger to NON-PRE-RELEASES
-# If you create a GitHub pre-release it will NOT be uploaded to other platforms, this may be usefull for dev builds.
-# If you change a pre-release to a normal release, it WILL be uploaded.
+#   The workflow will only trigger to NON-PRE-RELEASES
+#   If you create a GitHub pre-release it will NOT be uploaded to other platforms, this may be usefull for dev builds.
+#   If you change a pre-release to a normal release, it WILL be uploaded.
 #
 # Recommended: change the reference to specific version of the workflow called in publish-mod job
 

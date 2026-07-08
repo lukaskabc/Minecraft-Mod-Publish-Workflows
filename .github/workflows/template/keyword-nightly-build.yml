@@ -1,0 +1,98 @@
+# Copy this file to your repository to /.github/workflows/ directory
+# To create a new nightly build, go to your repository > Actions
+#   Select the "Nightly Build on Keyword commit" action in the left and click the "Run workflow" button in the right
+#
+# Alternatively push a commit containig one of configured keywords to a configured branch
+#
+# Recommended:
+#   Change the reference to specific version of the workflow called in nightly-build job
+#   Change branches that triggers this workflow automatically in on.push.branches
+#   Change trigger keywords in env.TRIGGER_KEYWORDS
+
+name: Nightly Build on Keyword commit
+
+on:
+  push:
+    branches:
+      # Add every branch that should be eligible for nightly builds.
+      # Pushes to any other branch never even starts this workflow.
+      - main
+      - develop
+  workflow_dispatch:
+  # Allows to manually start the workflow
+
+env:
+  # One keyword per line. A push is only built if at least one commit message contains one of these (case-insensitive, substring match).
+  # Blank lines are ignored.
+  TRIGGER_KEYWORDS: |
+    [nightly]
+    nightly-build
+
+jobs:
+  check-trigger:
+    name: Check whether the nightly build should run
+    runs-on: ubuntu-latest
+    outputs:
+      should_run: ${{ steps.check.outputs.should_run }}
+    steps:
+      - name: Evaluate commit message keywords
+        id: check
+        shell: bash
+        env:
+          EVENT_NAME: ${{ github.event_name }}
+          KEYWORDS: ${{ env.TRIGGER_KEYWORDS }}
+          COMMITS_JSON: ${{ toJson(github.event.commits) }}
+        run: |
+          set -euo pipefail
+
+          # Writes the "should_run" output and exits.
+          set_result() {
+            echo "should_run=$1" >> "$GITHUB_OUTPUT"
+            echo "$2"
+            exit 0
+          }
+
+          # Manual runs always build, no keyword check
+          if [[ "$EVENT_NAME" == "workflow_dispatch" ]]; then
+            set_result true "Manually triggered via workflow_dispatch, running unconditionally."
+          fi
+
+          # Turn the newline-separated KEYWORDS into a JSON array, dropping blank lines.
+          KEYWORDS_JSON=$(jq --raw-input --slurp \
+            '[split("\n")[] | select(length > 0)]' <<< "$KEYWORDS")
+
+          # True if any commit message contains any keyword (case-insensitive).
+          IS_MATCH=$(jq --null-input \
+            --argjson commits "$COMMITS_JSON" \
+            --argjson keywords "$KEYWORDS_JSON" \
+            '
+              [ $commits[].message as $message
+                | $keywords[] as $keyword
+                | ($message | ascii_downcase | contains($keyword | ascii_downcase))
+              ] | any
+            ')
+
+          if [[ "$IS_MATCH" == "true" ]]; then
+            set_result true "A commit message matched a trigger keyword."
+          else
+            set_result false "No commit message matched any keyword in TRIGGER_KEYWORDS, skipping."
+          fi
+
+  nightly-build:
+    name: Run nightly build
+    needs: check-trigger
+    if: needs.check-trigger.outputs.should_run == 'true'
+    # Recommended: change the reference to a specific version of the reusable workflow
+    # Using a specific version prevents breaking your workflow when a breaking change is introduced
+    # If a specific commit hash is used, improves security
+    # The reference must be changed at TWO places                                       ↓ change this
+    uses: lukaskabc/Minecraft-Mod-Publish-Workflows/.github/workflows/nightly-build.yml@main
+    with:
+      # CHANGE THIS REFERENCE AS WELL
+      # This value must match the reference used in the "uses:" parameter (the value after "@")
+      workflow_ref: "main"
+
+      # Enable or disable discord announcement
+      discord_enabled: true
+    secrets:
+      DISCORD_NIGHTLY_WEBHOOK_URL: ${{ secrets.DISCORD_NIGHTLY_WEBHOOK_URL }}
