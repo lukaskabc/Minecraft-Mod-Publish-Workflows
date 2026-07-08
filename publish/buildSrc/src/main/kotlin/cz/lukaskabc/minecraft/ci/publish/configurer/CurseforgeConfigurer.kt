@@ -1,6 +1,7 @@
 package cz.lukaskabc.minecraft.ci.publish.configurer
 
 
+import cz.lukaskabc.minecraft.ci.publish.ProjectConfiguration
 import cz.lukaskabc.minecraft.ci.publish.schema.Artifact
 import cz.lukaskabc.minecraft.ci.publish.schema.CfDependency
 import cz.lukaskabc.minecraft.ci.publish.schema.Dependencies
@@ -10,7 +11,7 @@ import org.gradle.api.provider.Provider
 import org.gradle.internal.extensions.stdlib.toDefaultLowerCase
 
 
-class CurseforgeConfigurer(configuration: PlatformConfiguration, curseforgeApiKeyProvider: Provider<String>) :
+class CurseforgeConfigurer(configuration: ProjectConfiguration, curseforgeApiKeyProvider: Provider<String>) :
     PlatformConfigurer<CurseforgeDependency, CfDependency>(configuration, curseforgeApiKeyProvider) {
 
     override fun isEnabled(): Boolean = publishConfig.curseforgeEnabled

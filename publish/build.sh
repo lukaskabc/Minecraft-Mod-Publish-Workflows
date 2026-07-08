@@ -1,6 +1,6 @@
 set -euo pipefail
 
-export ARTIFACTS_JSON=$(cat testing.publish.config.json)
+export CONFIG_JSON=$(cat testing.publish.config.json)
 export VERSION=0.5.2
 export CURSEFORGE_API_KEY=cf_key
 export MODRINTH_API_KEY=mr_key

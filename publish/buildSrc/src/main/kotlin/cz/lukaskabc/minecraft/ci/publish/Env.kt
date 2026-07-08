@@ -4,6 +4,9 @@ object Env {
     const val CURSEFORGE_API_KEY = "CURSEFORGE_API_KEY"
     const val MODRINTH_API_KEY = "MODRINTH_API_KEY"
     const val DISCORD_WEBHOOK_URL = "DISCORD_WEBHOOK_URL"
+    const val DISCORD_NIGHTLY_WEBHOOK_URL = "DISCORD_NIGHTLY_WEBHOOK_URL"
+    const val GITHUB_REPOSITORY = "GITHUB_REPOSITORY"
+    const val GITHUB_RUN_ID = "GITHUB_RUN_ID"
 
     /**
      * Automatically `true` when running inside GitHub workflow
@@ -25,5 +28,5 @@ object Env {
     /**
      * JSON with publication configuration (`publish.config.json`)
      */
-    const val ARTIFACTS_JSON = "ARTIFACTS_JSON"
+    const val CONFIG_JSON = "CONFIG_JSON"
 }

@@ -102,6 +102,11 @@
           "type": "string",
           "title": "Content message for Nightly build",
           "description": "Set the content message, the commit message is **always appended** after this content. Use `{version}` as a placeholder for the nightly version. Defaults to \n`v{version} Nightly build available!`"
+        },
+        "nightly_link_title": {
+          "type": "string",
+          "title": "Nightly GitHub link title",
+          "description": "The text of the link to GitHub workflow run containing the nightly build. Defaults to: `Download from GitHub`"
         }
       },
       "additionalProperties": false,

@@ -15,7 +15,7 @@ on:
         type: boolean
         default: false
     secrets:
-      DISCORD_WEBHOOK_URL:
+      DISCORD_NIGHTLY_WEBHOOK_URL:
         description: "Discord webhook URL to post the nightly build announcement to, required if the discord is enabled."
         required: false
 
@@ -72,7 +72,7 @@ jobs:
           echo "artifacts=$ARTIFACTS" >> "$GITHUB_OUTPUT"
 
   compile-artifact:
-    name: Build artifact - ${{ matrix.artifact.branch }}
+    name: ${{ matrix.artifact.id }} - Build artifact
     needs: select-artifacts
     runs-on: ubuntu-latest
     strategy:
@@ -85,6 +85,7 @@ jobs:
       - name: Checkout caller repository
         uses: actions/checkout@v7
         with:
+          # Ref from the triggering event
           ref: ${{ github.ref }}
           fetch-depth: 1
           path: repository
@@ -104,7 +105,7 @@ jobs:
           java-version: ${{ matrix.artifact.java_version }}
 
       - name: Configure git identity
-        # Official github actions bot account required by set-version.sh altough not used to push
+        # Official github actions bot account required by set-version.sh although not used to push
         run: |
           git config --global user.name "github-actions[bot]"
           git config --global user.email "41898282+github-actions[bot]@users.noreply.github.com"
@@ -171,9 +172,9 @@ jobs:
           fi
 
       - name: Upload jar as artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
-          name: nightly-build-${{ matrix.artifact.branch }}-${{ steps.version.outputs.datetime }}
+          name: nightly-build-${{ matrix.artifact.id }}-${{ steps.version.outputs.datetime }}
           path: repository/${{ steps.asset.outputs.glob }}
           if-no-files-found: error
 
@@ -182,23 +183,31 @@ jobs:
     needs: compile-artifact
     runs-on: ubuntu-latest
     steps:
-      - name: Send Webhook
+      - name: Checkout workflow repository
+        # Checksout the repository of this workflow to use the files
+        uses: actions/checkout@v7
+        with:
+          repository: lukaskabc/Minecraft-Mod-Publish-Workflows
+          ref: ${{ inputs.workflow_ref }}
+          path: workflow
+          fetch-depth: 1
+
+      - name: Setup Java
+        uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: ${{ env.MOD_PUBLISH_JAVA_VERSION }}
+
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v6
+
+      - name: Announce Nightly build on Discord
         shell: bash
         env:
-          DISCORD_WEBHOOK_URL: ${{ secrets.DISCORD_WEBHOOK_URL }}
+          DISCORD_NIGHTLY_WEBHOOK_URL: ${{ secrets.DISCORD_NIGHTLY_WEBHOOK_URL }}
+          CONFIG_JSON: ${{ needs.load-config.outputs.config }}
         run: |
           set -euo pipefail
-
-          if [[ -z "$DISCORD_WEBHOOK_URL" ]]; then
-            echo "No DISCORD_WEBHOOK_URL secret configured, skipping Discord notification."
-            exit 0
-          fi
-
-          # Construct the URL pointing directly to the workflow run containing the uploaded artifacts.
-          # GitHub Actions artifacts require an authenticated download (there's no stable public
-          # direct-download URL), so the run page - where all of them are listed - is the link.
-          WORKFLOW_URL="https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}"
-
-          curl -H "Content-Type: application/json" \
-               -d "{\"content\": \"**Nightly Build Successful!** :new_moon:\nDownload the compiled jar artifacts here: $WORKFLOW_URL\"}" \
-               "$DISCORD_WEBHOOK_URL"
+          chmod +x workflow/publish/gradlew
+          cd workflow/publish
+          ./gradlew announceDiscord -Pnightly=true

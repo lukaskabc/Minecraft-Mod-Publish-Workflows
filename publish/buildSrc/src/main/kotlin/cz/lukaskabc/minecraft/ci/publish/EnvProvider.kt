@@ -16,13 +16,28 @@ open class EnvProvider(protected val providers: ProviderFactory) {
 
     open fun modVersion() = envRequired(Env.VERSION)
 
-    open fun publishConfig() = envRequired(Env.ARTIFACTS_JSON)
+    open fun publishConfig() = envRequired(Env.CONFIG_JSON)
 
-    fun curseforgeToken() = envRequired(Env.CURSEFORGE_API_KEY)
+    open fun curseforgeToken() = envRequired(Env.CURSEFORGE_API_KEY)
 
-    fun modrinthToken() = envRequired(Env.MODRINTH_API_KEY)
+    open fun modrinthToken() = envRequired(Env.MODRINTH_API_KEY)
 
-    fun discordWebhookUrl() = envRequired(Env.DISCORD_WEBHOOK_URL)
+    open fun discordWebhookUrl() = envRequired(Env.DISCORD_WEBHOOK_URL)
+    open fun discordNightlyWebhookUrl() = envRequired(Env.DISCORD_NIGHTLY_WEBHOOK_URL)
+
+    open fun githubRepository() = envRequired(Env.GITHUB_REPOSITORY)
+    open fun githubRunId() = envRequired(Env.GITHUB_RUN_ID)
+
+    open fun execTask(): ExecTask {
+        if (isPropertyEnabled("nightly")) {
+            return ExecTask.NIGHTLY_DISCORD_ANNOUNCE
+        }
+        return ExecTask.PUBLISH_MODS
+    }
+
+    protected fun isPropertyEnabled(propName: String): Boolean {
+        return providers.gradleProperty(propName).orNull == "true"
+    }
 
     protected fun env(varName: String): Provider<String> {
         return providers.environmentVariable(varName)

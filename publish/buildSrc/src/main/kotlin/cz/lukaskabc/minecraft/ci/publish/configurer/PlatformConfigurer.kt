@@ -1,13 +1,12 @@
 package cz.lukaskabc.minecraft.ci.publish.configurer
 
+import cz.lukaskabc.minecraft.ci.publish.ProjectAware
+import cz.lukaskabc.minecraft.ci.publish.ProjectConfiguration
 import cz.lukaskabc.minecraft.ci.publish.schema.Artifact
 import cz.lukaskabc.minecraft.ci.publish.schema.CfDependency
 import cz.lukaskabc.minecraft.ci.publish.schema.Dependencies
-import cz.lukaskabc.minecraft.ci.publish.schema.PublishConfigSchema
-import me.modmuss50.mpp.ModPublishExtension
 import me.modmuss50.mpp.PlatformDependency
 import me.modmuss50.mpp.PlatformDependencyContainer
-import org.gradle.api.Project
 import org.gradle.api.provider.Provider
 import java.io.File
 
@@ -18,19 +17,11 @@ fun Artifact.jarNameGlob(modVersion: String): String {
 
 fun CfDependency.DependencyType.asPlatform() = PlatformDependency.DependencyType.valueOf(name)
 
-abstract class PlatformConfigurer<PD : PlatformDependency, D> {
-    protected val project: Project
-    protected val context: ModPublishExtension
-    protected val modVersion: String
-    protected val publishConfig: PublishConfigSchema
-
+abstract class PlatformConfigurer<PD : PlatformDependency, D> : ProjectAware {
     protected val accessToken: String
 
-    constructor(configuration: PlatformConfiguration, accessTokenProvider: Provider<String>) {
-        this.project = configuration.project
-        this.context = configuration.context
-        this.modVersion = configuration.modVersion
-        this.publishConfig = configuration.publishConfig
+    constructor(configuration: ProjectConfiguration, accessTokenProvider: Provider<String>)
+            : super(configuration) {
         this.accessToken = if (isEnabled()) accessTokenProvider.get() else "Platform disabled"
     }
 

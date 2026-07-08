@@ -23,6 +23,8 @@ dependencies {
     implementation("org.hibernate.validator:hibernate-validator:$hibernateValidatorVersion")
     implementation("org.glassfish.expressly:expressly:6.0.0")
     implementation("org.hibernate.validator:hibernate-validator-cdi:$hibernateValidatorVersion")
+
+    implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.11.0")
 }
 
 /**

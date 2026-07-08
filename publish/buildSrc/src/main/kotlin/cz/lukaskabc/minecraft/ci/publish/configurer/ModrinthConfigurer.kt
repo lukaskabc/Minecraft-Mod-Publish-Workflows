@@ -1,5 +1,6 @@
 package cz.lukaskabc.minecraft.ci.publish.configurer
 
+import cz.lukaskabc.minecraft.ci.publish.ProjectConfiguration
 import cz.lukaskabc.minecraft.ci.publish.schema.Artifact
 import cz.lukaskabc.minecraft.ci.publish.schema.CfDependency
 import cz.lukaskabc.minecraft.ci.publish.schema.Dependencies
@@ -10,7 +11,7 @@ import org.gradle.api.provider.Provider
 import org.gradle.internal.extensions.stdlib.toDefaultLowerCase
 
 
-class ModrinthConfigurer(configuration: PlatformConfiguration, modrinthApiKeyProvider: Provider<String>) :
+class ModrinthConfigurer(configuration: ProjectConfiguration, modrinthApiKeyProvider: Provider<String>) :
     PlatformConfigurer<ModrinthDependency, MrDependency>(configuration, modrinthApiKeyProvider) {
 
     override fun isEnabled(): Boolean = publishConfig.modrinthEnabled

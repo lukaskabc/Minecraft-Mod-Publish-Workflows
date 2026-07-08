@@ -32,7 +32,7 @@ jobs:
     name: Checkout repositories, download release assets and compute the publish matrix
     outputs:
       version: ${{ steps.extract_version.outputs.version }}
-      branches: ${{ steps.matrix.outputs.branches }}
+      artifact_ids: ${{ steps.matrix.outputs.artifact_ids }}
       curseforge_enabled: ${{ steps.matrix.outputs.curseforge_enabled }}
       modrinth_enabled: ${{ steps.matrix.outputs.modrinth_enabled }}
       discord_enabled: ${{ steps.matrix.outputs.discord_enabled }}
@@ -79,12 +79,12 @@ jobs:
       - name: Prepare gradle wrapper
         run: chmod +x workflow/publish/gradlew
 
-      - name: Compute branch matrix and enabled platforms
+      - name: Compute artifact matrix and enabled platforms
         id: matrix
         run: |
           set -euo pipefail
           CONFIG=repository/publish.config.json
-          echo "branches=$(jq -c '[.artifacts[].branch]' "$CONFIG")" >> "$GITHUB_OUTPUT"
+          echo "artifact_ids=$(jq -c '[.artifacts[].id]' "$CONFIG")" >> "$GITHUB_OUTPUT"
           echo "curseforge_enabled=$(jq -r '.curseforge_enabled' "$CONFIG")" >> "$GITHUB_OUTPUT"
           echo "modrinth_enabled=$(jq -r '.modrinth_enabled' "$CONFIG")" >> "$GITHUB_OUTPUT"
           echo "discord_enabled=$(jq -r '.discord_enabled' "$CONFIG")" >> "$GITHUB_OUTPUT"
@@ -108,7 +108,7 @@ jobs:
       # Allow some tasks to succeed and do not cancel others if one fails
       fail-fast: false
       matrix:
-        branch: ${{ fromJson(needs.prepare.outputs.branches) }}
+        id: ${{ fromJson(needs.prepare.outputs.artifact_ids) }}
     steps:
       - name: Download publish workspace
         uses: actions/download-artifact@v8
@@ -124,7 +124,7 @@ jobs:
       - name: Setup Gradle
         uses: gradle/actions/setup-gradle@v6
 
-      - name: Publish CurseForge branch
+      - name: ${{ matrix.id }} - Publish CurseForge artifact
         shell: bash
         env:
           CURSEFORGE_API_KEY: ${{ secrets.CURSEFORGE_API_KEY }}
@@ -145,7 +145,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        branch: ${{ fromJson(needs.prepare.outputs.branches) }}
+        id: ${{ fromJson(needs.prepare.outputs.artifact_ids) }}
     steps:
       - name: Download publish workspace
         uses: actions/download-artifact@v8
@@ -161,7 +161,7 @@ jobs:
       - name: Setup Gradle
         uses: gradle/actions/setup-gradle@v6
 
-      - name: Publish Modrinth branch
+      - name: ${{ matrix.id }} - Publish Modrinth artifact
         shell: bash
         env:
           MODRINTH_API_KEY: ${{ secrets.MODRINTH_API_KEY }}
@@ -211,7 +211,7 @@ jobs:
           VERSION: ${{ needs.prepare.outputs.version }}
         run: |
           set -euo pipefail
-          export ARTIFACTS_JSON=$(cat repository/publish.config.json)
+          export CONFIG_JSON=$(cat repository/publish.config.json)
           chmod +x workflow/publish/gradlew
           cd workflow/publish
           ./gradlew announceDiscord

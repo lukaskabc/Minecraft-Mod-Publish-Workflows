@@ -16,7 +16,7 @@
   "artifacts": [
     {
       "id": "-MYID-1.21.1-something+1,2,3",
-      "file_glob": "build/libs/*-1.21.1-neoforge-{version}.jar",
+      "file_glob": "build/libs/*.jar",
       "branch": "1.21.1-something+1,2,3",
       "loaders": [
         "neoforge"
@@ -29,7 +29,7 @@
     },
     {
       "id": "SOME-ID-main",
-      "file_glob": "build/libs/*-1.21.1-neoforge-{version}.jar",
+      "file_glob": "build/libs/*.jar",
       "branch": "main",
       "loaders": [
         "neoforge"
