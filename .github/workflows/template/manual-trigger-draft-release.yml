@@ -16,7 +16,7 @@ on:
         type: string
       validate-only:
         description: Only parse and validate the file publish.config.json
-        required: true
+        required: false
         type: boolean
         default: false
 

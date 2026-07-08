@@ -11,7 +11,7 @@ on:
         type: string
       max_file_size:
         description: "Maximum file size in MB allowed for Discord upload, defaults to 10MB, if the compiled artifact does not meets the requirement, the upload job is skipped."
-        required: true
+        required: false
         type: number
         default: 10
     secrets:
