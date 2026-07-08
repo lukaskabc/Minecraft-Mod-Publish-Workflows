@@ -91,8 +91,5 @@ jobs:
       # CHANGE THIS REFERENCE AS WELL
       # This value must match the reference used in the "uses:" parameter (the value after "@")
       workflow_ref: "main"
-
-      # Enable or disable discord announcement
-      discord_enabled: true
     secrets:
       DISCORD_NIGHTLY_WEBHOOK_URL: ${{ secrets.DISCORD_NIGHTLY_WEBHOOK_URL }}

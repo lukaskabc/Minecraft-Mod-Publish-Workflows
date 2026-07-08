@@ -6,7 +6,9 @@
     "client",
     "server",
     "curseforge_enabled",
-    "modrinth_enabled"
+    "modrinth_enabled",
+    "discord_enabled",
+    "discord_announce_nightly_builds"
   ],
   "properties": {
     "client": {
@@ -35,8 +37,14 @@
     },
     "discord_enabled": {
       "type": "boolean",
-      "description": "Whether the artifact(s) should be published to Discord",
+      "description": "Whether the normal release artifact(s) should be published to Discord",
       "title": "Announce on Discord",
+      "default": false
+    },
+    "discord_announce_nightly_builds": {
+      "title": "Announce nightly builds to discord",
+      "type": "boolean",
+      "description": "Whether nightly builds should be announced to the nightly webhook",
       "default": false
     },
     "curseforge_project_slug": {
@@ -92,12 +100,6 @@
           "description": "Color of the left line used in the discord embed. Full `RRGGBB` hex color prefixed with a `#`.",
           "pattern": "^#[0-9a-fA-F]{6}$"
         },
-        "announce_nightly_builds": {
-          "title": "Announce nightly builds",
-          "type": "boolean",
-          "description": "Whether nightly builds should be announced to the nightly webhook",
-          "default": false
-        },
         "nightly_content": {
           "type": "string",
           "title": "Content message for Nightly build",
@@ -111,8 +113,7 @@
       },
       "additionalProperties": false,
       "required": [
-        "discord_branch",
-        "announce_nightly_builds"
+        "discord_branch"
       ]
     },
     "artifacts": {
