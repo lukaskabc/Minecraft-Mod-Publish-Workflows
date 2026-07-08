@@ -7,6 +7,11 @@ Available workflows:
 - Release a new version, upload it to Curseforge, Modrinth, Github release and send announcement to Discord webhook
 - Build a nightly (preview) jar and optionally post it to Discord webhook
 
+Requirements for the mod repository:
+- Installed [Gradle wrapper](https://docs.gradle.org/current/userguide/gradle_wrapper.html)
+- Buildable with `gradlew build`
+- Project version must be set in properties or toml file (`some_property=value` or `property="value"`)
+
 ___
 
 ## Publication process
