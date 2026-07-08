@@ -22,6 +22,7 @@ permissions:
 jobs:
   # Extracts only the version (strips leading "v") from the tag name
   extract-version:
+    name: "Extract the version number"
     runs-on: ubuntu-latest
     outputs:
       version: ${{ steps.strip-v.outputs.version }}
@@ -34,6 +35,7 @@ jobs:
           echo "version=${TAG#v}" >> "$GITHUB_OUTPUT"
 
   draft-release:
+    name: Draft new GitHub release
     needs: extract-version
     # Recommended: change the reference to a specific version of the reusable workflow
     # Using a specific version prevents breaking your workflow when a breaking change is introduced

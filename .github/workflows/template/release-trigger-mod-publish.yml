@@ -13,6 +13,7 @@ on:
 
 jobs:
   publish-mod:
+    name: Upload the mod to several platforms
     # Recommended: change the reference to a specific version of the reusable workflow
     # Using a specific version prevents breaking your workflow when a breaking change is introduced
     # If a specific commit hash is used, improves security
