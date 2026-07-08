@@ -29,4 +29,6 @@ object Env {
      * JSON with publication configuration (`publish.config.json`)
      */
     const val CONFIG_JSON = "CONFIG_JSON"
+
+    const val NIGHTLY_ARTIFACTS_DIR = "NIGHTLY_ARTIFACTS_DIR"
 }

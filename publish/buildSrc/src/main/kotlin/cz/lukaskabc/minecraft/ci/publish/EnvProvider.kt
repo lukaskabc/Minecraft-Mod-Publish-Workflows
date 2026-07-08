@@ -28,6 +28,8 @@ open class EnvProvider(protected val providers: ProviderFactory) {
     open fun githubRepository() = envRequired(Env.GITHUB_REPOSITORY)
     open fun githubRunId() = envRequired(Env.GITHUB_RUN_ID)
 
+    open fun nightlyArtifactDir() = envRequired(Env.NIGHTLY_ARTIFACTS_DIR)
+
     open fun execTask(): ExecTask {
         if (isPropertyEnabled("nightly")) {
             return ExecTask.NIGHTLY_DISCORD_ANNOUNCE

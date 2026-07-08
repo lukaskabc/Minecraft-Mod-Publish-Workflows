@@ -5,8 +5,7 @@ import kotlin.system.exitProcess
 import cz.lukaskabc.minecraft.ci.publish.*
 import cz.lukaskabc.minecraft.ci.publish.action.*
 import cz.lukaskabc.minecraft.ci.publish.schema.*
-import cz.lukaskabc.minecraft.ci.publish.configurer.*
-import me.modmuss50.mpp.ModPublishExtension
+import cz.lukaskabc.minecraft.ci.publish.task.*
 
 plugins {
     id("me.modmuss50.mod-publish-plugin") // version defined in buildSrc
@@ -50,10 +49,20 @@ publishMods {
     val actionProvider: ActionProvider = when (execTask) {
         ExecTask.PUBLISH_MODS -> PublishReleaseAction(configuration)
         ExecTask.NIGHTLY_DISCORD_ANNOUNCE -> DiscordNightlyAnnounceAction(configuration)
+        /* Handled by a standalone task */
+        ExecTask.DISCORD_NIGHTLY_FILE_UPLOAD -> NoOpActionProvider()
         else -> {
             throw IllegalStateException("Unknown execution task: ${execTask.name}")
         }
     }
 
     actionProvider.get().execute(this)
+}
+
+tasks.register<DiscordNightlyFileUploadTask>("uploadDiscordNightlyFile") {
+    discordEnabled = publishConfig.discordEnabled
+    val artifactDirPath = envProvider.nightlyArtifactDir()
+    artifactsDir = project.layout.projectDirectory.dir(artifactDirPath)
+    webhookUrl = envProvider.discordNightlyWebhookUrl()
+    webhookConfig = publishConfig.discordWebhook
 }
