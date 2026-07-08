@@ -47,6 +47,7 @@ jsonSchema2Pojo {
     includeJsr303Annotations = true
     includeJsr305Annotations = true
     useJakartaValidation = true
+    serializable = true
     targetPackage = "cz.lukaskabc.minecraft.ci.publish.schema"
 }
 

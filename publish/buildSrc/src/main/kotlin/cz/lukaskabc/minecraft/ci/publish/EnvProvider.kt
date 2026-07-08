@@ -1,5 +1,6 @@
 package cz.lukaskabc.minecraft.ci.publish
 
+import org.gradle.api.GradleException
 import org.gradle.api.provider.Provider
 import org.gradle.api.provider.ProviderFactory
 
@@ -48,7 +49,7 @@ open class EnvProvider(protected val providers: ProviderFactory) {
     protected fun envRequired(varName: String): String {
         val value = providers.environmentVariable(varName).orNull
         if (value != null) return value
-        throw Exception("Required environment variable $varName is not set!")
+        throw GradleException("Required environment variable $varName is not set!")
     }
 
 }

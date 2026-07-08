@@ -7,6 +7,7 @@ import cz.lukaskabc.minecraft.ci.publish.schema.CfDependency
 import cz.lukaskabc.minecraft.ci.publish.schema.Dependencies
 import me.modmuss50.mpp.PlatformDependency
 import me.modmuss50.mpp.PlatformDependencyContainer
+import org.gradle.api.GradleException
 import org.gradle.api.provider.Provider
 import java.io.File
 
@@ -57,6 +58,6 @@ abstract class PlatformConfigurer<PD : PlatformDependency, D> : ProjectAware {
             include(fileNameGlob)
         }
         return artifacts.files.firstOrNull()
-            ?: throw Exception("Failed to match artifact file for $fileNameGlob (original glob: $glob)")
+            ?: throw GradleException("Failed to match artifact file for $fileNameGlob (original glob: $glob)")
     }
 }

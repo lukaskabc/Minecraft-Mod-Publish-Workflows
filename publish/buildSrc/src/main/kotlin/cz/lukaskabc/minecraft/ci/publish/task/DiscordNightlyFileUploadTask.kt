@@ -1,16 +1,20 @@
 package cz.lukaskabc.minecraft.ci.publish.task
 
 import cz.lukaskabc.minecraft.ci.publish.schema.DiscordWebhook
+import kotlinx.serialization.encodeToString
+import me.modmuss50.mpp.platforms.discord.DiscordAPI
 import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.MultipartBody
 import okhttp3.OkHttpClient
 import okhttp3.Request
 import okhttp3.RequestBody.Companion.asRequestBody
 import org.gradle.api.DefaultTask
+import org.gradle.api.GradleException
 import org.gradle.api.file.DirectoryProperty
 import org.gradle.api.provider.Property
 import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.InputDirectory
+import org.gradle.api.tasks.Internal
 import org.gradle.api.tasks.Optional
 import org.gradle.api.tasks.TaskAction
 import java.io.File
@@ -31,53 +35,70 @@ abstract class DiscordNightlyFileUploadTask : DefaultTask() {
     @get:Input
     abstract val webhookConfig: Property<DiscordWebhook>
 
-    private val client by lazy {
-        OkHttpClient.Builder()
-            .callTimeout(2, TimeUnit.MINUTES)
-            .build()
-    }
-
     init {
         group = "publishing"
         description = "Uploads nightly build artifact to Discord via the Webhook."
 
-        // Since this task performs an external network side-effect, it should never be cached or considered up-to-date.
+        // External network actions must never be cached or assumed up-to-date
         outputs.upToDateWhen { false }
     }
 
     @TaskAction
     fun runUpload() {
+        if (!discordEnabled.getOrElse(false)) {
+            throw GradleException("Discord is not enabled, skipping nightly file upload")
+        }
+
+        val directory = artifactsDir.orNull?.asFile
+        if (directory == null || !directory.exists()) {
+            throw GradleException("Artifacts directory is not set or does not exist, Discord file upload failed")
+        }
+
+        val files = directory.listFiles()?.filter { it.isFile } ?: emptyList()
+        if (files.isEmpty()) {
+            throw GradleException("No files found in ${directory.absolutePath}, Discord file upload failed")
+        }
+
+        if (!webhookUrl.isPresent || webhookUrl.get().isBlank()) {
+            throw GradleException("Discord nightly webhook URL is empty, Discord file upload failed")
+        }
+
+        val client = OkHttpClient.Builder()
+            .connectTimeout(30, TimeUnit.SECONDS)
+            .readTimeout(30, TimeUnit.SECONDS)
+            .writeTimeout(2, TimeUnit.MINUTES)
+            .build()
+
         try {
-            if (!discordEnabled.getOrElse(false)) {
-                throw IllegalStateException("Discord is not enabled, skipping nightly file upload")
-            }
-
-            val directory = artifactsDir.orNull?.asFile
-            if (directory == null || !directory.exists()) {
-                throw IllegalStateException("Artifacts directory is not set or does not exist, Discord file upload failed")
-            }
-
-            val files = directory.listFiles()?.filter { it.isFile } ?: emptyList()
-            if (files.isEmpty()) {
-                throw IllegalStateException("No files found in ${directory.absolutePath}, Discord file upload failed")
-            }
-
-            val url = webhookUrl.getOrElse("")
-            if (url.isBlank()) {
-                throw IllegalStateException("Discord nightly webhook URL is empty, Discord file upload failed")
-            }
-
-            uploadFiles(url, files)
-        } catch (e: Exception) {
-            logger.error("Discord file upload failed: ${e.message}")
-            throw e
+            uploadFiles(client, webhookUrl.get(), files)
+        } finally {
+            client.dispatcher.executorService.shutdown()
+            client.connectionPool.evictAll()
         }
     }
 
-    private fun uploadFiles(webhookUrl: String, files: List<File>) {
-        // Discord allows up to 10 attachments per message; chunk just in case a matrix grows.
+    private fun uploadFiles(client: OkHttpClient, webhookUrl: String, files: List<File>) {
+        val config = webhookConfig.orNull
+        val username = config?.username
+        val avatarUrl = config?.avatarUrl
+
+        val payloadJson = if (!username.isNullOrBlank() || !avatarUrl.isNullOrBlank()) {
+            val webhookPayload = DiscordAPI.Webhook(
+                username = username,
+                avatarUrl = avatarUrl
+            )
+            DiscordAPI.httpContext.json.encodeToString(webhookPayload)
+        } else {
+            null
+        }
+
+        // Discord allows a max of 10 attachments per webhook message chunk
         files.chunked(10).forEach { chunk ->
             val body = MultipartBody.Builder().setType(MultipartBody.FORM).apply {
+                if (payloadJson != null) {
+                    addFormDataPart("payload_json", payloadJson)
+                }
+
                 chunk.forEachIndexed { index, file ->
                     addFormDataPart(
                         "files[$index]",
@@ -91,7 +112,7 @@ abstract class DiscordNightlyFileUploadTask : DefaultTask() {
 
             client.newCall(request).execute().use { response ->
                 if (!response.isSuccessful) {
-                    throw IllegalStateException("Discord file upload failed: ${response.code} ${response.body?.toString()}")
+                    throw GradleException("Discord file upload failed: ${response.code} ${response.body?.string()}")
                 }
             }
         }

@@ -52,7 +52,7 @@ publishMods {
         /* Handled by a standalone task */
         ExecTask.DISCORD_NIGHTLY_FILE_UPLOAD -> NoOpActionProvider()
         else -> {
-            throw IllegalStateException("Unknown execution task: ${execTask.name}")
+            throw GradleException("Unknown execution task: ${execTask.name}")
         }
     }
 

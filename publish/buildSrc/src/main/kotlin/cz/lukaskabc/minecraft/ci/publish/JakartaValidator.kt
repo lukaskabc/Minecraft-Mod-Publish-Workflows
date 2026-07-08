@@ -2,13 +2,14 @@ package cz.lukaskabc.minecraft.ci.publish
 
 import jakarta.validation.Validation
 import jakarta.validation.Validator
+import org.gradle.api.GradleException
 
 object JakartaValidator {
     private val validator: Validator = Validation.buildDefaultValidatorFactory().validator
 
     /**
      * Validates the given object.
-     * Throws an IllegalArgumentException if any validation constraints fail.
+     * Throws an GradleException if any validation constraints fail.
      */
     fun <T : Any> validate(obj: T) {
         val violations = validator.validate(obj)
@@ -22,7 +23,7 @@ object JakartaValidator {
                 }
             }
 
-            throw IllegalArgumentException(errorMessage)
+            throw GradleException(errorMessage)
         }
     }
 }

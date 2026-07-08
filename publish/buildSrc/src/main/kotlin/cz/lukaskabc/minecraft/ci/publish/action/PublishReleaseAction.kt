@@ -7,6 +7,7 @@ import cz.lukaskabc.minecraft.ci.publish.configurer.DiscordConfigurer
 import cz.lukaskabc.minecraft.ci.publish.configurer.ModrinthConfigurer
 import me.modmuss50.mpp.ModPublishExtension
 import org.gradle.api.Action
+import org.gradle.api.GradleException
 
 class PublishReleaseAction(configuration: ProjectConfiguration) : ProjectAware(configuration), ActionProvider {
     val changelogFile = project.file("changelog.md")
@@ -29,7 +30,7 @@ class PublishReleaseAction(configuration: ProjectConfiguration) : ProjectAware(c
             .none { it.branch == publishConfig.discordWebhook.discordBranch }
 
         if (discordBranchMissing) {
-            throw Exception("Unable to configure Discord publication, discord branch '${publishConfig.discordWebhook.discordBranch}' is not being published!")
+            throw GradleException("Unable to configure Discord publication, discord branch '${publishConfig.discordWebhook.discordBranch}' is not being published!")
         }
     }
 

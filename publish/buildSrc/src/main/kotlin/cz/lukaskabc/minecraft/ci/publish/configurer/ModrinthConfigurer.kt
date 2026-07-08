@@ -7,6 +7,7 @@ import cz.lukaskabc.minecraft.ci.publish.schema.Dependencies
 import cz.lukaskabc.minecraft.ci.publish.schema.MrDependency
 import me.modmuss50.mpp.platforms.modrinth.ModrinthDependency
 import me.modmuss50.mpp.platforms.modrinth.ModrinthEnvironment
+import org.gradle.api.GradleException
 import org.gradle.api.provider.Provider
 import org.gradle.internal.extensions.stdlib.toDefaultLowerCase
 
@@ -27,7 +28,7 @@ class ModrinthConfigurer(configuration: ProjectConfiguration, modrinthApiKeyProv
         } else if (dep.slug != null) {
             platformDep.slug.set(dep.slug)
         } else {
-            throw Exception("No ID either slug configured for Modrinth dependency")
+            throw GradleException("No ID either slug configured for Modrinth dependency")
         }
     }
 
@@ -55,7 +56,7 @@ class ModrinthConfigurer(configuration: ProjectConfiguration, modrinthApiKeyProv
                 2 -> ModrinthEnvironment.SERVER_ONLY
                 3 -> ModrinthEnvironment.CLIENT_AND_SERVER
                 else -> {
-                    throw Exception("Unexpected side configuration: server ${publishConfig.server} | client ${publishConfig.client}")
+                    throw GradleException("Unexpected side configuration: server ${publishConfig.server} | client ${publishConfig.client}")
                 }
             }
 
