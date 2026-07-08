@@ -22,6 +22,10 @@ on:
 env:
   MOD_PUBLISH_JAVA_VERSION: 25
 
+concurrency:
+  group: nightly-build-discord
+  queue: max
+
 jobs:
   resolve-default-branch:
     name: Resolve repository default branch
@@ -186,9 +190,6 @@ jobs:
     name: Post download link to Discord
     needs: [load-config, compile-artifact]
     runs-on: ubuntu-latest
-    concurrency:
-      group: nightly-build-discord
-      queue: max
     steps:
       - name: Checkout workflow repository
         # Checksout the repository of this workflow to use the files
@@ -224,9 +225,6 @@ jobs:
     name: Upload the artifact to Discord
     needs: [load-config, compile-artifact, notify-discord]
     runs-on: ubuntu-latest
-    concurrency:
-      group: nightly-build-discord
-      queue: max
     steps:
       - name: Checkout workflow repository
         # Checksout the repository of this workflow to use the files
