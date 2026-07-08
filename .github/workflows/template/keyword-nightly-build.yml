@@ -91,5 +91,6 @@ jobs:
       # CHANGE THIS REFERENCE AS WELL
       # This value must match the reference used in the "uses:" parameter (the value after "@")
       workflow_ref: "main"
+      max_file_size: 10
     secrets:
       DISCORD_NIGHTLY_WEBHOOK_URL: ${{ secrets.DISCORD_NIGHTLY_WEBHOOK_URL }}

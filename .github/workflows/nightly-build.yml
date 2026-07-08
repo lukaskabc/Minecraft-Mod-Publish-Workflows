@@ -9,6 +9,11 @@ on:
         description: "Reference for this workflow to pin version-dependent calls"
         required: true
         type: string
+      max_file_size:
+        description: "Maximum file size in MB allowed for Discord upload, defaults to 10MB, if the compiled artifact does not meets the requirement, the upload job is skipped."
+        required: true
+        type: number
+        default: 10
     secrets:
       DISCORD_NIGHTLY_WEBHOOK_URL:
         description: "Discord webhook URL to post the nightly build announcement to, required if the discord is enabled."
@@ -84,6 +89,7 @@ jobs:
         artifact: ${{ fromJson(needs.select-artifacts.outputs.artifacts) }}
     outputs:
       new_version: ${{ steps.version.outputs.new_version }}
+      artifact_size_mb: ${{ steps.asset.outputs.artifact_size_mb }}
     steps:
       - name: Checkout caller repository
         uses: actions/checkout@v7
@@ -151,7 +157,7 @@ jobs:
           chmod +x ./gradlew
           ./gradlew build
 
-      - name: Check compiled artifact exists
+      - name: Check compiled artifact exists and calculate its size
         id: asset
         shell: bash
         env:
@@ -173,6 +179,17 @@ jobs:
             echo "No files found matching $EXPANDED_GLOB"
             exit 1
           fi
+
+          # Calculate total size of the matching files
+          total_size_bytes=0
+          for f in "${files[@]}"; do
+            size=$(stat -c%s "$f")
+            total_size_bytes=$((total_size_bytes + size))
+          done
+
+          # Convert to MB (rounding up to nearest integer for safe ceiling limits)
+          total_size_mb=$(( (total_size_bytes + 1048575) / 1048576 ))
+          echo "artifact_size_mb=$total_size_mb" >> "$GITHUB_OUTPUT"
 
       - name: Upload jar as artifact
         uses: actions/upload-artifact@v7
@@ -220,7 +237,7 @@ jobs:
   upload-discord:
     name: Upload the artifact to Discord
     needs: [load-config, compile-artifact, notify-discord]
-    if: ${{ fromJSON(needs.load-config.outputs.config).discord_announce_nightly_builds == true }}
+    if: ${{ fromJSON(needs.load-config.outputs.config).discord_announce_nightly_builds == true && fromJson(needs.compile-artifact.outputs.artifact_size_mb) <= inputs.max_file_size }}
     runs-on: ubuntu-latest
     steps:
       - name: Checkout workflow repository
