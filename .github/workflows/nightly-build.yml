@@ -83,7 +83,8 @@ jobs:
       matrix:
         # Only the artifact entries matching the triggering branch
         artifact: ${{ fromJson(needs.select-artifacts.outputs.artifacts) }}
-
+    outputs:
+      new_version: ${{ steps.version.outputs.new_version }}
     steps:
       - name: Checkout caller repository
         uses: actions/checkout@v7
@@ -209,6 +210,7 @@ jobs:
         env:
           DISCORD_NIGHTLY_WEBHOOK_URL: ${{ secrets.DISCORD_NIGHTLY_WEBHOOK_URL }}
           CONFIG_JSON: ${{ needs.load-config.outputs.config }}
+          VERSION: ${{ needs.compile-artifact.outputs.new_version }}
         run: |
           set -euo pipefail
           chmod +x workflow/publish/gradlew
