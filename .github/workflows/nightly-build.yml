@@ -183,7 +183,7 @@ jobs:
 
   notify-discord:
     name: Post download link to Discord
-    needs: compile-artifact
+    needs: [load-config, compile-artifact]
     runs-on: ubuntu-latest
     steps:
       - name: Checkout workflow repository
