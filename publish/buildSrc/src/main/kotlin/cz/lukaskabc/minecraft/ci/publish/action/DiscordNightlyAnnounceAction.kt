@@ -6,6 +6,7 @@ import cz.lukaskabc.minecraft.ci.publish.configurer.DiscordConfigurer
 import kotlinx.serialization.json.Json
 import me.modmuss50.mpp.GithubPublishResult
 import me.modmuss50.mpp.ModPublishExtension
+import me.modmuss50.mpp.PublishResult
 import org.gradle.api.Action
 import org.gradle.api.file.RegularFile
 import kotlin.system.exitProcess
@@ -64,7 +65,7 @@ class DiscordNightlyAnnounceAction(configuration: ProjectConfiguration) : Projec
         val result = GithubPublishResult(envProvider.githubRepository(), -1, jobRunUrl, title)
         destFile.asFile.parentFile?.mkdirs()
         destFile.asFile.writeText(
-            Json.encodeToString(result)
+            Json.encodeToString<PublishResult>(result)
         )
     }
 
