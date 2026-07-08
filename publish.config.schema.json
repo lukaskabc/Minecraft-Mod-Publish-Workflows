@@ -108,7 +108,7 @@
         "nightly_link_title": {
           "type": "string",
           "title": "Nightly GitHub link title",
-          "description": "The text of the link to GitHub workflow run containing the nightly build. Defaults to: `Download from GitHub`"
+          "description": "The text of the link to GitHub workflow run containing the nightly build. Defaults to: `Download from GitHub (Login required)`"
         }
       },
       "additionalProperties": false,
