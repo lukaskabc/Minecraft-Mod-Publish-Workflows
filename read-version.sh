@@ -45,7 +45,7 @@ if [[ ! -f "$TARGET_FILE" ]]; then
 fi
 
 # Extract current version using an awk logic that mirrors set-version.sh's matching
-CURRENT_VERSION=$(awk -v prop="$TARGET_PROP" '
+CURRENT_VERSION=$(awk -v prop="$TARGET_PROP" -v dq='"' -v sq="'" '
   BEGIN {
     # Safely escape dots in case the property is something like "mod.version"
     safe_prop = prop
@@ -59,6 +59,17 @@ CURRENT_VERSION=$(awk -v prop="$TARGET_PROP" '
     val = substr($0, RLENGTH + 1)
     # Strip trailing whitespace and carriage returns
     sub(/[[:space:]]+$/, "", val)
+
+    # Strip a matching pair of surrounding quotes (single or double)
+    n = length(val)
+    if (n >= 2) {
+      first = substr(val, 1, 1)
+      last = substr(val, n, 1)
+      if ((first == dq && last == dq) || (first == sq && last == sq)) {
+        val = substr(val, 2, n - 2)
+      }
+    }
+
     print val
     exit
   }

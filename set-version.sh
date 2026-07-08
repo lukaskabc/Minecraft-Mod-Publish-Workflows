@@ -79,7 +79,7 @@ echo "$SPEC_JSON" | jq -c '.[]' | while IFS= read -r row; do
     exit 1
   fi
 
-  awk -v prop="$prop" -v ver="$VERSION" '
+  awk -v prop="$prop" -v ver="$VERSION" -v dq='"' -v sq="'" '
     BEGIN {
       # Safely escape dots in case the property is something like "mod.version"
       safe_prop = prop
@@ -91,7 +91,14 @@ echo "$SPEC_JSON" | jq -c '.[]' | while IFS= read -r row; do
     match($0, pattern) {
       # Extract the exact matched string (everything up to where the value starts)
       prefix = substr($0, 1, RLENGTH)
-      print prefix ver
+
+      # Preserve quotes if the existing value is quoted (single or double)
+      rest = substr($0, RLENGTH + 1)
+      quote = ""
+      first = substr(rest, 1, 1)
+      if (first == dq || first == sq) quote = first
+
+      print prefix quote ver quote
       found = 1
       next
     }
@@ -99,7 +106,8 @@ echo "$SPEC_JSON" | jq -c '.[]' | while IFS= read -r row; do
       print
     }
     END {
-      # If matching property was not found, append new one
+      # If matching property was not found, append new one (unquoted)
+      # This may produce invalid outputs if the file format requires quotes... well...
       if (!found) print prop "=" ver
     }
   ' "$file" > "${file}.tmp" && mv "${file}.tmp" "$file"
