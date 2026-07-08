@@ -19,6 +19,9 @@ on:
         description: "Discord webhook URL to post the nightly build announcement to, required if the discord is enabled."
         required: false
 
+env:
+  MOD_PUBLISH_JAVA_VERSION: 25
+
 jobs:
   resolve-default-branch:
     name: Resolve repository default branch
