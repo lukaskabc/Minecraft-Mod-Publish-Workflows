@@ -42,7 +42,7 @@ class CurseforgeConfigurer(configuration: ProjectConfiguration, curseforgeApiKey
             projectId.set(publishConfig.curseforgeProjectId)
             changelogType.set("markdown")
 
-            javaVersions.add(JavaVersion.toVersion(artifact.javaVersion))
+            // do not publish Java version, compiler can use different version than the mod at runtime
         }
     }
 }
