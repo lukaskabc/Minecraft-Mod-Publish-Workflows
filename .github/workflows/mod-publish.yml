@@ -121,6 +121,7 @@ jobs:
         uses: actions/download-artifact@v8
         with:
           name: publish-workspace
+          path: repository/publish.config.json
 
       - name: Setup Java
         uses: actions/setup-java@v5
@@ -160,6 +161,7 @@ jobs:
         uses: actions/download-artifact@v8
         with:
           name: publish-workspace
+          path: repository/publish.config.json
 
       - name: Setup Java
         uses: actions/setup-java@v5
@@ -204,6 +206,7 @@ jobs:
         uses: actions/download-artifact@v8
         with:
           name: publish-workspace
+          path: repository/publish.config.json
 
       - name: Setup Java
         uses: actions/setup-java@v5
