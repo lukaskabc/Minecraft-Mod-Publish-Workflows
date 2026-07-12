@@ -132,7 +132,7 @@ jobs:
           VERSION: ${{ needs.prepare.outputs.version }}
         run: |
           set -euo pipefail
-          export ARTIFACTS_JSON=$(cat repository/publish.config.json)
+          export CONFIG_JSON=$(cat repository/publish.config.json)
           chmod +x workflow/publish/gradlew
           cd workflow/publish
           ./gradlew "publishCurseforge-${{ matrix.id }}"
@@ -169,7 +169,7 @@ jobs:
           VERSION: ${{ needs.prepare.outputs.version }}
         run: |
           set -euo pipefail
-          export ARTIFACTS_JSON=$(cat repository/publish.config.json)
+          export CONFIG_JSON=$(cat repository/publish.config.json)
           chmod +x workflow/publish/gradlew
           cd workflow/publish
           ./gradlew publishModrinth-${{ matrix.id }}

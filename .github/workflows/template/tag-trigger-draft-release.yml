@@ -4,6 +4,8 @@
 #
 # This is an ALTERNATIVE to the manual-trigger-draft-release.yml
 #
+# This workflow MUST NOT be used at the same time with manual-trigger-draft-release.yml
+#
 # Recommended: change the reference to specific version of the workflow called in draft-release job
 
 name: Draft new GitHub release (tag push)
