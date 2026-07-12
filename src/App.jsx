@@ -82,6 +82,7 @@ export default function App() {
 
   const jsonResult = useMemo(() => {
     return JSON.stringify(formData, null, 2)
+      .replace(/\\\\n/g, "\\n")
   }, [formData]);
 
   const handleFileSelect = (event) => {
