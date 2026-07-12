@@ -6,6 +6,7 @@ import cz.lukaskabc.minecraft.ci.publish.configurer.CurseforgeConfigurer
 import cz.lukaskabc.minecraft.ci.publish.configurer.DiscordConfigurer
 import cz.lukaskabc.minecraft.ci.publish.configurer.ModrinthConfigurer
 import me.modmuss50.mpp.ModPublishExtension
+import me.modmuss50.mpp.ReleaseType
 import org.gradle.api.Action
 import org.gradle.api.GradleException
 
@@ -44,7 +45,7 @@ class PublishReleaseAction(configuration: ProjectConfiguration) : ProjectAware(c
 
         dryRun.set(envProvider.isDryRun())
 
-        type.set(STABLE)
+        type.set(ReleaseType.valueOf(publishConfig.defaultReleaseType.name))
         changelog.set(changelogFile.readText())
         version.set(modVersion)
         displayName.set("v${modVersion}")

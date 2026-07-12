@@ -7,8 +7,11 @@ import cz.lukaskabc.minecraft.ci.publish.schema.CfDependency
 import cz.lukaskabc.minecraft.ci.publish.schema.Dependencies
 import me.modmuss50.mpp.PlatformDependency
 import me.modmuss50.mpp.PlatformDependencyContainer
+import me.modmuss50.mpp.PlatformOptions
+import me.modmuss50.mpp.ReleaseType
 import org.gradle.api.GradleException
 import org.gradle.api.provider.Provider
+import org.gradle.internal.extensions.stdlib.toDefaultLowerCase
 import java.io.File
 
 
@@ -59,5 +62,21 @@ abstract class PlatformConfigurer<PD : PlatformDependency, D> : ProjectAware {
         }
         return artifacts.files.firstOrNull()
             ?: throw GradleException("Failed to match artifact file for $fileNameGlob (original glob: $glob)")
+    }
+
+    fun configurePlatform(context: PlatformOptions, artifact: Artifact) {
+        context.accessToken.set(this.accessToken)
+
+        if (artifact.releaseType != null) {
+            context.type.set(ReleaseType.valueOf(artifact.releaseType.name))
+            // if not specified, overridden with default release type from publishMods context
+        }
+
+        // the artifact to upload
+        context.file.set(artifactFile(artifact))
+
+        artifact.loaders.forEach {
+            context.modLoaders.add(it.name.toDefaultLowerCase())
+        }
     }
 }

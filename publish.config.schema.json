@@ -8,7 +8,8 @@
     "curseforge_enabled",
     "modrinth_enabled",
     "discord_enabled",
-    "discord_announce_nightly_builds"
+    "discord_announce_nightly_builds",
+    "default_release_type"
   ],
   "properties": {
     "client": {
@@ -63,6 +64,11 @@
       "type": "string",
       "description": "The Modrinth project ID",
       "title": "Modrinth project ID"
+    },
+    "default_release_type": {
+      "title": "Default release type",
+      "description": "Default release stability type. Can be overriden for each artifact.",
+      "$ref": "#/$defs/release_type"
     },
     "discord_webhook": {
       "type": "object",
@@ -143,6 +149,10 @@
             "description": "The name of the branch from which the artifact is compiled",
             "pattern": "\\S+"
           },
+          "release_type": {
+            "$ref": "#/$defs/release_type",
+            "description": "The stability type of the release. If not specified, the Default release type is used."
+          },
           "loaders": {
             "title": "Mod loaders",
             "type": "array",
@@ -151,9 +161,9 @@
             "items": {
               "type": "string",
               "enum": [
-                "neoforge",
-                "fabric",
-                "forge"
+                "Neoforge",
+                "Fabric",
+                "Forge"
               ]
             },
             "uniqueItems": true
@@ -276,6 +286,16 @@
     }
   ],
   "$defs": {
+    "release_type": {
+      "title": "Release type",
+      "type": "string",
+      "description": "The stability type of the release.",
+      "enum": [
+        "Stable",
+        "Beta",
+        "Alpha"
+      ]
+    },
     "dependencies": {
       "title": "Dependencies",
       "type": "object",
@@ -304,10 +324,10 @@
       "type": "string",
       "description": "Type of the dependency",
       "enum": [
-        "required",
-        "optional",
-        "incompatible",
-        "embedded"
+        "Required",
+        "Optional",
+        "Incompatible",
+        "Embedded"
       ]
     },
     "cf_dependency": {
@@ -357,7 +377,8 @@
       },
       "then": {
         "required": ["slug"]
-      }
+      },
+      "required": ["dependency_type"]
     }
   }
 }

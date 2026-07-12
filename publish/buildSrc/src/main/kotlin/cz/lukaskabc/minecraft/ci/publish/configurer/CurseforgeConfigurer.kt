@@ -5,6 +5,7 @@ import cz.lukaskabc.minecraft.ci.publish.ProjectConfiguration
 import cz.lukaskabc.minecraft.ci.publish.schema.Artifact
 import cz.lukaskabc.minecraft.ci.publish.schema.CfDependency
 import cz.lukaskabc.minecraft.ci.publish.schema.Dependencies
+import me.modmuss50.mpp.ReleaseType
 import me.modmuss50.mpp.platforms.curseforge.CurseforgeDependency
 import org.gradle.api.JavaVersion
 import org.gradle.api.provider.Provider
@@ -29,14 +30,7 @@ class CurseforgeConfigurer(configuration: ProjectConfiguration, curseforgeApiKey
 
     override fun configure(artifact: Artifact) {
         context.curseforge("curseforge-${artifact.id}") {
-            accessToken.set(this@CurseforgeConfigurer.accessToken)
-
-            // the artifact to upload
-            file.set(artifactFile(artifact))
-
-            artifact.loaders.forEach {
-                modLoaders.add(it.name.toDefaultLowerCase())
-            }
+            configurePlatform(this, artifact)
             minecraftVersions.addAll(artifact.gameVersions)
 
             configureDependencies(this, artifact)

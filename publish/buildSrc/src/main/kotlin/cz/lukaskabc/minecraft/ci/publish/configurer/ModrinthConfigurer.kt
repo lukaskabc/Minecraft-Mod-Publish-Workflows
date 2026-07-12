@@ -5,6 +5,7 @@ import cz.lukaskabc.minecraft.ci.publish.schema.Artifact
 import cz.lukaskabc.minecraft.ci.publish.schema.CfDependency
 import cz.lukaskabc.minecraft.ci.publish.schema.Dependencies
 import cz.lukaskabc.minecraft.ci.publish.schema.MrDependency
+import me.modmuss50.mpp.ReleaseType
 import me.modmuss50.mpp.platforms.modrinth.ModrinthDependency
 import me.modmuss50.mpp.platforms.modrinth.ModrinthEnvironment
 import org.gradle.api.GradleException
@@ -36,14 +37,7 @@ class ModrinthConfigurer(configuration: ProjectConfiguration, modrinthApiKeyProv
 
     override fun configure(artifact: Artifact) {
         context.modrinth("modrinth-${artifact.id}") {
-            accessToken.set(this@ModrinthConfigurer.accessToken)
-
-            // the artifact to upload
-            file.set(artifactFile(artifact))
-
-            artifact.loaders.forEach {
-                modLoaders.add(it.name.toDefaultLowerCase())
-            }
+            configurePlatform(this, artifact)
             minecraftVersions.addAll(artifact.gameVersions)
 
             configureDependencies(this, artifact)

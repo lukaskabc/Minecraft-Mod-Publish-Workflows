@@ -13,44 +13,43 @@
     "content": "Hey! New version v{version} was just released!",
     "embed_color": "#47d378"
   },
+  "default_release_type": "Stable",
   "artifacts": [
     {
       "id": "-MYID-1.21.1-something+1,2,3",
       "file_glob": "build/libs/*.jar",
       "branch": "1.21.1-something+1,2,3",
       "loaders": [
-        "neoforge"
+        "Neoforge"
       ],
       "game_versions": [
         "1.21.1"
       ],
-      "java_version": "21",
-      "dependencies": {}
+      "java_version": "21"
     },
     {
       "id": "SOME-ID-main",
       "file_glob": "build/libs/*.jar",
       "branch": "main",
       "loaders": [
-        "neoforge"
+        "Neoforge"
       ],
       "game_versions": [
         "1.21.1"
       ],
-      "java_version": "21",
-      "dependencies": {}
+      "java_version": "21"
     }
   ],
   "common_dependencies": {
     "curseforge": [
       {
         "slug": "stellarview",
-        "dependency_type": "required"
+        "dependency_type": "Required"
       }
     ],
     "modrinth": [
       {
-        "dependency_type": "required",
+        "dependency_type": "Required",
         "slug": "stellarview"
       }
     ]
