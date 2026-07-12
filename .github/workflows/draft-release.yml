@@ -22,6 +22,8 @@ permissions:
 
 jobs:
   load-config:
+    permissions:
+      contents: read
     name: Load and validate configuration
     uses: ./.github/workflows/load-config.yml
     with:
@@ -36,6 +38,8 @@ jobs:
     name: Create draft release
     needs: load-config
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
     # skip if validate only is enabled
     if: ${{ inputs.validate-only != true }}
     outputs:
@@ -56,7 +60,7 @@ jobs:
 
       - name: Create draft release
         id: cr
-        uses: softprops/action-gh-release@v3
+        uses: softprops/action-gh-release@718ea10b132b3b2eba29c1007bb80653f286566b # v3.0.1
         with:
           tag_name: ${{ steps.tag_name.outputs.tag }}
           name: ${{ steps.tag_name.outputs.tag }}
@@ -69,6 +73,8 @@ jobs:
     needs: [load-config, create-release]
     # skip if validate only is enabled
     if: ${{ inputs.validate-only != true }}
+    permissions:
+      contents: write
     strategy:
       fail-fast: false
       matrix:

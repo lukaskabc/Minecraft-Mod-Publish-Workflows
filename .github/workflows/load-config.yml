@@ -15,6 +15,8 @@ on:
         type: string
         required: true
 
+permissions:
+  contents: read
 
 jobs:
   load-config:
@@ -47,7 +49,7 @@ jobs:
           node-version: "24"
 
       - name: Install JSON schema validator
-        run: npm install --ignore-scripts -g ajv-cli ajv-formats
+        run: npm install --ignore-scripts -g ajv-cli@5.0.0 ajv-formats@3.0.1 ajv@8.20.0
 
       - name: Validate publish config
         run: |
