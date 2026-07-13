@@ -95,7 +95,7 @@ jobs:
         with:
           name: publish-workspace
           path: |
-            workflow/publish
+            workflow/
             repository/publish.config.json
           retention-days: 1
 
