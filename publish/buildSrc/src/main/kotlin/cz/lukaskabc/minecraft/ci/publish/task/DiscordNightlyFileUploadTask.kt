@@ -25,9 +25,8 @@ abstract class DiscordNightlyFileUploadTask : DefaultTask() {
     @get:Input
     abstract val discordEnabled: Property<Boolean>
 
-    @get:InputDirectory
-    @get:Optional
-    abstract val artifactsDir: DirectoryProperty
+    @get:Input
+    abstract val artifactsDirPath: Property<String>
 
     @get:Input
     abstract val webhookUrl: Property<String>
@@ -49,7 +48,7 @@ abstract class DiscordNightlyFileUploadTask : DefaultTask() {
             throw GradleException("Discord is not enabled, skipping nightly file upload")
         }
 
-        val directory = artifactsDir.orNull?.asFile
+        val directory = project.layout.projectDirectory.dir(artifactsDirPath).orNull?.asFile
         if (directory == null || !directory.exists()) {
             throw GradleException("Artifacts directory is not set or does not exist, Discord file upload failed")
         }

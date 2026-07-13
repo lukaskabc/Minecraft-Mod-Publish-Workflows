@@ -61,8 +61,7 @@ publishMods {
 
 tasks.register<DiscordNightlyFileUploadTask>("uploadDiscordNightlyFile") {
     discordEnabled = publishConfig.discordAnnounceNightlyBuilds
-    val artifactDirPath = envProvider.nightlyArtifactDir()
-    artifactsDir = project.layout.projectDirectory.dir(artifactDirPath)
+    artifactsDirPath = provider(envProvider::nightlyArtifactDir)
     webhookUrl = envProvider.discordNightlyWebhookUrl()
     webhookConfig = publishConfig.discordWebhook
 }

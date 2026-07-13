@@ -5,6 +5,7 @@ export VERSION=0.5.2
 export CURSEFORGE_API_KEY=cf_key
 export MODRINTH_API_KEY=mr_key
 export DISCORD_WEBHOOK_URL=http://disabled
-export DRY_RUN=true
+export DRY_RUN=false
+export GITHUB_ACTIONS=true
 ./gradlew :buildSrc:clean
-./gradlew tasks
+./gradlew publishMods
