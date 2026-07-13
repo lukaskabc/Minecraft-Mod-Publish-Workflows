@@ -40,8 +40,8 @@ class PublishReleaseAction(configuration: ProjectConfiguration) : ProjectAware(c
 
         logger.lifecycle("Configuring mod publishing")
 
-        val cfConfigurer = CurseforgeConfigurer(configuration, project.provider<String>(envProvider::curseforgeToken))
-        val mrConfigurer = ModrinthConfigurer(configuration, project.provider<String>(envProvider::modrinthToken))
+        val cfConfigurer = lazy { CurseforgeConfigurer(configuration, project.provider<String>(envProvider::curseforgeToken)) }
+        val mrConfigurer = lazy { ModrinthConfigurer(configuration, project.provider<String>(envProvider::modrinthToken)) }
 
         dryRun.set(envProvider.isDryRun())
 
@@ -54,11 +54,11 @@ class PublishReleaseAction(configuration: ProjectConfiguration) : ProjectAware(c
             logger.lifecycle("Configuring release for branch ${artifact.branch} with artifact id ${artifact.id}")
             if (publishConfig.curseforgeEnabled) {
                 logger.lifecycle("- curseforge")
-                cfConfigurer.configure(artifact)
+                cfConfigurer.value.configure(artifact)
             }
             if (publishConfig.modrinthEnabled) {
                 logger.lifecycle("- modrinth")
-                mrConfigurer.configure(artifact)
+                mrConfigurer.value.configure(artifact)
             }
             if (publishConfig.discordEnabled && publishConfig.discordWebhook.discordBranch == artifact.branch) {
                 logger.lifecycle("- discord")
