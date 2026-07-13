@@ -15,8 +15,6 @@ import org.gradle.internal.extensions.stdlib.toDefaultLowerCase
 class CurseforgeConfigurer(configuration: ProjectConfiguration, curseforgeApiKeyProvider: Provider<String>) :
     PlatformConfigurer<CurseforgeDependency, CfDependency>(configuration, curseforgeApiKeyProvider) {
 
-    override fun isEnabled(): Boolean = publishConfig.curseforgeEnabled
-
     override fun configureDependency(
         platformDep: CurseforgeDependency,
         dep: CfDependency

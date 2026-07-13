@@ -64,7 +64,7 @@ class PublishReleaseAction(configuration: ProjectConfiguration) : ProjectAware(c
                 logger.lifecycle("- discord")
                 val discordWebhook = publishConfig.discordWebhook
                 discord("announceDiscord") {
-                    webhookUrl.set(envProvider.discordWebhookUrl())
+                    webhookUrl.set(project.provider(envProvider::discordWebhookUrl))
 
                     if (discordWebhook.username != null) {
                         username.set(discordWebhook.username)

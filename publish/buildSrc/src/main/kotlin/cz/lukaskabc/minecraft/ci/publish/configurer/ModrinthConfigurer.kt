@@ -16,8 +16,6 @@ import org.gradle.internal.extensions.stdlib.toDefaultLowerCase
 class ModrinthConfigurer(configuration: ProjectConfiguration, modrinthApiKeyProvider: Provider<String>) :
     PlatformConfigurer<ModrinthDependency, MrDependency>(configuration, modrinthApiKeyProvider) {
 
-    override fun isEnabled(): Boolean = publishConfig.modrinthEnabled
-
     override fun extractDependencies(deps: Dependencies): List<MrDependency>? = deps.modrinth
 
     override fun configureDependency(

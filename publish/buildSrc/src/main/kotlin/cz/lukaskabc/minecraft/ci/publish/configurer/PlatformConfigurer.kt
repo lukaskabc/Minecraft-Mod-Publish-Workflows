@@ -22,14 +22,12 @@ fun Artifact.jarNameGlob(modVersion: String): String {
 fun CfDependency.DependencyType.asPlatform() = PlatformDependency.DependencyType.valueOf(name)
 
 abstract class PlatformConfigurer<PD : PlatformDependency, D> : ProjectAware {
-    protected val accessToken: String
+    protected val accessToken: Provider<String>
 
     constructor(configuration: ProjectConfiguration, accessTokenProvider: Provider<String>)
             : super(configuration) {
-        this.accessToken = if (isEnabled()) accessTokenProvider.get() else "Platform disabled"
+        this.accessToken = accessTokenProvider
     }
-
-    abstract fun isEnabled(): Boolean
 
     abstract fun configure(artifact: Artifact)
     abstract fun configureDependency(platformDep: PD, dep: D)

@@ -41,7 +41,7 @@ class DiscordNightlyAnnounceAction(configuration: ProjectConfiguration) : Projec
 
         discord("announceDiscordNightly") {
 
-            webhookUrl.set(envProvider.discordNightlyWebhookUrl())
+            webhookUrl.set(project.provider(envProvider::discordNightlyWebhookUrl))
 
             publishResults.setFrom(resultFile)
 
