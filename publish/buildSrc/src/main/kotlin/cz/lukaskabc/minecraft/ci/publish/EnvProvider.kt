@@ -29,7 +29,7 @@ open class EnvProvider(protected val providers: ProviderFactory) {
     open fun githubRepository() = envRequired(Env.GITHUB_REPOSITORY)
     open fun githubRunId() = envRequired(Env.GITHUB_RUN_ID)
 
-    open fun nightlyArtifactDir() = env(Env.NIGHTLY_ARTIFACTS_DIR)
+    open fun nightlyArtifactDir() = envRequired(Env.NIGHTLY_ARTIFACTS_DIR)
 
     open fun execTask(): ExecTask {
         return ExecTask.entries.firstOrNull { isPropertyEnabled(it.propertyName) } ?: ExecTask.PUBLISH_MODS
