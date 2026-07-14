@@ -2,9 +2,12 @@ package cz.lukaskabc.minecraft.ci.publish.configurer
 
 import cz.lukaskabc.minecraft.ci.publish.ProjectConfiguration
 import cz.lukaskabc.minecraft.ci.publish.schema.Artifact
+import cz.lukaskabc.minecraft.ci.publish.schema.Artifacts
+
 import cz.lukaskabc.minecraft.ci.publish.schema.CfDependency
 import cz.lukaskabc.minecraft.ci.publish.schema.Dependencies
 import cz.lukaskabc.minecraft.ci.publish.schema.MrDependency
+import me.modmuss50.mpp.ModPublishExtension
 import me.modmuss50.mpp.ReleaseType
 import me.modmuss50.mpp.platforms.modrinth.ModrinthDependency
 import me.modmuss50.mpp.platforms.modrinth.ModrinthEnvironment
@@ -13,8 +16,8 @@ import org.gradle.api.provider.Provider
 import org.gradle.internal.extensions.stdlib.toDefaultLowerCase
 
 
-class ModrinthConfigurer(configuration: ProjectConfiguration, modrinthApiKeyProvider: Provider<String>) :
-    PlatformConfigurer<ModrinthDependency, MrDependency>(configuration, modrinthApiKeyProvider) {
+class ModrinthConfigurer(configuration: ProjectConfiguration) :
+    PlatformConfigurer<ModrinthDependency, MrDependency>(configuration, configuration.envProvider::modrinthToken) {
 
     override fun extractDependencies(deps: Dependencies): List<MrDependency>? = deps.modrinth
 
@@ -33,28 +36,30 @@ class ModrinthConfigurer(configuration: ProjectConfiguration, modrinthApiKeyProv
 
     override fun getDependencyType(dep: MrDependency): CfDependency.DependencyType = dep.dependencyType
 
-    override fun configure(artifact: Artifact) {
-        context.modrinth("modrinth-${artifact.id}") {
-            configurePlatform(this, artifact)
-            minecraftVersions.addAll(artifact.gameVersions)
+    override fun configure(artifactId: String, artifact: Artifact) {
+        val publishConfig = configuration.publishConfig
+        publishMods {
+            modrinth("modrinth-${artifactId}") {
+                configurePlatform(this, artifact)
+                minecraftVersions.addAll(artifact.gameVersions)
 
-            configureDependencies(this, artifact)
+                configureDependencies(this, artifact)
 
-            val clientBit = if(publishConfig.client) 1 else 0
-            val serverBit = if(publishConfig.server) 2 else 0
+                val clientBit = if (publishConfig.client) 1 else 0
+                val serverBit = if (publishConfig.server) 2 else 0
 
-            val env: ModrinthEnvironment? = when (clientBit or serverBit) {
-                1 -> ModrinthEnvironment.CLIENT_ONLY
-                2 -> ModrinthEnvironment.SERVER_ONLY
-                3 -> ModrinthEnvironment.CLIENT_AND_SERVER
-                else -> {
-                    throw GradleException("Unexpected side configuration: server ${publishConfig.server} | client ${publishConfig.client}")
+                val env: ModrinthEnvironment? = when (clientBit or serverBit) {
+                    1 -> ModrinthEnvironment.CLIENT_ONLY
+                    2 -> ModrinthEnvironment.SERVER_ONLY
+                    3 -> ModrinthEnvironment.CLIENT_AND_SERVER
+                    else -> {
+                        throw GradleException("Unexpected side configuration: server ${publishConfig.server} | client ${publishConfig.client}")
+                    }
                 }
+
+                environment.set(env)
+                projectId.set(publishConfig.modrinthProjectId)
             }
-
-            environment.set(env)
-
-            projectId.set(publishConfig.modrinthProjectId)
         }
     }
 }

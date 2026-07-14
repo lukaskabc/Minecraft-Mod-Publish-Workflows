@@ -41,7 +41,7 @@ jsonSchema2Pojo {
     setSource(files("../../publish.config.schema.json"))
     setSourceType("jsonSchema")
     setAnnotationStyle("jackson3")
-    includeAdditionalProperties = false
+    includeAdditionalProperties = true
     includeGetters = true
     includeSetters = true
     includeJsr303Annotations = true
@@ -51,12 +51,9 @@ jsonSchema2Pojo {
     targetPackage = "cz.lukaskabc.minecraft.ci.publish.schema"
 }
 
-sourceSets {
-    main {
-        java {
-            srcDir(layout.buildDirectory.dir("generated/source/js2p"))
-        }
-    }
+java {
+    withJavadocJar()
+    withSourcesJar()
 }
 
 // Force Gradle to run the code generation BEFORE attempting to compile
@@ -65,6 +62,18 @@ tasks.withType<JavaCompile>().configureEach {
 }
 tasks.withType<org.jetbrains.kotlin.gradle.tasks.KotlinCompile>().configureEach {
     dependsOn("generateJsonSchema2Pojo")
+}
+tasks.named<Jar>("sourcesJar") {
+    dependsOn("generateJsonSchema2Pojo")
+}
+tasks.named<Jar>("javadocJar") {
+    dependsOn("generateJsonSchema2Pojo")
+}
+
+// Prevent invalid Javadoc comments generated from the schema description from failing the build
+tasks.withType<Javadoc>().configureEach {
+    (options as StandardJavadocDocletOptions).addStringOption("Xdoclint:none", "-quiet")
+    isFailOnError = false
 }
 
 idea {

@@ -5,6 +5,7 @@ import cz.lukaskabc.minecraft.ci.publish.ProjectConfiguration
 import cz.lukaskabc.minecraft.ci.publish.schema.Artifact
 import cz.lukaskabc.minecraft.ci.publish.schema.CfDependency
 import cz.lukaskabc.minecraft.ci.publish.schema.Dependencies
+import me.modmuss50.mpp.ModPublishExtension
 import me.modmuss50.mpp.PlatformDependency
 import me.modmuss50.mpp.PlatformDependencyContainer
 import me.modmuss50.mpp.PlatformOptions
@@ -13,6 +14,7 @@ import org.gradle.api.GradleException
 import org.gradle.api.provider.Provider
 import org.gradle.internal.extensions.stdlib.toDefaultLowerCase
 import java.io.File
+import java.util.concurrent.Callable
 
 
 fun Artifact.jarNameGlob(modVersion: String): String {
@@ -24,12 +26,12 @@ fun CfDependency.DependencyType.asPlatform() = PlatformDependency.DependencyType
 abstract class PlatformConfigurer<PD : PlatformDependency, D> : ProjectAware {
     protected val accessToken: Provider<String>
 
-    constructor(configuration: ProjectConfiguration, accessTokenProvider: Provider<String>)
+    constructor(configuration: ProjectConfiguration, accessTokenSupplier: Callable<String>)
             : super(configuration) {
-        this.accessToken = accessTokenProvider
+        this.accessToken = configuration.project.provider(accessTokenSupplier)
     }
 
-    abstract fun configure(artifact: Artifact)
+    abstract fun configure(artifactId: String, artifact: Artifact)
     abstract fun configureDependency(platformDep: PD, dep: D)
 
     abstract fun extractDependencies(deps: Dependencies): List<D>?
@@ -37,7 +39,7 @@ abstract class PlatformConfigurer<PD : PlatformDependency, D> : ProjectAware {
     abstract fun getDependencyType(dep: D): CfDependency.DependencyType
 
     fun configureDependencies(depContainer: PlatformDependencyContainer<PD>, artifact: Artifact) {
-        sequenceOf(publishConfig.commonDependencies, artifact.dependencies)
+        sequenceOf(configuration.publishConfig.commonDependencies, artifact.dependencies)
             .filter { it != null }
             .mapNotNull(this::extractDependencies)
             .flatten()
@@ -53,9 +55,9 @@ abstract class PlatformConfigurer<PD : PlatformDependency, D> : ProjectAware {
      * Resolves an artifact jar file from `./artifacts` directory
      */
     fun artifactFile(artifact: Artifact): File {
-        val glob = artifact.jarNameGlob(modVersion)
+        val glob = artifact.jarNameGlob(configuration.modVersion)
         val fileNameGlob = glob.substringAfterLast('/')
-        val artifacts = project.fileTree("./artifacts") {
+        val artifacts = configuration.project.fileTree("./artifacts") {
             include(fileNameGlob)
         }
         return artifacts.files.firstOrNull()

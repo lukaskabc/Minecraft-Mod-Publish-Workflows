@@ -14,9 +14,8 @@
     "embed_color": "#47d378"
   },
   "default_release_type": "Stable",
-  "artifacts": [
-    {
-      "id": "-MYID-1.21.1-something+1,2,3",
+  "artifacts": {
+    "-MYID-1.21.1-something+1,2,3": {
       "file_glob": "build/libs/*.jar",
       "branch": "1.21.1-something+1,2,3",
       "loaders": [
@@ -27,8 +26,7 @@
       ],
       "java_version": "21"
     },
-    {
-      "id": "SOME-ID-main",
+    "SOME-ID-main":{
       "file_glob": "build/libs/*.jar",
       "branch": "main",
       "loaders": [
@@ -39,7 +37,7 @@
       ],
       "java_version": "21"
     }
-  ],
+  },
   "common_dependencies": {
     "curseforge": [
       {

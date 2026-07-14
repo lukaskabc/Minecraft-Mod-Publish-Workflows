@@ -124,114 +124,18 @@
     },
     "artifacts": {
       "title": "Artifacts / Branches",
-      "type": "array",
+      "type": "object",
       "description": "Configuration for artifacts that should be released",
-      "minItems": 1,
-      "items": {
-        "title": "Artifact / Branch",
-        "type": "object",
-        "properties": {
-          "id": {
-            "title": "Identifier",
-            "type": "string",
-            "description": "Unique identifier of the artifact for purposes of this workflow. The name must be complaint with gradle task naming rules. Must not use `<space>` `/` `\\` `:` `<` `>` `\"` `?` `*` `|`. You should also not use `.` as a leading or trailing character.",
-            "pattern": "^([^ \\/\\\\:<>\"?*|.]|[^ \\/\\\\:<>\"?*|.][^ \\/\\\\:<>\"?*|]*[^ \\/\\\\:<>\"?*|.])$"
-          },
-          "file_glob": {
-            "title": "File glob",
-            "type": "string",
-            "description": "The glob for the compiled artifact to be uploaded. Can use `{version}` which will be replaced with the current mod version. E.g. \n`build/libs/*-1.21.1-neoforge-{version}.jar`",
-            "pattern": "\\S+"
-          },
-          "branch": {
-            "title": "Git Branch",
-            "type": "string",
-            "description": "The name of the branch from which the artifact is compiled",
-            "pattern": "\\S+"
-          },
-          "release_type": {
-            "$ref": "#/$defs/release_type",
-            "description": "The stability type of the release. If not specified, the Default release type is used."
-          },
-          "loaders": {
-            "title": "Mod loaders",
-            "type": "array",
-            "description": "Mod loaders that can load the artifact",
-            "minItems": 1,
-            "items": {
-              "type": "string",
-              "enum": [
-                "Neoforge",
-                "Fabric",
-                "Forge"
-              ]
-            },
-            "uniqueItems": true
-          },
-          "game_versions": {
-            "title": "Game versions",
-            "type": "array",
-            "description": "Supported game versions for the artifact (e.g. `1.21.1`)",
-            "minItems": 1,
-            "items": {
-              "title": "Game Version",
-              "pattern": "^\\d+(\\.\\d+)+$",
-              "type": "string",
-              "minLength": 1
-            },
-            "uniqueItems": true
-          },
-          "java_version": {
-            "title": "Java version",
-            "type": "string",
-            "description": "The java version required to build the branch and run the mod (e.g. `17`)",
-            "pattern": "\\S+"
-          },
-          "version_properties": {
-            "title": "File version replacements",
-            "type": "array",
-            "description": "List of files and respective properties where the version should be set. Only supports properties format (`property=value`). Use your gradle build script to distribute the value to other files. If none is supplied, defaults to `mod_version` in `gradle.properties`.",
-            "items": {
-              "title": "Property file",
-              "type": "object",
-              "properties": {
-                "file": {
-                  "title": "File path",
-                  "type": "string",
-                  "description": "The exact relative path to the file (e.g. `gradle.properties`)",
-                  "pattern": "\\S+"
-                },
-                "property": {
-                  "title": "Property name",
-                  "type": "string",
-                  "description": "The name of the property which should be set to the version (e.g. `mod_version`)",
-                  "pattern": "\\S+"
-                }
-              },
-              "required": [
-                "file",
-                "property"
-              ],
-              "additionalProperties": false
-            }
-          },
-          "dependencies": {
-            "type": "object",
-            "description": "Dependencies for the artifact (merged with **common dependencies**)",
-            "$ref": "#/$defs/dependencies"
-          }
-        },
-        "additionalProperties": false,
-        "required": [
-          "id",
-          "branch",
-          "loaders",
-          "game_versions",
-          "java_version",
-          "file_glob"
-        ]
+      "minProperties": 1,
+      "propertyNames": {
+        "title": "Artifact Identifier",
+        "type": "string",
+        "description": "Unique identifier of the artifact for purposes of this workflow. The name must be complaint with gradle task naming rules. Must not use `<space>` `/` `\\` `:` `<` `>` `\"` `?` `*` `|`. You should also not use `.` as a leading or trailing character.",
+        "pattern": "^([^ \\/\\\\:<>\"?*|.]|[^ \\/\\\\:<>\"?*|.][^ \\/\\\\:<>\"?*|]*[^ \\/\\\\:<>\"?*|.])$"
       },
-      "uniqueItems": true
+      "additionalProperties": {
+        "$ref": "#/$defs/artifact"
+      }
     },
     "common_dependencies": {
       "title": "Common dependencies",
@@ -286,6 +190,104 @@
     }
   ],
   "$defs": {
+    "artifact": {
+
+      "title": "Artifact / Branch",
+      "type": "object",
+      "properties": {
+        "file_glob": {
+          "title": "File glob",
+          "type": "string",
+          "description": "The glob for the compiled artifact to be uploaded. Can use `{version}` which will be replaced with the current mod version. E.g. \n`build/libs/*-1.21.1-neoforge-{version}.jar`",
+          "pattern": "\\S+"
+        },
+        "branch": {
+          "title": "Git Branch",
+          "type": "string",
+          "description": "The name of the branch from which the artifact is compiled",
+          "pattern": "\\S+"
+        },
+        "release_type": {
+          "$ref": "#/$defs/release_type",
+          "description": "The stability type of the release. If not specified, the Default release type is used."
+        },
+        "loaders": {
+          "title": "Mod loaders",
+          "type": "array",
+          "description": "Mod loaders that can load the artifact",
+          "minItems": 1,
+          "items": {
+            "type": "string",
+            "enum": [
+              "Neoforge",
+              "Fabric",
+              "Forge"
+            ]
+          },
+          "uniqueItems": true
+        },
+        "game_versions": {
+          "title": "Game versions",
+          "type": "array",
+          "description": "Supported game versions for the artifact (e.g. `1.21.1`)",
+          "minItems": 1,
+          "items": {
+            "title": "Game Version",
+            "pattern": "^\\d+(\\.\\d+)+$",
+            "type": "string",
+            "minLength": 1
+          },
+          "uniqueItems": true
+        },
+        "java_version": {
+          "title": "Java version",
+          "type": "string",
+          "description": "The java version required to build the branch and run the mod (e.g. `17`)",
+          "pattern": "\\S+"
+        },
+        "version_properties": {
+          "title": "File version replacements",
+          "type": "array",
+          "description": "List of files and respective properties where the version should be set. Only supports properties format (`property=value`). Use your gradle build script to distribute the value to other files. If none is supplied, defaults to `mod_version` in `gradle.properties`.",
+          "items": {
+            "title": "Property file",
+            "type": "object",
+            "properties": {
+              "file": {
+                "title": "File path",
+                "type": "string",
+                "description": "The exact relative path to the file (e.g. `gradle.properties`)",
+                "pattern": "\\S+"
+              },
+              "property": {
+                "title": "Property name",
+                "type": "string",
+                "description": "The name of the property which should be set to the version (e.g. `mod_version`)",
+                "pattern": "\\S+"
+              }
+            },
+            "required": [
+              "file",
+              "property"
+            ],
+            "additionalProperties": false
+          }
+        },
+        "dependencies": {
+          "type": "object",
+          "description": "Dependencies for the artifact (merged with **common dependencies**)",
+          "$ref": "#/$defs/dependencies"
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "branch",
+        "loaders",
+        "game_versions",
+        "java_version",
+        "file_glob"
+      ]
+    },
     "release_type": {
       "title": "Release type",
       "type": "string",

@@ -9,6 +9,12 @@ object Env {
     const val GITHUB_RUN_ID = "GITHUB_RUN_ID"
 
     /**
+     * The ID of the artifact being published.
+     * Must be ID of configured artifact in the configuration file.
+     */
+    const val ARTIFACT_ID = "ARTIFACT_ID"
+
+    /**
      * Automatically `true` when running inside GitHub workflow
      */
     const val GITHUB_ACTIONS = "GITHUB_ACTIONS"
@@ -31,4 +37,6 @@ object Env {
     const val CONFIG_JSON = "CONFIG_JSON"
 
     const val NIGHTLY_ARTIFACTS_DIR = "NIGHTLY_ARTIFACTS_DIR"
+
+    const val PLATFORM = "PLATFORM"
 }

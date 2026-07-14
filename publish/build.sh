@@ -7,5 +7,8 @@ export MODRINTH_API_KEY=mr_key
 export DISCORD_WEBHOOK_URL=http://disabled
 export DRY_RUN=false
 export GITHUB_ACTIONS=true
-./gradlew :buildSrc:clean
-./gradlew publishMods
+
+export PLATFORM=curseforge
+export ARTIFACT_ID=SOME-ID-main
+#./gradlew :buildSrc:clean
+./gradlew publishArtifact
