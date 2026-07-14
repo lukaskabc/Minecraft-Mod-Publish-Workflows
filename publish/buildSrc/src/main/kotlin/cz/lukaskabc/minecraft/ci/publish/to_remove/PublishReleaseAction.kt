@@ -2,13 +2,8 @@ package cz.lukaskabc.minecraft.ci.publish.action
 
 import cz.lukaskabc.minecraft.ci.publish.ProjectAware
 import cz.lukaskabc.minecraft.ci.publish.ProjectConfiguration
-import cz.lukaskabc.minecraft.ci.publish.configurer.CurseforgeConfigurer
-import cz.lukaskabc.minecraft.ci.publish.configurer.DiscordConfigurer
-import cz.lukaskabc.minecraft.ci.publish.configurer.ModrinthConfigurer
 import me.modmuss50.mpp.ModPublishExtension
-import me.modmuss50.mpp.ReleaseType
 import org.gradle.api.Action
-import org.gradle.api.GradleException
 
 class PublishReleaseAction(configuration: ProjectConfiguration) : ProjectAware(configuration), ActionProvider {
 //    val changelogFile = project.file("changelog.md")

@@ -2,14 +2,8 @@ package cz.lukaskabc.minecraft.ci.publish.action
 
 import cz.lukaskabc.minecraft.ci.publish.ProjectAware
 import cz.lukaskabc.minecraft.ci.publish.ProjectConfiguration
-import cz.lukaskabc.minecraft.ci.publish.configurer.DiscordConfigurer
-import kotlinx.serialization.json.Json
-import me.modmuss50.mpp.GithubPublishResult
 import me.modmuss50.mpp.ModPublishExtension
-import me.modmuss50.mpp.PublishResult
 import org.gradle.api.Action
-import org.gradle.api.file.RegularFile
-import kotlin.system.exitProcess
 
 class DiscordNightlyAnnounceAction(configuration: ProjectConfiguration) : ProjectAware(configuration), ActionProvider {
     override fun get(): Action<ModPublishExtension> {
