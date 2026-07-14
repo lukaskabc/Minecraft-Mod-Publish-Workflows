@@ -8,10 +8,8 @@
   "curseforge_project_id": "1474053",
   "modrinth_project_id": "gJ5LPGfO",
   "discord_webhook": {
-    "discord_branch": "main",
     "username": "Super publish bot",
-    "content": "Hey! New version v{version} was just released!",
-    "embed_color": "#47d378"
+    "content": "Hey! New version v{version} was just released!"
   },
   "default_release_type": "Stable",
   "artifacts": {

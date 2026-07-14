@@ -6,5 +6,8 @@ import cz.lukaskabc.minecraft.ci.publish.ProjectConfiguration
 class AnnounceDiscordAction(configuration: ProjectConfiguration) : ProjectAware(configuration), Runnable {
     override fun run() {
         // Implementation for announcing on Discord
+        with(configuration) {
+            logger.lifecycle("Loading publish configurations")
+        }
     }
 }

@@ -28,13 +28,6 @@ abstract class PlatformConfigurer<PD : PlatformDependency, D> : ProjectAware {
     }
 
     /**
-     * Returns the glob pattern for the artifact jar file with `{version}` placeholder replaced with the mod version.
-     */
-    protected fun Artifact.jarNameGlob(modVersion: String): String {
-        return this.fileGlob.replace("{version}", modVersion)
-    }
-
-    /**
      * Maps the [CfDependency.DependencyType] to [PlatformDependency.DependencyType]
      */
     protected fun CfDependency.DependencyType.asPlatform() = PlatformDependency.DependencyType.valueOf(name)
@@ -79,34 +72,9 @@ abstract class PlatformConfigurer<PD : PlatformDependency, D> : ProjectAware {
     }
 
     /**
-     * Resolves an artifact jar file from `./artifacts` directory
-     */
-    fun artifactFile(artifact: Artifact): File {
-        val glob = artifact.jarNameGlob(configuration.modVersion)
-        val fileNameGlob = glob.substringAfterLast('/')
-        val artifacts = configuration.project.fileTree("./artifacts") {
-            include(fileNameGlob)
-        }
-        return artifacts.files.firstOrNull()
-            ?: throw GradleException("Failed to match artifact file for $fileNameGlob (original glob: $glob)")
-    }
-
-    /**
      * Configure common platform options for the given artifact
      */
     protected fun configurePlatform(context: PlatformOptions, artifact: Artifact) {
         context.accessToken.set(this.accessToken)
-
-        if (artifact.releaseType != null) {
-            context.type.set(ReleaseType.valueOf(artifact.releaseType.name))
-            // if not specified, overridden with default release type from publishMods context
-        }
-
-        // the artifact to upload
-        context.file.set(artifactFile(artifact))
-
-        artifact.loaders.forEach {
-            context.modLoaders.add(it.name.toDefaultLowerCase())
-        }
     }
 }

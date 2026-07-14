@@ -145,6 +145,13 @@ jobs:
           cd workflow/publish
           ./gradlew "publishCurseforge-${ARTIFACT_ID}"
 
+      - name: ${{ matrix.id }} - Upload publish mods result
+        uses: actions/upload-artifact@v7
+        with:
+          name: modPublish-result-${{ matrix.id }}
+          path: workflow/publish/build/publishMods/*.json
+          if-no-files-found: 'error'
+          retention-days: 1
   publish-modrinth:
     needs: prepare
     if: needs.prepare.outputs.modrinth_enabled == 'true'
@@ -184,6 +191,14 @@ jobs:
           cd workflow/publish
           ./gradlew "publishModrinth-${ARTIFACT_ID}"
 
+      - name: ${{ matrix.id }} - Upload publish mods result
+        uses: actions/upload-artifact@v7
+        with:
+          name: modPublish-result-${{ matrix.id }}
+          path: workflow/publish/build/publishMods/*.json
+          if-no-files-found: 'error'
+          retention-days: 1
+
   announce-discord:
     needs: [prepare, publish-curseforge, publish-modrinth]
     # !cancelled() - run always even if a dependency "failed (checked later)" or was skipped (disabled)
@@ -204,6 +219,18 @@ jobs:
         uses: actions/download-artifact@v8
         with:
           name: publish-workspace
+
+      - name: Download publish results
+        uses: actions/download-artifact@v8
+        with:
+          pattern: modPublish-result-**
+          merge-multiple: 'true'
+      # TODO: will the files be downloaded to root or to the correct directory?
+
+      - name: Debug - List files
+        run: |
+          ls -la workflow/publish/build/publishMods/
+          ls -la .
 
       - name: Setup Java
         uses: actions/setup-java@v5

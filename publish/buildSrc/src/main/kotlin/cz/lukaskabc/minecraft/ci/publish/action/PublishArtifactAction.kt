@@ -5,12 +5,15 @@ import cz.lukaskabc.minecraft.ci.publish.ProjectConfiguration
 import cz.lukaskabc.minecraft.ci.publish.ReleasePlatform
 import cz.lukaskabc.minecraft.ci.publish.configurer.CurseforgeConfigurer
 import cz.lukaskabc.minecraft.ci.publish.configurer.ModrinthConfigurer
+import cz.lukaskabc.minecraft.ci.publish.schema.Artifact
 import cz.lukaskabc.minecraft.ci.publish.schema.PublishConfigSchema
 import cz.lukaskabc.minecraft.ci.publish.task.TaskNames
 import me.modmuss50.mpp.PublishModTask
 import me.modmuss50.mpp.ReleaseType
 import org.gradle.api.GradleException
+import org.gradle.internal.extensions.stdlib.toDefaultLowerCase
 import org.gradle.kotlin.dsl.get
+import java.io.File
 import java.util.Locale
 import java.util.Locale.getDefault
 import java.util.function.Consumer
@@ -33,6 +36,26 @@ class PublishArtifactAction(configuration: ProjectConfiguration): ProjectAware(c
      */
     fun PublishConfigSchema.ReleaseType.mapType() = ReleaseType.valueOf(name)
 
+    /**
+     * Returns the glob pattern for the artifact jar file with `{version}` placeholder replaced with the mod version.
+     */
+    private fun Artifact.jarNameGlob(modVersion: String): String {
+        return this.fileGlob.replace("{version}", modVersion)
+    }
+
+    /**
+     * Resolves an artifact jar file from `./artifacts` directory
+     */
+    private fun artifactFile(artifact: Artifact): File {
+        val glob = artifact.jarNameGlob(configuration.modVersion)
+        val fileNameGlob = glob.substringAfterLast('/')
+        val artifacts = configuration.project.fileTree("./artifacts") {
+            include(fileNameGlob)
+        }
+        return artifacts.files.firstOrNull()
+            ?: throw GradleException("Failed to match artifact file for $fileNameGlob (original glob: $glob)")
+    }
+
     override fun run() {
         with(configuration) {
             val artifactId = envProvider.artifactId()
@@ -50,12 +73,23 @@ class PublishArtifactAction(configuration: ProjectConfiguration): ProjectAware(c
             publishMods {
                 dryRun.set(envProvider.isDryRun())
 
-                val releaseType = artifact.releaseType ?: publishConfig.defaultReleaseType
-                type.set(releaseType.mapType())
+                // the artifact to upload
+                file.set(artifactFile(artifact))
+
+                if (artifact.releaseType != null) {
+                    type.set(ReleaseType.valueOf(artifact.releaseType.name))
+                } else {
+                    val releaseType = artifact.releaseType ?: publishConfig.defaultReleaseType
+                    type.set(releaseType.mapType())
+                }
 
                 changelog.set(changelogFile.readText())
                 version.set(modVersion)
                 displayName.set("v${modVersion}")
+
+                artifact.loaders.forEach {
+                    modLoaders.add(it.name.toDefaultLowerCase())
+                }
 
                 if (platform == ReleasePlatform.CURSEFORGE && publishConfig.curseforgeEnabled) {
                     CurseforgeConfigurer(configuration)

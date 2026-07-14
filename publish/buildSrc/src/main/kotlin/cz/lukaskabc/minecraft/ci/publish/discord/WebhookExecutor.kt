@@ -1,6 +1,7 @@
 package cz.lukaskabc.minecraft.ci.publish.discord
 
-object WebhookExecutor {
+import me.modmuss50.mpp.platforms.discord.DiscordAPI
 
+object WebhookExecutor {
 
 }
