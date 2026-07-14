@@ -7,16 +7,10 @@ import cz.lukaskabc.minecraft.ci.publish.configurer.CurseforgeConfigurer
 import cz.lukaskabc.minecraft.ci.publish.configurer.ModrinthConfigurer
 import cz.lukaskabc.minecraft.ci.publish.schema.Artifact
 import cz.lukaskabc.minecraft.ci.publish.schema.PublishConfigSchema
-import cz.lukaskabc.minecraft.ci.publish.task.TaskNames
-import me.modmuss50.mpp.PublishModTask
 import me.modmuss50.mpp.ReleaseType
 import org.gradle.api.GradleException
 import org.gradle.internal.extensions.stdlib.toDefaultLowerCase
-import org.gradle.kotlin.dsl.get
 import java.io.File
-import java.util.Locale
-import java.util.Locale.getDefault
-import java.util.function.Consumer
 
 /**
  * Configures the [publishMods][me.modmuss50.mpp.ModPublishExtension] to relrease the artifact specified by [ARTIFACT_ID][cz.lukaskabc.minecraft.ci.publish.EnvProvider.artifactId]
@@ -76,8 +70,9 @@ class PublishArtifactAction(configuration: ProjectConfiguration): ProjectAware(c
                 // the artifact to upload
                 file.set(artifactFile(artifact))
 
-                if (artifact.releaseType != null) {
-                    type.set(ReleaseType.valueOf(artifact.releaseType.name))
+                val releaseType = artifact.releaseType
+                if (releaseType != null) {
+                    type.set(ReleaseType.valueOf(releaseType.name))
                 } else {
                     val releaseType = artifact.releaseType ?: publishConfig.defaultReleaseType
                     type.set(releaseType.mapType())

@@ -5,15 +5,10 @@ import cz.lukaskabc.minecraft.ci.publish.ProjectConfiguration
 import cz.lukaskabc.minecraft.ci.publish.schema.Artifact
 import cz.lukaskabc.minecraft.ci.publish.schema.CfDependency
 import cz.lukaskabc.minecraft.ci.publish.schema.Dependencies
-import me.modmuss50.mpp.ModPublishExtension
 import me.modmuss50.mpp.PlatformDependency
 import me.modmuss50.mpp.PlatformDependencyContainer
 import me.modmuss50.mpp.PlatformOptions
-import me.modmuss50.mpp.ReleaseType
-import org.gradle.api.GradleException
 import org.gradle.api.provider.Provider
-import org.gradle.internal.extensions.stdlib.toDefaultLowerCase
-import java.io.File
 import java.util.concurrent.Callable
 
 /**
@@ -60,7 +55,7 @@ abstract class PlatformConfigurer<PD : PlatformDependency, D> : ProjectAware {
      */
     protected fun configureDependencies(depContainer: PlatformDependencyContainer<PD>, artifact: Artifact) {
         sequenceOf(configuration.publishConfig.commonDependencies, artifact.dependencies)
-            .filter { it != null }
+            .filterNotNull()
             .mapNotNull(this::extractDependencies)
             .flatten()
             .forEach { dep: D ->

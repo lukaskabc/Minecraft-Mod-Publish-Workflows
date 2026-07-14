@@ -32,6 +32,8 @@ dependencies {
     implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.11.0")
     // for http request construction
     implementation("com.squareup.okhttp3:okhttp:5.4.0")
+
+    compileOnly("com.google.code.findbugs:jsr305:3.0.2")
 }
 
 /**
@@ -42,8 +44,8 @@ jsonSchema2Pojo {
     setSourceType("jsonSchema")
     setAnnotationStyle("jackson3")
     includeAdditionalProperties = true
-    includeGetters = true
-    includeSetters = true
+    includeGetters = false
+    includeSetters = false
     includeJsr303Annotations = true
     includeJsr305Annotations = true
     useJakartaValidation = true
@@ -62,6 +64,13 @@ tasks.withType<JavaCompile>().configureEach {
 }
 tasks.withType<org.jetbrains.kotlin.gradle.tasks.KotlinCompile>().configureEach {
     dependsOn("generateJsonSchema2Pojo")
+    compilerOptions {
+        // Teach Kotlin to treat Jakarta/Javax validation NotNull as compile-time Non-Null
+        freeCompilerArgs.addAll(
+            "-Xnullability-annotations=@jakarta.validation.constraints:strict",
+            "-Xjsr305=strict"
+        )
+    }
 }
 tasks.named<Jar>("sourcesJar") {
     dependsOn("generateJsonSchema2Pojo")

@@ -190,7 +190,7 @@
           "description": "The description of the embed"
         },
         "color": {
-          "type": "integer",
+          "type": "string",
           "title": "Color",
           "description": "Color of the left line used in the discord embed. Full `RRGGBB` hex color prefixed with a `#`.",
           "pattern": "^#[0-9a-fA-F]{6}$"
