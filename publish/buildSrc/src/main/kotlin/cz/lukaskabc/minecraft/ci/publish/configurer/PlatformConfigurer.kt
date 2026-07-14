@@ -16,13 +16,9 @@ import org.gradle.internal.extensions.stdlib.toDefaultLowerCase
 import java.io.File
 import java.util.concurrent.Callable
 
-
-fun Artifact.jarNameGlob(modVersion: String): String {
-    return this.fileGlob.replace("{version}", modVersion)
-}
-
-fun CfDependency.DependencyType.asPlatform() = PlatformDependency.DependencyType.valueOf(name)
-
+/**
+ * Configures the given artifact for publication on a platform
+ */
 abstract class PlatformConfigurer<PD : PlatformDependency, D> : ProjectAware {
     protected val accessToken: Provider<String>
 
@@ -31,14 +27,45 @@ abstract class PlatformConfigurer<PD : PlatformDependency, D> : ProjectAware {
         this.accessToken = configuration.project.provider(accessTokenSupplier)
     }
 
-    abstract fun configure(artifactId: String, artifact: Artifact)
-    abstract fun configureDependency(platformDep: PD, dep: D)
+    /**
+     * Returns the glob pattern for the artifact jar file with `{version}` placeholder replaced with the mod version.
+     */
+    protected fun Artifact.jarNameGlob(modVersion: String): String {
+        return this.fileGlob.replace("{version}", modVersion)
+    }
 
-    abstract fun extractDependencies(deps: Dependencies): List<D>?
+    /**
+     * Maps the [CfDependency.DependencyType] to [PlatformDependency.DependencyType]
+     */
+    protected fun CfDependency.DependencyType.asPlatform() = PlatformDependency.DependencyType.valueOf(name)
 
-    abstract fun getDependencyType(dep: D): CfDependency.DependencyType
+    /**
+     * Configures the publication of the given artifact
+     */
+    public abstract fun configure(artifactId: String, artifact: Artifact)
 
-    fun configureDependencies(depContainer: PlatformDependencyContainer<PD>, artifact: Artifact) {
+    /**
+     * Configure the platform dependency using the information from configured dependency
+     */
+    protected abstract fun configureDependency(platformDep: PD, dep: D)
+
+    /**
+     * @return the dependencies for the platform
+     */
+    protected abstract fun extractDependencies(deps: Dependencies): List<D>?
+
+    /**
+     * @return the type of the platform specific dependnecy
+     */
+    protected abstract fun getDependencyType(dep: D): CfDependency.DependencyType
+
+    /**
+     * Add dependencies of the artifact for the platform
+     * @see [extractDependencies]
+     * @see [getDependencyType]
+     * @see [configureDependency]
+     */
+    protected fun configureDependencies(depContainer: PlatformDependencyContainer<PD>, artifact: Artifact) {
         sequenceOf(configuration.publishConfig.commonDependencies, artifact.dependencies)
             .filter { it != null }
             .mapNotNull(this::extractDependencies)
@@ -64,7 +91,10 @@ abstract class PlatformConfigurer<PD : PlatformDependency, D> : ProjectAware {
             ?: throw GradleException("Failed to match artifact file for $fileNameGlob (original glob: $glob)")
     }
 
-    fun configurePlatform(context: PlatformOptions, artifact: Artifact) {
+    /**
+     * Configure common platform options for the given artifact
+     */
+    protected fun configurePlatform(context: PlatformOptions, artifact: Artifact) {
         context.accessToken.set(this.accessToken)
 
         if (artifact.releaseType != null) {

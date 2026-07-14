@@ -4,9 +4,9 @@ import org.gradle.api.GradleException
 import org.gradle.api.provider.Provider
 import org.gradle.api.provider.ProviderFactory
 
-const val TRUE = "true"
-
 open class EnvProvider(protected val providers: ProviderFactory) {
+    private val TRUE = "true"
+
     fun isGithubWorkflow() = env(Env.GITHUB_ACTIONS).getOrElse("") == TRUE
 
     /**

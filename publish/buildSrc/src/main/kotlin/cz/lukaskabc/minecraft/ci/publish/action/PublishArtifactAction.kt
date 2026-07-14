@@ -16,12 +16,7 @@ import java.util.Locale.getDefault
 import java.util.function.Consumer
 
 /**
- * Maps the value to [ReleaseType]
- */
-fun PublishConfigSchema.ReleaseType.mapType() = ReleaseType.valueOf(name)
-
-/**
- * Configures the [publishMods][me.modmuss50.mpp.ModPublishExtension] to relrease the artifact by [ARTIFACT_ID][cz.lukaskabc.minecraft.ci.publish.EnvProvider.artifactId]
+ * Configures the [publishMods][me.modmuss50.mpp.ModPublishExtension] to relrease the artifact specified by [ARTIFACT_ID][cz.lukaskabc.minecraft.ci.publish.EnvProvider.artifactId]
  *
  * Requires `changelog.md` file in the project directory.
  *
@@ -32,6 +27,11 @@ fun PublishConfigSchema.ReleaseType.mapType() = ReleaseType.valueOf(name)
  */
 class PublishArtifactAction(configuration: ProjectConfiguration): ProjectAware(configuration), Runnable {
     val changelogFile = configuration.project.file("changelog.md")
+
+    /**
+     * Maps the value of [PublishConfigSchema.ReleaseType] to [ReleaseType]
+     */
+    fun PublishConfigSchema.ReleaseType.mapType() = ReleaseType.valueOf(name)
 
     override fun run() {
         with(configuration) {
@@ -51,7 +51,7 @@ class PublishArtifactAction(configuration: ProjectConfiguration): ProjectAware(c
                 dryRun.set(envProvider.isDryRun())
 
                 val releaseType = artifact.releaseType ?: publishConfig.defaultReleaseType
-                type.set(ReleaseType.valueOf(releaseType.name))
+                type.set(releaseType.mapType())
 
                 changelog.set(changelogFile.readText())
                 version.set(modVersion)
