@@ -184,11 +184,6 @@
           "title": "Title",
           "description": "The title of the embed"
         },
-        "type": {
-          "type": "string",
-          "title": "Type",
-          "const": "rich"
-        },
         "description": {
           "type": "string",
           "title": "Description",
