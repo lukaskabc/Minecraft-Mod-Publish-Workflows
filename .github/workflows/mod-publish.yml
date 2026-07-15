@@ -135,6 +135,7 @@ jobs:
         shell: bash
         env:
           CURSEFORGE_API_KEY: ${{ secrets.CURSEFORGE_API_KEY }}
+          PLATFORM: 'curseforge'
           DRY_RUN: ${{ inputs.dry_run }}
           VERSION: ${{ needs.prepare.outputs.version }}
           ARTIFACT_ID: ${{ matrix.id }}
@@ -143,7 +144,7 @@ jobs:
           export CONFIG_JSON=$(cat repository/publish.config.json)
           chmod +x workflow/publish/gradlew
           cd workflow/publish
-          ./gradlew "publishCurseforge-${ARTIFACT_ID}"
+          ./gradlew publishArtifact
 
       - name: ${{ matrix.id }} - Upload publish mods result
         uses: actions/upload-artifact@v7
@@ -152,6 +153,7 @@ jobs:
           path: workflow/publish/build/publishMods/*.json
           if-no-files-found: 'error'
           retention-days: 1
+
   publish-modrinth:
     needs: prepare
     if: needs.prepare.outputs.modrinth_enabled == 'true'
@@ -181,6 +183,7 @@ jobs:
         shell: bash
         env:
           MODRINTH_API_KEY: ${{ secrets.MODRINTH_API_KEY }}
+          PLATFORM: 'modrinth'
           DRY_RUN: ${{ inputs.dry_run }}
           VERSION: ${{ needs.prepare.outputs.version }}
           ARTIFACT_ID: ${{ matrix.id }}
@@ -189,7 +192,7 @@ jobs:
           export CONFIG_JSON=$(cat repository/publish.config.json)
           chmod +x workflow/publish/gradlew
           cd workflow/publish
-          ./gradlew "publishModrinth-${ARTIFACT_ID}"
+          ./gradlew publishArtifact
 
       - name: ${{ matrix.id }} - Upload publish mods result
         uses: actions/upload-artifact@v7
@@ -224,8 +227,8 @@ jobs:
         uses: actions/download-artifact@v8
         with:
           pattern: modPublish-result-**
+          path: workflow/publish/build/publishMods
           merge-multiple: 'true'
-      # TODO: will the files be downloaded to root or to the correct directory?
 
       - name: Debug - List files
         run: |
