@@ -10,6 +10,7 @@ plugins {
     `kotlin-dsl`
     idea
     id("org.jsonschema2pojo") version "1.3.3"
+    embeddedKotlin("plugin.serialization")
 }
 
 dependencies {
@@ -34,6 +35,10 @@ dependencies {
     implementation("com.squareup.okhttp3:okhttp:5.4.0")
 
     compileOnly("com.google.code.findbugs:jsr305:3.0.2")
+
+    testImplementation("org.junit.jupiter:junit-jupiter:5.10.2")
+    testImplementation(gradleTestKit()) // provides ProjectBuilder
+    testRuntimeOnly("org.junit.platform:junit-platform-launcher")
 }
 
 /**
@@ -83,6 +88,37 @@ tasks.named<Jar>("javadocJar") {
 tasks.withType<Javadoc>().configureEach {
     (options as StandardJavadocDocletOptions).addStringOption("Xdoclint:none", "-quiet")
     isFailOnError = false
+}
+
+// Resolve the real webhook URL from either a -P property or an env var
+val discordWebhookTestUrl: String? = (findProperty("discordWebhookUrl") as String?)
+    ?: providers.environmentVariable("TEST_DISCORD_WEBHOOK_URL").orNull
+
+tasks.register<Test>("testDiscordAnnounce") {
+    group = "verification"
+    description = "Sends a REAL announcement to a live Discord webhook. " +
+            "Usage: ./gradlew testDiscordAnnounce -PdiscordWebhookUrl=<url> " +
+            "(or set TEST_DISCORD_WEBHOOK_URL)"
+
+    testClassesDirs = sourceSets["test"].output.classesDirs
+    classpath = sourceSets["test"].runtimeClasspath
+    useJUnitPlatform()
+
+    filter {
+        includeTestsMatching("cz.lukaskabc.minecraft.ci.publish.action.AnnounceDiscordActionTest")
+    }
+
+    discordWebhookTestUrl?.let { systemProperty("test.discord.webhook.url", it) }
+
+    // it hits the network - never treat as cacheable/up-to-date
+    outputs.upToDateWhen { false }
+}
+
+tasks.named<Test>("test") {
+    useJUnitPlatform()
+    filter {
+        excludeTestsMatching("cz.lukaskabc.minecraft.ci.publish.action.AnnounceDiscordActionTest")
+    }
 }
 
 idea {

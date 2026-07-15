@@ -23,6 +23,11 @@ class AnnounceDiscordAction(configuration: ProjectConfiguration) : ProjectAware(
         val results =  project.fileTree(publishModsDir) {
             include("*.json") // * matches direct files only; ** would make it recursive
         }
+
+        if (results.isEmpty) {
+            throw GradleException("No publish results found in /build/publishMods")
+        }
+
         return configuration.project.files(results)
     }
 
@@ -53,7 +58,7 @@ class AnnounceDiscordAction(configuration: ProjectConfiguration) : ProjectAware(
         }
 
         buttons.forEach { btn ->
-            if (buttons.any { it.url ==  btn.url}) {
+            if (buttons.any { it.url == btn.url && it !== btn}) {
                 throw GradleException("Duplicate URL: ${btn.url} with label: ${btn.label}")
             }
         }
