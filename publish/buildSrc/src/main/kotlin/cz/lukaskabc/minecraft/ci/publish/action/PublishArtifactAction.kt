@@ -23,7 +23,6 @@ import java.io.File
  * - [DRY_RUN][cz.lukaskabc.minecraft.ci.publish.Env.DRY_RUN] (Optional)
  */
 class PublishArtifactAction(configuration: ProjectConfiguration): ProjectAware(configuration), Runnable {
-    val changelogFile = configuration.project.file("changelog.md")
 
     /**
      * Maps the value of [PublishConfigSchema.ReleaseType] to [ReleaseType]

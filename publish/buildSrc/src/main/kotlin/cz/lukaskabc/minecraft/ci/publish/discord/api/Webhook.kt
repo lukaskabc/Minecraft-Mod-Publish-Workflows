@@ -3,8 +3,7 @@ package cz.lukaskabc.minecraft.ci.publish.discord.api
 import jakarta.validation.Valid
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
-import me.modmuss50.mpp.platforms.discord.DiscordAPI.Component
-import me.modmuss50.mpp.platforms.discord.DiscordAPI.Embed
+import me.modmuss50.mpp.platforms.discord.DiscordAPI.Embed as DiscordEmbed
 
 /**
  *
@@ -19,9 +18,7 @@ data class Webhook(
     @SerialName("avatar_url")
     val avatarUrl: String? = null,
     @field:Valid
-    val embeds: List<Embed>? = null,
+    val embeds: List<DiscordEmbed>? = null,
     @field:Valid
-    val components: List<Component>? = null,
-    @SerialName("thread_name")
-    val threadName: String? = null,
+    val components: List<Component>? = null
 )
