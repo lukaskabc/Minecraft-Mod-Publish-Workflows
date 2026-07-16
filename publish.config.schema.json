@@ -84,18 +84,19 @@
           "title": "Avatar URL",
           "description": "Avatar image URL for the webhook, defaults to the avatar configured when the webhook URL was created."
         },
-        "content": {
+        "release_content": {
           "type": "string",
           "title": "Content message",
-          "description": "Set the content message. The following placeholders are available: \n`{version}`, \n`{changelog}`\n Defaults to \n`v{version} was released!\n{changelog}`"
+          "description": "Set the content message. The following placeholders are available: \n`{version}`, \n`{changelog}`\n Defaults to \n`# Changelog \n{changelog}`"
         },
-        "embed": {
+        "release_embed": {
+          "title": "Version release Discord Embed",
           "$ref": "#/$defs/embed"
         },
         "nightly_content": {
           "type": "string",
           "title": "Content message for Nightly build",
-          "description": "Set the content message, the commit message is **always appended** after this content. Use `{version}` as a placeholder for the nightly version. Defaults to \n`v{version} Nightly build available!`"
+          "description": "Set the content message. Available placeholders: \n`{version}`, \n`{loaders}`, \n`{game_versions}`, \n`{file_name}`, \n`{platform}`. Defaults to \n`# Nightly build \nv{version}`"
         },
         "nightly_link_title": {
           "type": "string",
@@ -176,7 +177,7 @@
     "embed": {
       "type": "object",
       "title": "Discord Embed",
-      "description": "An embed object to be sent with the Discord webhook.\nAvailable placeholders: \n{version} The mod version without 'v' prefix, \n{changelog} The changelog contents",
+      "description": "An embed object to be sent with the Discord webhook.\nAvailable placeholders: \n{version} The mod version without 'v' prefix, \n{changelog} The changelog contents. \n Do not use Discord tags in embed, if you want to send a notifications, use the tag in the standard message content.",
       "additionalProperties": false,
       "properties": {
         "title": {
