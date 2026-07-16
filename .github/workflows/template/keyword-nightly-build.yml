@@ -1,4 +1,6 @@
 # Copy this file to your repository to /.github/workflows/ directory
+# for each branch on which you want to compile nightly builds
+#
 # To create a new nightly build, go to your repository > Actions
 #   Select the "Nightly Build on Keyword commit" action in the left and click the "Run workflow" button in the right
 #
@@ -16,6 +18,7 @@ on:
     branches:
       # Add every branch that should be eligible for nightly builds.
       # Pushes to any other branch never even starts this workflow.
+      # Workflow is always run on the respective branch, you can keep here only the branch on which this file is placed
       - main
       - develop
   workflow_dispatch:

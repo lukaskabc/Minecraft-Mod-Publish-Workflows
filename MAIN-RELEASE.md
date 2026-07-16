@@ -2,10 +2,13 @@
 
 ## 1. Create GitHub workflows in your repository
 
+Perform this setup on your main branch.
+
 In your repository create directory `/.github/workflows/` and copy files from this repository from [`/.github/workflows/template`](.github/workflows/template).
 
 - Copy the [`release-trigger-mod-publish.yml`](.github/workflows/template/release-trigger-mod-publish.yml)
 - Choose and copy **ONE OF** [`tag-trigger-draft-release.yml`](.github/workflows/template/tag-trigger-draft-release.yml) or [`manual-trigger-draft-release.yml`](.github/workflows/template/manual-trigger-draft-release.yml)
+- Do NOT use both workflows at the same time
 - Choose a specific version/ref from this repository (or rather a specific commit hash) and update **BOTH** copied files with the chosen version/hash/ref
 
 ## 2. Create a configuration file

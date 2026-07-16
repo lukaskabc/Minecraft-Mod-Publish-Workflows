@@ -2,6 +2,7 @@ package cz.lukaskabc.minecraft.ci.publish.action
 
 import cz.lukaskabc.minecraft.ci.publish.ProjectAware
 import cz.lukaskabc.minecraft.ci.publish.ProjectConfiguration
+import cz.lukaskabc.minecraft.ci.publish.ReleasePlatform
 import cz.lukaskabc.minecraft.ci.publish.discord.PlaceholderProcessor
 import cz.lukaskabc.minecraft.ci.publish.discord.WebhookExecutor
 import cz.lukaskabc.minecraft.ci.publish.discord.api.ActionRow
@@ -10,6 +11,7 @@ import cz.lukaskabc.minecraft.ci.publish.discord.api.Webhook
 import cz.lukaskabc.minecraft.ci.publish.discord.getEmoji
 import cz.lukaskabc.minecraft.ci.publish.discord.toDiscord
 import me.modmuss50.mpp.PublishResult
+import me.modmuss50.mpp.ReleaseType
 import org.apache.hc.core5.net.URIBuilder
 import org.gradle.api.GradleException
 import org.gradle.api.file.ConfigurableFileCollection
@@ -31,24 +33,45 @@ class AnnounceDiscordAction(configuration: ProjectConfiguration) : ProjectAware(
         return configuration.project.files(results)
     }
 
-    private fun createButtons(): List<ButtonComponent> {
-        val buttons = publishResults().files.map {
+    private fun createButtons(): List<ActionRow> {
+        val results = publishResults().files.map {
             PublishResult.fromJson(it.readText())
-        }.map {
-            ButtonComponent(
-                label = it.title,
-                url =  it.link,
-                emoji = getEmoji(it)
-            )
         }
 
-        buttons.forEach { btn ->
-            if (buttons.any { it.url == btn.url && it !== btn}) {
-                throw GradleException("Duplicate URL: ${btn.url} with label: ${btn.label}")
+        // Ensure no link is duplicated
+        val seenUrls = mutableSetOf<String>()
+        results.forEach { result ->
+            if (!seenUrls.add(result.link)) {
+                throw GradleException("Duplicate URL: ${result.link} with label: ${result.title}")
             }
         }
 
-        return buttons
+        // put github first
+        val priorityComparator = Comparator<String> { a, b ->
+            when {
+                a == "github" -> -1
+                b == "github" -> 1
+                else -> a.compareTo(b)
+            }
+        }
+        val groupedByType = results.groupBy { it.type }.toSortedMap(priorityComparator)
+
+        val actionRows = groupedByType.flatMap { (type, groupResults) ->
+            groupResults
+                // Sort by link within the group
+                .sortedBy { it.link }
+                .map { result ->
+                    ButtonComponent(
+                        label = result.title,
+                        url = result.link,
+                        emoji = getEmoji(result)
+                    )
+                }
+                .chunked(ActionRow.MAX_SIZE)
+                .map { chunk -> ActionRow(components = chunk) }
+        }
+
+        return actionRows
     }
 
     fun getMessageContent(params: PlaceholderProcessor.Params): String {
@@ -65,7 +88,7 @@ class AnnounceDiscordAction(configuration: ProjectConfiguration) : ProjectAware(
 
             val placeholderParams = PlaceholderProcessor.Params(
                 modVersion = configuration.modVersion,
-                changelog = changelog
+                changelog = this@AnnounceDiscordAction.changelog
             )
 
             val uri = URIBuilder(configuration.envProvider.discordWebhookUrl())
@@ -74,8 +97,6 @@ class AnnounceDiscordAction(configuration: ProjectConfiguration) : ProjectAware(
                 .build()
 
             val buttonRows: List<ActionRow> = createButtons()
-                .chunked(ActionRow.MAX_SIZE)
-                .map { ActionRow(components = it) }
 
             val embed = webhookConfig.releaseEmbed?.toDiscord(placeholderParams)
             val messageContent = getMessageContent(placeholderParams)

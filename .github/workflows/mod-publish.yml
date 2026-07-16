@@ -82,6 +82,27 @@ jobs:
         run: |
           gh release view "$RELEASE_TAG" --json body --jq '.body' > workflow/publish/changelog.md
 
+      - name: Generate GitHub publish result JSON
+        env:
+          GH_REPO: ${{ github.repository }}
+          GH_TOKEN: ${{ github.token }}
+          RELEASE_TAG: ${{ inputs.release_tag }}
+        run: |
+          # Create target directories
+          mkdir -p workflow/publish/build/publishMods
+          
+          # Fetch release details and construct the JSON structure dynamically
+          gh release view "$RELEASE_TAG" --json databaseId,name | jq \
+            --arg repo "$GH_REPO" \
+            --arg tag "$RELEASE_TAG" \
+            '{
+              type: "github",
+              repository: $repo,
+              releaseId: .databaseId,
+              url: "https://github.com/\($repo)/releases/tag/\($tag)",
+              title: .name
+            }' > workflow/publish/build/publishMods/github-publish-result.json
+
       - name: Prepare gradle wrapper
         run: chmod +x workflow/publish/gradlew
 
@@ -149,7 +170,7 @@ jobs:
       - name: ${{ matrix.id }} - Upload publish mods result
         uses: actions/upload-artifact@v7
         with:
-          name: modPublish-result-${{ matrix.id }}
+          name: modPublish-result-curseforge-${{ matrix.id }}
           path: workflow/publish/build/publishMods/*.json
           if-no-files-found: 'error'
           retention-days: 1
@@ -197,7 +218,7 @@ jobs:
       - name: ${{ matrix.id }} - Upload publish mods result
         uses: actions/upload-artifact@v7
         with:
-          name: modPublish-result-${{ matrix.id }}
+          name: modPublish-result-modrinth-${{ matrix.id }}
           path: workflow/publish/build/publishMods/*.json
           if-no-files-found: 'error'
           retention-days: 1

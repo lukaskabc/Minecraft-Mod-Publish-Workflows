@@ -1,5 +1,6 @@
 # Publishing Minecraft mod workflows
-This repository contains reusable GitHub Action workflows that allows to automatically compile and publish minecraft mod to Github release, [Curseforge](https://www.curseforge.com/), [Modrinth](https://modrinth.com/) and even Discord.
+This repository contains reusable GitHub Action workflows that allows to automatically compile and publish minecraft mod to 
+Github release, [Curseforge](https://www.curseforge.com/), [Modrinth](https://modrinth.com/) and announce it to Discord.
 Internally uses [Mod publish plugin created by Modmuss](https://github.com/modmuss50/mod-publish-plugin).
 The workflows are written with support for multi-branch releases for publishing different jars for different versions and mod loaders.
 
@@ -37,19 +38,17 @@ The process to release a new version consists of the following steps:
   - Modrinth
   - Curseforge 
   - and Discord
-- Only a single configured (main) artifact update will be published to discord (e.g. the main branch).  
-  Otherwise each released artifact would be announced to the discord, 
-  each with the same changelog resulting in spam, which is not desired.
+- After all artifacts are successfully published to both Modrinth and Curseforge, an announcement is sent to Discord webhook
 
 ## Release version setup
 Described in [MAIN-RELEASE](./MAIN-RELEASE.md) file
 
 ## Nightly (preview) builds
-Optionally, in addition to the main release workflow, there is pipeline for building preview jars.
+Optionally, in addition to the main release workflow, there is pipeline for building preview jars to Discord webhook.
 
 First configure the main release workflow and include the options for nightly builds in the same configuration file.
 
-1. Add [keyword-nightly-build.yml](./.github/workflows/template/keyword-nightly-build.yml) to your repository workflows.
+1. Add [keyword-nightly-build.yml](./.github/workflows/template/keyword-nightly-build.yml) to your repository workflows to each branch from which you want to publish the nightly builds.
 2. Configure the branches and commit keywords that should trigger the nightly build
 3. At the bottom of the file, pin the workflow version and configure the file upload limit for your discord server
 - If the compiled file has bigger size than the configured value, the upload job will be skipped.
