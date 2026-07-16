@@ -6,11 +6,11 @@ import cz.lukaskabc.minecraft.ci.publish.ReleasePlatform
 import cz.lukaskabc.minecraft.ci.publish.configurer.PlatformConfigurer
 import cz.lukaskabc.minecraft.ci.publish.discord.PlaceholderProcessor
 import cz.lukaskabc.minecraft.ci.publish.discord.WebhookExecutor
-import cz.lukaskabc.minecraft.ci.publish.discord.addQueryParam
 import cz.lukaskabc.minecraft.ci.publish.discord.api.ActionRow
 import cz.lukaskabc.minecraft.ci.publish.discord.api.ButtonComponent
 import cz.lukaskabc.minecraft.ci.publish.discord.api.Webhook
 import cz.lukaskabc.minecraft.ci.publish.discord.getEmoji
+import org.apache.hc.core5.net.URIBuilder
 import org.gradle.api.GradleException
 import java.io.File
 import java.net.URI
@@ -39,9 +39,10 @@ class NightlyAnnounceDiscordAction(configuration: ProjectConfiguration) : Abstra
 
             logger.lifecycle("Preparing announcement of nightly build")
 
-            val nightlyUri = URI(envProvider.discordNightlyWebhookUrl())
-                .apply { addQueryParam(this, "with_components", "true") }
-                .apply { addQueryParam(this, "wait", "true") }
+            val nightlyUri = URIBuilder(envProvider.discordNightlyWebhookUrl())
+                .addParameter("with_components", "true")
+                .addParameter("wait", "true")
+                .build()
 
             val placeholderParams = PlaceholderProcessor.Params(
                 modVersion = configuration.modVersion,

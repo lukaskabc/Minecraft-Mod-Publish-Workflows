@@ -13,6 +13,7 @@ import org.apache.hc.client5.http.impl.io.PoolingHttpClientConnectionManager
 import org.apache.hc.core5.http.ContentType
 import org.apache.hc.core5.http.io.entity.EntityUtils
 import org.apache.hc.core5.http.io.entity.StringEntity
+import org.apache.hc.core5.net.URIBuilder
 import org.apache.hc.core5.util.Timeout
 import org.gradle.api.GradleException
 import java.io.File
@@ -65,8 +66,10 @@ object WebhookExecutor {
      * If the message already contains attachments, they will be replaced
      */
     fun attachFile(webhookUri: URI, messageId: String, file: File) {
-        val patchUri = withPatchPath(webhookUri, messageId)
-            .apply { addQueryParam(this, "wait", "true") }
+        val patchUri = URIBuilder(webhookUri)
+            .appendPath("messages/$messageId")
+            .addParameter("wait", "true")
+            .build()
 
         // Should ensure that if re-run, any existing attachments will be replaced
         val payloadJson = """{"attachments":[{"id":0,"filename":"${file.name}"}]}"""

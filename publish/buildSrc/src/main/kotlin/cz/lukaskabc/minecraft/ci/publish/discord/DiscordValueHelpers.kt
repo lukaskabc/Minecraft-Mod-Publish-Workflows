@@ -6,44 +6,6 @@ import cz.lukaskabc.minecraft.ci.publish.schema.Footer
 import cz.lukaskabc.minecraft.ci.publish.schema.Thumbnail
 import me.modmuss50.mpp.PublishResult
 import me.modmuss50.mpp.platforms.discord.DiscordAPI
-import org.gradle.api.GradleException
-import java.net.URI
-
-fun addQueryParam(uri: URI?, paramName: String, paramValue: String): URI {
-    if (uri == null) {
-        throw GradleException("Discord Webhook URI not specified!")
-    }
-
-    val param = "$paramName=$paramValue"
-    val newRawQuery = if (uri.rawQuery.isNullOrBlank()) param else "${uri.rawQuery}&$param"
-
-    val rebuilt = buildString {
-        append(uri.scheme).append(':')
-        if (uri.rawAuthority != null) append("//").append(uri.rawAuthority)
-        append(uri.rawPath ?: "")
-        append('?').append(newRawQuery)
-        if (uri.rawFragment != null) append('#').append(uri.rawFragment)
-    }
-
-    return URI(rebuilt)
-}
-
-fun withPatchPath(uri: URI?, messageId: String?): URI {
-    if (uri == null || messageId == null) {
-        throw GradleException("Discord Webhook URI not specified!")
-    }
-
-    val rebuilt = buildString {
-        append(uri.scheme).append(':')
-        if (uri.rawAuthority != null) append("//").append(uri.rawAuthority)
-        append(uri.rawPath ?: "")
-        append("/messages/$messageId")
-        append('?').append(uri.rawQuery)
-        if (uri.rawFragment != null) append('#').append(uri.rawFragment)
-    }
-
-    return URI(rebuilt)
-}
 
 fun getEmoji(publishResult: PublishResult): Emoji? = getEmoji(publishResult.type)
 

@@ -4,13 +4,13 @@ import cz.lukaskabc.minecraft.ci.publish.ProjectAware
 import cz.lukaskabc.minecraft.ci.publish.ProjectConfiguration
 import cz.lukaskabc.minecraft.ci.publish.discord.PlaceholderProcessor
 import cz.lukaskabc.minecraft.ci.publish.discord.WebhookExecutor
-import cz.lukaskabc.minecraft.ci.publish.discord.addQueryParam
 import cz.lukaskabc.minecraft.ci.publish.discord.api.ActionRow
 import cz.lukaskabc.minecraft.ci.publish.discord.api.ButtonComponent
 import cz.lukaskabc.minecraft.ci.publish.discord.api.Webhook
 import cz.lukaskabc.minecraft.ci.publish.discord.getEmoji
 import cz.lukaskabc.minecraft.ci.publish.discord.toDiscord
 import me.modmuss50.mpp.PublishResult
+import org.apache.hc.core5.net.URIBuilder
 import org.gradle.api.GradleException
 import org.gradle.api.file.ConfigurableFileCollection
 import java.net.URI
@@ -69,9 +69,10 @@ class AnnounceDiscordAction(configuration: ProjectConfiguration) : ProjectAware(
                 changelog = changelog
             )
 
-            val uri = URI(configuration.envProvider.discordWebhookUrl())
-                .apply { addQueryParam(this, "with_components", "true") }
-                .apply { addQueryParam(this, "wait", "true") }
+            val uri = URIBuilder(configuration.envProvider.discordWebhookUrl())
+                .addParameter("with_components", "true")
+                .addParameter("wait", "true")
+                .build()
 
             val buttonRows: List<ActionRow> = createButtons()
                 .chunked(ActionRow.MAX_SIZE)
