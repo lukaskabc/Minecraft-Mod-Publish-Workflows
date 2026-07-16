@@ -7,21 +7,20 @@ import me.modmuss50.mpp.platforms.discord.DiscordAPI
 import org.gradle.api.GradleException
 import java.net.URI
 
-fun addWithComponentsQuery(uri: String?): URI {
+fun addQueryParam(uri: URI?, paramName: String, paramValue: String): URI {
     if (uri == null) {
         throw GradleException("Discord Webhook URI not specified!")
     }
-    val baseUri = URI(uri)
 
-    val param = "with_components=true"
-    val newRawQuery = if (baseUri.rawQuery.isNullOrBlank()) param else "${baseUri.rawQuery}&$param"
+    val param = "$paramName=$paramValue"
+    val newRawQuery = if (uri.rawQuery.isNullOrBlank()) param else "${uri.rawQuery}&$param"
 
     val rebuilt = buildString {
-        append(baseUri.scheme).append(':')
-        if (baseUri.rawAuthority != null) append("//").append(baseUri.rawAuthority)
-        append(baseUri.rawPath ?: "")
+        append(uri.scheme).append(':')
+        if (uri.rawAuthority != null) append("//").append(uri.rawAuthority)
+        append(uri.rawPath ?: "")
         append('?').append(newRawQuery)
-        if (baseUri.rawFragment != null) append('#').append(baseUri.rawFragment)
+        if (uri.rawFragment != null) append('#').append(uri.rawFragment)
     }
 
     return URI(rebuilt)

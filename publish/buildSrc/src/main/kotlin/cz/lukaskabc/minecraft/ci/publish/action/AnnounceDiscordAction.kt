@@ -4,7 +4,7 @@ import cz.lukaskabc.minecraft.ci.publish.ProjectAware
 import cz.lukaskabc.minecraft.ci.publish.ProjectConfiguration
 import cz.lukaskabc.minecraft.ci.publish.discord.PlaceholderProcessor
 import cz.lukaskabc.minecraft.ci.publish.discord.WebhookExecutor
-import cz.lukaskabc.minecraft.ci.publish.discord.addWithComponentsQuery
+import cz.lukaskabc.minecraft.ci.publish.discord.addQueryParam
 import cz.lukaskabc.minecraft.ci.publish.discord.api.ActionRow
 import cz.lukaskabc.minecraft.ci.publish.discord.api.ButtonComponent
 import cz.lukaskabc.minecraft.ci.publish.discord.api.Emoji
@@ -13,6 +13,7 @@ import cz.lukaskabc.minecraft.ci.publish.discord.toDiscord
 import me.modmuss50.mpp.PublishResult
 import org.gradle.api.GradleException
 import org.gradle.api.file.ConfigurableFileCollection
+import java.net.URI
 
 class AnnounceDiscordAction(configuration: ProjectConfiguration) : ProjectAware(configuration), Runnable {
 
@@ -66,6 +67,11 @@ class AnnounceDiscordAction(configuration: ProjectConfiguration) : ProjectAware(
         return buttons
     }
 
+    fun getMessageContent(params: PlaceholderProcessor.Params): String {
+        return (configuration.publishConfig?.discordWebhook?.releaseContent ?: "# Changelog \n{changelog}")
+            .let { PlaceholderProcessor.process(it, params) }
+    }
+
     override fun run() {
         with(configuration) {
             logger.lifecycle("Loading publish configurations")
@@ -78,14 +84,16 @@ class AnnounceDiscordAction(configuration: ProjectConfiguration) : ProjectAware(
                 changelog = changelogFile.readText()
             )
 
-            val uri = addWithComponentsQuery(configuration.envProvider.discordWebhookUrl())
+            val uri = URI(configuration.envProvider.discordWebhookUrl())
+                .apply { addQueryParam(this, "with_components", "true") }
+                .apply { addQueryParam(this, "wait", "true") }
 
             val buttonRows: List<ActionRow> = createButtons()
                 .chunked(ActionRow.MAX_SIZE)
                 .map { ActionRow(components = it) }
 
-            val embed = webhookConfig.embed?.toDiscord(placeholderParams)
-            val messageContent = webhookConfig.content?.let { PlaceholderProcessor.process(it, placeholderParams) }
+            val embed = webhookConfig.releaseEmbed?.toDiscord(placeholderParams)
+            val messageContent = getMessageContent(placeholderParams)
 
             val webhook = Webhook(
                 content = messageContent,
