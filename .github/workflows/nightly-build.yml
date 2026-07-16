@@ -72,7 +72,7 @@ jobs:
         run: |
           set -euo pipefail
 
-          ARTIFACTS=$(echo "$CONFIG" | jq -c --arg branch "$BRANCH" '[.artifacts[] | select(.branch == $branch)]')
+          ARTIFACTS=$(echo "$CONFIG" | jq -c --arg branch "$BRANCH" '[.artifacts | to_entries[] | select(.value.branch == $branch) | .value + {id: .key}]')
           COUNT=$(echo "$ARTIFACTS" | jq 'length')
 
           if [[ "$COUNT" -eq 0 ]]; then
