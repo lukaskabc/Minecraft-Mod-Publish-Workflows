@@ -7,8 +7,8 @@ import cz.lukaskabc.minecraft.ci.publish.discord.WebhookExecutor
 import cz.lukaskabc.minecraft.ci.publish.discord.addQueryParam
 import cz.lukaskabc.minecraft.ci.publish.discord.api.ActionRow
 import cz.lukaskabc.minecraft.ci.publish.discord.api.ButtonComponent
-import cz.lukaskabc.minecraft.ci.publish.discord.api.Emoji
 import cz.lukaskabc.minecraft.ci.publish.discord.api.Webhook
+import cz.lukaskabc.minecraft.ci.publish.discord.getEmoji
 import cz.lukaskabc.minecraft.ci.publish.discord.toDiscord
 import me.modmuss50.mpp.PublishResult
 import org.gradle.api.GradleException
@@ -32,21 +32,6 @@ class AnnounceDiscordAction(configuration: ProjectConfiguration) : ProjectAware(
         return configuration.project.files(results)
     }
 
-    private fun getEmoji(publishResult: PublishResult): Emoji? {
-        return when (publishResult.type) {
-            // from Curseforge discord
-            // https://discord.com/invite/curseforge
-            "curseforge" -> Emoji(id = "1072449162446123039", name = publishResult.type)
-            // From Terrarium Modding
-            // https://discord.terrarium.earth/
-            "github" -> Emoji(id = "981406690404622406", name = publishResult.type)
-            // from Modrinth discord
-            // https://discord.modrinth.com/
-            "modrinth" -> Emoji(id = "1040805511538421890", name = publishResult.type)
-            else -> null
-        }
-    }
-
     private fun createButtons(): List<ButtonComponent> {
         val buttons = publishResults().files.map {
             PublishResult.fromJson(it.readText())
@@ -68,20 +53,20 @@ class AnnounceDiscordAction(configuration: ProjectConfiguration) : ProjectAware(
     }
 
     fun getMessageContent(params: PlaceholderProcessor.Params): String {
-        return (configuration.publishConfig?.discordWebhook?.releaseContent ?: "# Changelog \n{changelog}")
+        return (configuration.publishConfig.discordWebhook?.releaseContent ?: "# Changelog \n{changelog}")
             .let { PlaceholderProcessor.process(it, params) }
     }
 
     override fun run() {
         with(configuration) {
-            logger.lifecycle("Loading publish configurations")
+            logger.lifecycle("Preparing webhook configuration")
             val webhookConfig =
                 configuration.publishConfig.discordWebhook ?:
                     throw GradleException("Discord webhook not configured")
 
             val placeholderParams = PlaceholderProcessor.Params(
                 modVersion = configuration.modVersion,
-                changelog = changelogFile.readText()
+                changelog = changelog
             )
 
             val uri = URI(configuration.envProvider.discordWebhookUrl())
@@ -103,6 +88,7 @@ class AnnounceDiscordAction(configuration: ProjectConfiguration) : ProjectAware(
                 components = buttonRows
             )
 
+            logger.lifecycle("Sending version release announcement to Discord Webhook")
             WebhookExecutor.execute(uri, webhook)
         }
     }

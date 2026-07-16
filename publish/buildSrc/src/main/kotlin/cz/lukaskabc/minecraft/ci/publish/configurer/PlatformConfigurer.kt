@@ -77,7 +77,7 @@ abstract class PlatformConfigurer<PD : PlatformDependency, D> : ProjectAware {
     }
 
     protected fun getAnnounceTitle(artifact: Artifact, context: ModPublishExtension, platform: ReleasePlatform): String {
-        val template = artifact.discordButtonLabel ?: "{platform}: {loaders} {game_versions}"
+        val template = artifact.discordButtonLabel ?: DEFAULT_DISCORD_BUTTON_LABEL
         val params = PlaceholderProcessor.Params(
             modVersion = configuration.modVersion,
             changelog = context.changelog.getOrElse(""),
@@ -88,5 +88,9 @@ abstract class PlatformConfigurer<PD : PlatformDependency, D> : ProjectAware {
         )
 
         return PlaceholderProcessor.process(template, params)
+    }
+
+    companion object {
+        const val DEFAULT_DISCORD_BUTTON_LABEL = "{platform}: {loaders} {game_versions}"
     }
 }

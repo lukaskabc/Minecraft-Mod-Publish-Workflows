@@ -6,11 +6,11 @@ import java.io.File
 
 abstract class ProjectAware {
     protected val configuration: ProjectConfiguration
-    val changelogFile: File
+    val changelog: String
 
     constructor(configuration: ProjectConfiguration) {
         this.configuration = configuration
-        this.changelogFile = configuration.project.file("changelog.md")
+        this.changelog = configuration.project.file("changelog.md").readText()
     }
 
     fun <R> withProject(block: ProjectConfiguration.() -> R) = with(configuration, block)

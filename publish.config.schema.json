@@ -98,10 +98,10 @@
           "title": "Content message for Nightly build",
           "description": "Set the content message. Available placeholders: \n`{version}`, \n`{loaders}`, \n`{game_versions}`, \n`{file_name}`, \n`{platform}`. Defaults to \n`# Nightly build \nv{version}`"
         },
-        "nightly_link_title": {
+        "nightly_discord_button_label": {
           "type": "string",
           "title": "Nightly GitHub link title",
-          "description": "The text of the link to GitHub workflow run containing the nightly build. Defaults to: `Download from GitHub (Login required)`"
+          "description": "The text of the link to GitHub workflow run containing the nightly build. Defaults to: `(Login required) {platform}: {loaders} {game_versions}`"
         }
       },
       "additionalProperties": false
