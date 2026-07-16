@@ -1,6 +1,7 @@
 package cz.lukaskabc.minecraft.ci.publish.configurer
 
 import cz.lukaskabc.minecraft.ci.publish.ProjectConfiguration
+import cz.lukaskabc.minecraft.ci.publish.ReleasePlatform
 import cz.lukaskabc.minecraft.ci.publish.schema.Artifact
 import cz.lukaskabc.minecraft.ci.publish.schema.Artifacts
 
@@ -59,6 +60,8 @@ class ModrinthConfigurer(configuration: ProjectConfiguration) :
 
                 environment.set(env)
                 projectId.set(publishConfig.modrinthProjectId)
+
+                announcementTitle.set(getAnnounceTitle(artifact, this@publishMods, ReleasePlatform.MODRINTH))
             }
         }
     }

@@ -298,6 +298,11 @@
           "description": "The java version required to build the branch and run the mod (e.g. `17`)",
           "pattern": "\\S+"
         },
+        "discord_button_label": {
+          "title": "Discord announcement button label",
+          "description": "Text to use for link button in discord announcement. \nAvailable placeholders: {loaders}, {version}, {game_versions}, {file_name}, {platform}. \nDefaults to: `{platform}: {loaders} {game_versions}`",
+          "type": "string"
+        },
         "version_properties": {
           "title": "File version replacements",
           "type": "array",

@@ -5,8 +5,11 @@ import cz.lukaskabc.minecraft.ci.publish.ProjectConfiguration
 import cz.lukaskabc.minecraft.ci.publish.ReleasePlatform
 import cz.lukaskabc.minecraft.ci.publish.configurer.CurseforgeConfigurer
 import cz.lukaskabc.minecraft.ci.publish.configurer.ModrinthConfigurer
+import cz.lukaskabc.minecraft.ci.publish.discord.PlaceholderProcessor
 import cz.lukaskabc.minecraft.ci.publish.schema.Artifact
 import cz.lukaskabc.minecraft.ci.publish.schema.PublishConfigSchema
+import me.modmuss50.mpp.ModPublishExtension
+import me.modmuss50.mpp.Platform
 import me.modmuss50.mpp.ReleaseType
 import org.gradle.api.GradleException
 import org.gradle.internal.extensions.stdlib.toDefaultLowerCase
