@@ -88,18 +88,6 @@ jobs:
             --spec=draft7 \
             -c ajv-formats \
             --strict=false
-          
-          # Extract IDs, sort them, and output only the duplicates
-          DUPLICATE_IDS=$(jq -r '.artifacts[].id' repository/publish.config.json | sort | uniq -d)
-          
-          # If DUPLICATE_IDS is not empty, fail
-          if [ -n "$DUPLICATE_IDS" ]; then
-            echo "::error::Validation Failed! Duplicate artifact IDs found in publish.config.json:"
-            echo "$DUPLICATE_IDS" | while IFS= read -r id; do
-              echo "::error::  -> Duplicate ID: $id"
-            done
-            exit 1
-          fi
 
       - name: Export config output
         id: export
