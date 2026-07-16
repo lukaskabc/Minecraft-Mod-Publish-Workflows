@@ -37,6 +37,8 @@ open class EnvProvider(protected val providers: ProviderFactory) {
 
     open fun nightlyDiscordMessageId() = envRequired(Env.NIGHTLY_DISCORD_MESSAGE_ID)
 
+    open fun githubOutputPath() = envRequired(Env.GITHUB_OUTPUT)
+
     protected fun env(varName: String): Provider<String> {
         return providers.environmentVariable(varName)
     }

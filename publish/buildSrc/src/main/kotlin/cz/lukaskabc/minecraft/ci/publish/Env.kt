@@ -52,4 +52,6 @@ object Env {
      * - `modrinth`
      */
     const val PLATFORM = "PLATFORM"
+
+    const val GITHUB_OUTPUT = "GITHUB_OUTPUT"
 }

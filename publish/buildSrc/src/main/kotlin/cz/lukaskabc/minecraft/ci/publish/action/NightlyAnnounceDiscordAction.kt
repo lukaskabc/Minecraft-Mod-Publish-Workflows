@@ -1,5 +1,6 @@
 package cz.lukaskabc.minecraft.ci.publish.action
 
+import cz.lukaskabc.minecraft.ci.publish.Env
 import cz.lukaskabc.minecraft.ci.publish.ProjectConfiguration
 import cz.lukaskabc.minecraft.ci.publish.ReleasePlatform
 import cz.lukaskabc.minecraft.ci.publish.configurer.PlatformConfigurer
@@ -11,7 +12,9 @@ import cz.lukaskabc.minecraft.ci.publish.discord.api.ButtonComponent
 import cz.lukaskabc.minecraft.ci.publish.discord.api.Webhook
 import cz.lukaskabc.minecraft.ci.publish.discord.getEmoji
 import org.gradle.api.GradleException
+import java.io.File
 import java.net.URI
+import kotlin.math.log
 
 class NightlyAnnounceDiscordAction(configuration: ProjectConfiguration) : AbstractProjectAction(configuration), Runnable {
 
@@ -71,6 +74,18 @@ class NightlyAnnounceDiscordAction(configuration: ProjectConfiguration) : Abstra
             if (result?.id == null) {
                 throw GradleException("Failure during Discord webhook execution, failed to retrieve the submitted message ID")
             }
+
+            logger.lifecycle("Announcement sent successfully")
+            writeMessageIdToGithubOutput(result)
         }
+    }
+
+    private fun writeMessageIdToGithubOutput(response: WebhookExecutor.MessageResponse) {
+        configuration.logger.lifecycle("Writing published message ID to github output")
+        val githubOutputPath = configuration.envProvider.githubOutputPath()
+        val key = Env.NIGHTLY_DISCORD_MESSAGE_ID.lowercase()
+        val value = response.id
+
+        File(githubOutputPath).appendText("$key=$value")
     }
 }
