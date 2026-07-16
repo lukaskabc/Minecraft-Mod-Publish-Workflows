@@ -18,7 +18,7 @@ class NightlyAnnounceDiscordAction(configuration: ProjectConfiguration) : Abstra
     val jobRunUrl = "https://github.com/${configuration.envProvider.githubRepository()}/actions/runs/${configuration.envProvider.githubRunId()}"
 
     private fun getDiscordNightlyContent(params: PlaceholderProcessor.Params): String {
-        val content = configuration.publishConfig.discordWebhook?.nightlyContent ?: "# Nightly build \nv{version}`"
+        val content = configuration.publishConfig.discordWebhook?.nightlyContent ?: "# Nightly build \nv{version}"
         return PlaceholderProcessor.process(content, params)
     }
 
