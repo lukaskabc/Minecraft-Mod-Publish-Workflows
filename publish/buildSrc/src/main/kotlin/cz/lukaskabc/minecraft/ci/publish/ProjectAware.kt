@@ -2,7 +2,6 @@ package cz.lukaskabc.minecraft.ci.publish
 
 import me.modmuss50.mpp.ModPublishExtension
 import org.gradle.api.Action
-import java.io.File
 
 abstract class ProjectAware {
     protected val configuration: ProjectConfiguration

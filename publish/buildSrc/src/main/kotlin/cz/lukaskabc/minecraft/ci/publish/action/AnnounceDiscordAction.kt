@@ -13,7 +13,6 @@ import me.modmuss50.mpp.PublishResult
 import org.apache.hc.core5.net.URIBuilder
 import org.gradle.api.GradleException
 import org.gradle.api.file.ConfigurableFileCollection
-import java.net.URI
 
 class AnnounceDiscordAction(configuration: ProjectConfiguration) : ProjectAware(configuration), Runnable {
 

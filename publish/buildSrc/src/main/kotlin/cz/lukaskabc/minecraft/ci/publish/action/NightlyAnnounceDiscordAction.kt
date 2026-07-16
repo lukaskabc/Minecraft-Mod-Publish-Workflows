@@ -3,7 +3,6 @@ package cz.lukaskabc.minecraft.ci.publish.action
 import cz.lukaskabc.minecraft.ci.publish.Env
 import cz.lukaskabc.minecraft.ci.publish.ProjectConfiguration
 import cz.lukaskabc.minecraft.ci.publish.ReleasePlatform
-import cz.lukaskabc.minecraft.ci.publish.configurer.PlatformConfigurer
 import cz.lukaskabc.minecraft.ci.publish.discord.PlaceholderProcessor
 import cz.lukaskabc.minecraft.ci.publish.discord.WebhookExecutor
 import cz.lukaskabc.minecraft.ci.publish.discord.api.ActionRow
@@ -13,8 +12,6 @@ import cz.lukaskabc.minecraft.ci.publish.discord.getEmoji
 import org.apache.hc.core5.net.URIBuilder
 import org.gradle.api.GradleException
 import java.io.File
-import java.net.URI
-import kotlin.math.log
 
 class NightlyAnnounceDiscordAction(configuration: ProjectConfiguration) : AbstractProjectAction(configuration), Runnable {
 
