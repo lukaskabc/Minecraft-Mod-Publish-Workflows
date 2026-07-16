@@ -32,7 +32,7 @@ dependencies {
     // for mod-publish-plugin objects serialization
     implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.11.0")
     // for http request construction
-    implementation("com.squareup.okhttp3:okhttp:5.4.0")
+    implementation("org.apache.httpcomponents.client5:httpclient5:5.6.2")
 
     compileOnly("com.google.code.findbugs:jsr305:3.0.2")
 
@@ -116,9 +116,10 @@ tasks.register<Test>("testDiscordAnnounce") {
 
 tasks.named<Test>("test") {
     useJUnitPlatform()
-    filter {
-        excludeTestsMatching("cz.lukaskabc.minecraft.ci.publish.action.AnnounceDiscordActionTest")
-    }
+    exclude("**/AnnounceDiscordActionTest.class")
+
+    // FIXME: Remove once more tests are added
+    failOnNoDiscoveredTests = false
 }
 
 idea {

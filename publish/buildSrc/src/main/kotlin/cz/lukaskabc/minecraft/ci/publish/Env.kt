@@ -36,7 +36,22 @@ object Env {
      */
     const val CONFIG_JSON = "CONFIG_JSON"
 
-    const val NIGHTLY_ARTIFACTS_DIR = "NIGHTLY_ARTIFACTS_DIR"
+    /**
+     * File path to the nightly artifact
+     */
+    const val NIGHTLY_ARTIFACT_FILE_PATH = "NIGHTLY_ARTIFACT_FILE_PATH"
 
+    /**
+     * ID of existing discord nightly webhook message
+     */
+    const val NIGHTLY_DISCORD_MESSAGE_ID = "NIGHTLY_DISCORD_MESSAGE_ID"
+
+    /**
+     * The platform that should be configured
+     * - `curseforge`
+     * - `modrinth`
+     */
     const val PLATFORM = "PLATFORM"
+
+    const val GITHUB_OUTPUT = "GITHUB_OUTPUT"
 }

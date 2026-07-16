@@ -1,16 +1,11 @@
 package cz.lukaskabc.minecraft.ci.publish.action
 
-import cz.lukaskabc.minecraft.ci.publish.ProjectAware
 import cz.lukaskabc.minecraft.ci.publish.ProjectConfiguration
 import cz.lukaskabc.minecraft.ci.publish.ReleasePlatform
 import cz.lukaskabc.minecraft.ci.publish.configurer.CurseforgeConfigurer
 import cz.lukaskabc.minecraft.ci.publish.configurer.ModrinthConfigurer
-import cz.lukaskabc.minecraft.ci.publish.schema.Artifact
-import cz.lukaskabc.minecraft.ci.publish.schema.PublishConfigSchema
 import me.modmuss50.mpp.ReleaseType
-import org.gradle.api.GradleException
 import org.gradle.internal.extensions.stdlib.toDefaultLowerCase
-import java.io.File
 
 /**
  * Configures the [publishMods][me.modmuss50.mpp.ModPublishExtension] to relrease the artifact specified by [ARTIFACT_ID][cz.lukaskabc.minecraft.ci.publish.EnvProvider.artifactId]
@@ -22,43 +17,12 @@ import java.io.File
  * - [PLATFORM][cz.lukaskabc.minecraft.ci.publish.Env.PLATFORM]
  * - [DRY_RUN][cz.lukaskabc.minecraft.ci.publish.Env.DRY_RUN] (Optional)
  */
-class PublishArtifactAction(configuration: ProjectConfiguration): ProjectAware(configuration), Runnable {
-
-    /**
-     * Maps the value of [PublishConfigSchema.ReleaseType] to [ReleaseType]
-     */
-    fun PublishConfigSchema.ReleaseType.mapType() = ReleaseType.valueOf(name)
-
-    /**
-     * Returns the glob pattern for the artifact jar file with `{version}` placeholder replaced with the mod version.
-     */
-    private fun Artifact.jarNameGlob(modVersion: String): String {
-        return this.fileGlob.replace("{version}", modVersion)
-    }
-
-    /**
-     * Resolves an artifact jar file from `./artifacts` directory
-     */
-    private fun artifactFile(artifact: Artifact): File {
-        val glob = artifact.jarNameGlob(configuration.modVersion)
-        val fileNameGlob = glob.substringAfterLast('/')
-        val artifacts = configuration.project.fileTree("./artifacts") {
-            include(fileNameGlob)
-        }
-        return artifacts.files.firstOrNull()
-            ?: throw GradleException("Failed to match artifact file for $fileNameGlob (original glob: $glob)")
-    }
+class PublishArtifactAction(configuration: ProjectConfiguration): AbstractProjectAction(configuration), Runnable {
 
     override fun run() {
         with(configuration) {
             val artifactId = envProvider.artifactId()
-
-            val artifact = publishConfig.artifacts.additionalProperties.entries.find { it.key == artifactId }?.value
-
-            if (artifact == null) {
-                throw GradleException("Invalid artifact ID: '${artifactId}', no matching artifact found in configuration file.")
-            }
-
+            val artifact = getArtifact(artifactId)
             val platform = ReleasePlatform.valueOf(envProvider.platform())
 
             logger.lifecycle("Configuring publication for artifact ID: ${artifactId}")
@@ -77,7 +41,7 @@ class PublishArtifactAction(configuration: ProjectConfiguration): ProjectAware(c
                     type.set(releaseType.mapType())
                 }
 
-                changelog.set(changelogFile.readText())
+                changelog.set(changelog)
                 version.set(modVersion)
                 displayName.set("v${modVersion}")
 

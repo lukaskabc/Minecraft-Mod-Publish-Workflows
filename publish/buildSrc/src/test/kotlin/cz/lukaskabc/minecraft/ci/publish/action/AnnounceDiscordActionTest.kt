@@ -106,7 +106,7 @@ class AnnounceDiscordActionTest {
 
         val discordWebhook = DiscordWebhook().apply {
             username = "CI Test Bot"
-            content = "Test announcement for v{version}\n{changelog}"
+            releaseContent = "Test announcement for v{version}\n{changelog}"
         }
 
         val publishConfig = PublishConfigSchema().apply {

@@ -33,15 +33,11 @@ open class EnvProvider(protected val providers: ProviderFactory) {
 
     open fun platform() = envRequired(Env.PLATFORM).uppercase()
 
-    open fun nightlyArtifactDir() = envRequired(Env.NIGHTLY_ARTIFACTS_DIR)
+    open fun nightlyArtifactFilePath() = envRequired(Env.NIGHTLY_ARTIFACT_FILE_PATH)
 
-    open fun execTask(): ExecTask {
-        return ExecTask.entries.firstOrNull { isPropertyEnabled(it.propertyName) } ?: ExecTask.PUBLISH_MODS
-    }
+    open fun nightlyDiscordMessageId() = envRequired(Env.NIGHTLY_DISCORD_MESSAGE_ID)
 
-    protected fun isPropertyEnabled(propName: String): Boolean {
-        return providers.gradleProperty(propName).orNull == "true"
-    }
+    open fun githubOutputPath() = envRequired(Env.GITHUB_OUTPUT)
 
     protected fun env(varName: String): Provider<String> {
         return providers.environmentVariable(varName)

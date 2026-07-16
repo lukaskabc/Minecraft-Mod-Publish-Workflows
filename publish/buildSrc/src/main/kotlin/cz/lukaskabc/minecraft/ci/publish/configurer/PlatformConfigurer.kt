@@ -2,9 +2,12 @@ package cz.lukaskabc.minecraft.ci.publish.configurer
 
 import cz.lukaskabc.minecraft.ci.publish.ProjectAware
 import cz.lukaskabc.minecraft.ci.publish.ProjectConfiguration
+import cz.lukaskabc.minecraft.ci.publish.ReleasePlatform
+import cz.lukaskabc.minecraft.ci.publish.discord.PlaceholderProcessor
 import cz.lukaskabc.minecraft.ci.publish.schema.Artifact
 import cz.lukaskabc.minecraft.ci.publish.schema.CfDependency
 import cz.lukaskabc.minecraft.ci.publish.schema.Dependencies
+import me.modmuss50.mpp.ModPublishExtension
 import me.modmuss50.mpp.PlatformDependency
 import me.modmuss50.mpp.PlatformDependencyContainer
 import me.modmuss50.mpp.PlatformOptions
@@ -71,5 +74,23 @@ abstract class PlatformConfigurer<PD : PlatformDependency, D> : ProjectAware {
      */
     protected fun configurePlatform(context: PlatformOptions, artifact: Artifact) {
         context.accessToken.set(this.accessToken)
+    }
+
+    protected fun getAnnounceTitle(artifact: Artifact, context: ModPublishExtension, platform: ReleasePlatform): String {
+        val template = artifact.discordButtonLabel ?: DEFAULT_DISCORD_BUTTON_LABEL
+        val params = PlaceholderProcessor.Params(
+            modVersion = configuration.modVersion,
+            changelog = context.changelog.getOrElse(""),
+            loaders = context.modLoaders.get(),
+            gameVersions = artifact.gameVersions,
+            fileName = context.file.get().asFile.name,
+            platform = platform
+        )
+
+        return PlaceholderProcessor.process(template, params)
+    }
+
+    companion object {
+        const val DEFAULT_DISCORD_BUTTON_LABEL = "{platform}: {loaders} {game_versions}"
     }
 }

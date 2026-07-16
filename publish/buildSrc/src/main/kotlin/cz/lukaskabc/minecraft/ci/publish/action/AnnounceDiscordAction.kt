@@ -4,13 +4,13 @@ import cz.lukaskabc.minecraft.ci.publish.ProjectAware
 import cz.lukaskabc.minecraft.ci.publish.ProjectConfiguration
 import cz.lukaskabc.minecraft.ci.publish.discord.PlaceholderProcessor
 import cz.lukaskabc.minecraft.ci.publish.discord.WebhookExecutor
-import cz.lukaskabc.minecraft.ci.publish.discord.addWithComponentsQuery
 import cz.lukaskabc.minecraft.ci.publish.discord.api.ActionRow
 import cz.lukaskabc.minecraft.ci.publish.discord.api.ButtonComponent
-import cz.lukaskabc.minecraft.ci.publish.discord.api.Emoji
 import cz.lukaskabc.minecraft.ci.publish.discord.api.Webhook
+import cz.lukaskabc.minecraft.ci.publish.discord.getEmoji
 import cz.lukaskabc.minecraft.ci.publish.discord.toDiscord
 import me.modmuss50.mpp.PublishResult
+import org.apache.hc.core5.net.URIBuilder
 import org.gradle.api.GradleException
 import org.gradle.api.file.ConfigurableFileCollection
 
@@ -29,21 +29,6 @@ class AnnounceDiscordAction(configuration: ProjectConfiguration) : ProjectAware(
         }
 
         return configuration.project.files(results)
-    }
-
-    private fun getEmoji(publishResult: PublishResult): Emoji? {
-        return when (publishResult.type) {
-            // from Curseforge discord
-            // https://discord.com/invite/curseforge
-            "curseforge" -> Emoji(id = "1072449162446123039", name = publishResult.type)
-            // From Terrarium Modding
-            // https://discord.terrarium.earth/
-            "github" -> Emoji(id = "981406690404622406", name = publishResult.type)
-            // from Modrinth discord
-            // https://discord.modrinth.com/
-            "modrinth" -> Emoji(id = "1040805511538421890", name = publishResult.type)
-            else -> null
-        }
     }
 
     private fun createButtons(): List<ButtonComponent> {
@@ -66,26 +51,34 @@ class AnnounceDiscordAction(configuration: ProjectConfiguration) : ProjectAware(
         return buttons
     }
 
+    fun getMessageContent(params: PlaceholderProcessor.Params): String {
+        return (configuration.publishConfig.discordWebhook?.releaseContent ?: "# Changelog \n{changelog}")
+            .let { PlaceholderProcessor.process(it, params) }
+    }
+
     override fun run() {
         with(configuration) {
-            logger.lifecycle("Loading publish configurations")
+            logger.lifecycle("Preparing webhook configuration")
             val webhookConfig =
                 configuration.publishConfig.discordWebhook ?:
                     throw GradleException("Discord webhook not configured")
 
             val placeholderParams = PlaceholderProcessor.Params(
                 modVersion = configuration.modVersion,
-                changelog = changelogFile.readText()
+                changelog = changelog
             )
 
-            val uri = addWithComponentsQuery(configuration.envProvider.discordWebhookUrl())
+            val uri = URIBuilder(configuration.envProvider.discordWebhookUrl())
+                .addParameter("with_components", "true")
+                .addParameter("wait", "true")
+                .build()
 
             val buttonRows: List<ActionRow> = createButtons()
                 .chunked(ActionRow.MAX_SIZE)
                 .map { ActionRow(components = it) }
 
-            val embed = webhookConfig.embed?.toDiscord(placeholderParams)
-            val messageContent = webhookConfig.content?.let { PlaceholderProcessor.process(it, placeholderParams) }
+            val embed = webhookConfig.releaseEmbed?.toDiscord(placeholderParams)
+            val messageContent = getMessageContent(placeholderParams)
 
             val webhook = Webhook(
                 content = messageContent,
@@ -95,6 +88,7 @@ class AnnounceDiscordAction(configuration: ProjectConfiguration) : ProjectAware(
                 components = buttonRows
             )
 
+            logger.lifecycle("Sending version release announcement to Discord Webhook")
             WebhookExecutor.execute(uri, webhook)
         }
     }

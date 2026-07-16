@@ -21,4 +21,9 @@ enum class TaskNames(val taskName: String) {
      * @see me.modmuss50.mpp.MppPlugin
      */
     PUBLISH_MODS("publishMods"),
+
+    /**
+     * Accepts the nightly artifact and existing discord message ID and uploads the file to the message.
+     */
+    UPLOAD_DISCORD_NIGHTLY_ARTIFACT("uploadDiscordNightlyArtifact")
 }

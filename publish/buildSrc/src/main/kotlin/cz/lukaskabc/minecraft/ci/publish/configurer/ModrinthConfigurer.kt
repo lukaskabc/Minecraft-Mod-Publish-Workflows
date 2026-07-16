@@ -1,19 +1,14 @@
 package cz.lukaskabc.minecraft.ci.publish.configurer
 
 import cz.lukaskabc.minecraft.ci.publish.ProjectConfiguration
+import cz.lukaskabc.minecraft.ci.publish.ReleasePlatform
 import cz.lukaskabc.minecraft.ci.publish.schema.Artifact
-import cz.lukaskabc.minecraft.ci.publish.schema.Artifacts
-
 import cz.lukaskabc.minecraft.ci.publish.schema.CfDependency
 import cz.lukaskabc.minecraft.ci.publish.schema.Dependencies
 import cz.lukaskabc.minecraft.ci.publish.schema.MrDependency
-import me.modmuss50.mpp.ModPublishExtension
-import me.modmuss50.mpp.ReleaseType
 import me.modmuss50.mpp.platforms.modrinth.ModrinthDependency
 import me.modmuss50.mpp.platforms.modrinth.ModrinthEnvironment
 import org.gradle.api.GradleException
-import org.gradle.api.provider.Provider
-import org.gradle.internal.extensions.stdlib.toDefaultLowerCase
 
 
 class ModrinthConfigurer(configuration: ProjectConfiguration) :
@@ -59,6 +54,8 @@ class ModrinthConfigurer(configuration: ProjectConfiguration) :
 
                 environment.set(env)
                 projectId.set(publishConfig.modrinthProjectId)
+
+                announcementTitle.set(getAnnounceTitle(artifact, this@publishMods, ReleasePlatform.MODRINTH))
             }
         }
     }
