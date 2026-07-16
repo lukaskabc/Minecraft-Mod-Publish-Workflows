@@ -7,7 +7,6 @@ import org.gradle.api.logging.Logger
 
 data class ProjectConfiguration(
     val project: Project,
-    val context: ModPublishExtension,
     val modVersion: String,
     val publishConfig: PublishConfigSchema,
     val logger: Logger,

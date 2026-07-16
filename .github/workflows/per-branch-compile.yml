@@ -169,7 +169,7 @@ jobs:
           set -euo pipefail
           cd repository
           chmod +x ./gradlew
-          ./gradlew build
+          ./gradlew build --no-daemon
 
       - name: Check compiled artifact exists
         id: asset
@@ -219,7 +219,6 @@ jobs:
           
           files=("$GLOB")
           for f in "${files[@]}"; do
-            # --clobber: if a re-run already uploaded this asset, overwrite
-            # it instead of failing with "asset already exists".
-            gh release upload "$TAG_NAME" "$f" --clobber
+            # not using --clobber: each artifact must have unique name 
+            gh release upload "$TAG_NAME" "$f"
           done

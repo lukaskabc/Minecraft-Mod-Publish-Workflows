@@ -26,6 +26,9 @@ concurrency:
   group: nightly-build-discord
   queue: max
 
+permissions:
+  contents: read
+
 jobs:
   resolve-default-branch:
     name: Resolve repository default branch
@@ -56,6 +59,7 @@ jobs:
     name: Select artifacts for the triggering branch
     needs: load-config
     runs-on: ubuntu-latest
+    permissions: {}
     outputs:
       artifacts: ${{ steps.filter.outputs.artifacts }}
     steps:
@@ -68,7 +72,7 @@ jobs:
         run: |
           set -euo pipefail
 
-          ARTIFACTS=$(echo "$CONFIG" | jq -c --arg branch "$BRANCH" '[.artifacts[] | select(.branch == $branch)]')
+          ARTIFACTS=$(echo "$CONFIG" | jq -c --arg branch "$BRANCH" '[.artifacts | to_entries[] | select(.value.branch == $branch) | .value + {id: .key}]')
           COUNT=$(echo "$ARTIFACTS" | jq 'length')
 
           if [[ "$COUNT" -eq 0 ]]; then
@@ -203,6 +207,7 @@ jobs:
     needs: [load-config, compile-artifact]
     if: ${{ fromJSON(needs.load-config.outputs.config).discord_announce_nightly_builds == true }}
     runs-on: ubuntu-latest
+    permissions: {}
     steps:
       - name: Checkout workflow repository
         # Checksout the repository of this workflow to use the files
@@ -239,6 +244,7 @@ jobs:
     needs: [load-config, compile-artifact, notify-discord]
     if: ${{ fromJSON(needs.load-config.outputs.config).discord_announce_nightly_builds == true && fromJson(needs.compile-artifact.outputs.artifact_size_mb) <= inputs.max_file_size }}
     runs-on: ubuntu-latest
+    permissions: {}
     steps:
       - name: Checkout workflow repository
         # Checksout the repository of this workflow to use the files

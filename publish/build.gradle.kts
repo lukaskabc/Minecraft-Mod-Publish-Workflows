@@ -21,9 +21,6 @@ fun createEnvProvider(providers: ProviderFactory): EnvProvider {
 }
 
 val envProvider = createEnvProvider(providers)
-val execTask = envProvider.execTask()
-
-logger.lifecycle("Selected execution task ${execTask.name}")
 
 val mapper: JsonMapper = JsonMapper.builder()
     .addModule(kotlinModule())
@@ -37,31 +34,72 @@ val publishConfig: PublishConfigSchema = mapper.readValue(
 
 JakartaValidator.validate(publishConfig)
 
-publishMods {
-    if (envProvider.isGithubWorkflow() && publishConfig.artifacts.isEmpty()) {
-        println("No artifacts configured")
-        exitProcess(1)
-    }
-
-    val modVersion = envProvider.modVersion();
-    val configuration = ProjectConfiguration(project, this, modVersion, publishConfig, logger, envProvider)
-
-    val actionProvider: ActionProvider = when (execTask) {
-        ExecTask.PUBLISH_MODS -> PublishReleaseAction(configuration)
-        ExecTask.NIGHTLY_DISCORD_ANNOUNCE -> DiscordNightlyAnnounceAction(configuration)
-        /* Handled by a standalone task */
-        ExecTask.DISCORD_NIGHTLY_FILE_UPLOAD -> NoOpActionProvider()
-        else -> {
-            throw GradleException("Unknown execution task: ${execTask.name}")
-        }
-    }
-
-    actionProvider.get().execute(this)
+if (envProvider.isGithubWorkflow() && publishConfig.artifacts.additionalProperties.isEmpty()) {
+    println("No artifacts configured")
+    exitProcess(1)
 }
 
-tasks.register<DiscordNightlyFileUploadTask>("uploadDiscordNightlyFile") {
-    discordEnabled = publishConfig.discordAnnounceNightlyBuilds
-    artifactsDirPath = provider(envProvider::nightlyArtifactDir)
-    webhookUrl = envProvider.discordNightlyWebhookUrl()
-    webhookConfig = publishConfig.discordWebhook
+tasks.register(TaskNames.PUBLISH_ARTIFACT.taskName) {
+    group = "publishing"
+    description = "Publishes a single artifact to the configured platforms"
+    dependsOn(TaskNames.PUBLISH_MODS.taskName)
 }
+
+tasks.register(TaskNames.ANNOUNCE_DISCORD.taskName) {
+    group = "publishing"
+    description = "Announces the new release to Discord"
+}
+
+tasks.register(TaskNames.NIGHTLY_ANNOUNCE_DISCORD.taskName) {
+    group = "publishing"
+    description = "Announces and uploads nightly build to Discord"
+}
+
+if (gradle.startParameter.taskNames.contains(TaskNames.PUBLISH_MODS.taskName)) {
+    throw GradleException("Do not call publishMods directly, choose a single platform and artifact by it's ID to publish")
+}
+
+val modVersion = envProvider.modVersion();
+val configuration = ProjectConfiguration(project, modVersion, publishConfig, logger, envProvider)
+var taskMatched = false
+
+// Iterate tasks from CLI and run respective actions
+gradle.startParameter.taskNames.forEach { taskName ->
+    val action: Runnable = when (taskName) {
+        TaskNames.PUBLISH_ARTIFACT.taskName -> PublishArtifactAction(configuration)
+        TaskNames.ANNOUNCE_DISCORD.taskName -> AnnounceDiscordAction(configuration)
+        TaskNames.NIGHTLY_ANNOUNCE_DISCORD.taskName -> NightlyAnnounceDiscordAction(configuration)
+        else -> return@forEach
+    }
+    action.run()
+    taskMatched = true
+}
+
+if (!taskMatched) {
+    logger.warn("No Workflow task matched!")
+}
+
+//publishMods {
+//
+//    val modVersion = envProvider.modVersion();
+//    val configuration = ProjectConfiguration(project, this, modVersion, publishConfig, logger, envProvider)
+//
+//    val actionProvider: ActionProvider = when (execTask) {
+//        ExecTask.PUBLISH_MODS -> PublishReleaseAction(configuration)
+//        ExecTask.NIGHTLY_DISCORD_ANNOUNCE -> DiscordNightlyAnnounceAction(configuration)
+//        /* Handled by a standalone task */
+//        ExecTask.DISCORD_NIGHTLY_FILE_UPLOAD -> NoOpActionProvider()
+//        else -> {
+//            throw GradleException("Unknown execution task: ${execTask.name}")
+//        }
+//    }
+//
+//    actionProvider.get().execute(this)
+//}
+//
+//tasks.register<DiscordNightlyFileUploadTask>("uploadDiscordNightlyFile") {
+//    discordEnabled = publishConfig.discordAnnounceNightlyBuilds
+//    artifactsDirPath = provider(envProvider::nightlyArtifactDir)
+//    webhookUrl = envProvider.discordNightlyWebhookUrl()
+//    webhookConfig = publishConfig.discordWebhook
+//}

@@ -4,9 +4,9 @@ import org.gradle.api.GradleException
 import org.gradle.api.provider.Provider
 import org.gradle.api.provider.ProviderFactory
 
-const val TRUE = "true"
-
 open class EnvProvider(protected val providers: ProviderFactory) {
+    private val TRUE = "true"
+
     fun isGithubWorkflow() = env(Env.GITHUB_ACTIONS).getOrElse("") == TRUE
 
     /**
@@ -28,6 +28,10 @@ open class EnvProvider(protected val providers: ProviderFactory) {
 
     open fun githubRepository() = envRequired(Env.GITHUB_REPOSITORY)
     open fun githubRunId() = envRequired(Env.GITHUB_RUN_ID)
+
+    open fun artifactId() = envRequired(Env.ARTIFACT_ID)
+
+    open fun platform() = envRequired(Env.PLATFORM).uppercase()
 
     open fun nightlyArtifactDir() = envRequired(Env.NIGHTLY_ARTIFACTS_DIR)
 

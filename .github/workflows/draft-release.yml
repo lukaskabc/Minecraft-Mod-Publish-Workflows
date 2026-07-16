@@ -22,6 +22,8 @@ permissions:
 
 jobs:
   load-config:
+    permissions:
+      contents: read
     name: Load and validate configuration
     uses: ./.github/workflows/load-config.yml
     with:
@@ -31,11 +33,12 @@ jobs:
       workflow_ref: ${{ inputs.workflow_ref }}
     # outputs.config
 
-
   create-release:
     name: Create draft release
     needs: load-config
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
     # skip if validate only is enabled
     if: ${{ inputs.validate-only != true }}
     outputs:
@@ -56,24 +59,44 @@ jobs:
 
       - name: Create draft release
         id: cr
-        uses: softprops/action-gh-release@v3
+        uses: softprops/action-gh-release@718ea10b132b3b2eba29c1007bb80653f286566b # v3.0.1
         with:
           tag_name: ${{ steps.tag_name.outputs.tag }}
           name: ${{ steps.tag_name.outputs.tag }}
           draft: true
           prerelease: false
 
+  prepare-artifacts:
+    name: Prepare artifact matrix
+    needs: load-config
+    runs-on: ubuntu-latest
+    permissions: {}
+    outputs:
+      artifacts: ${{ steps.transform.outputs.artifacts }}
+    steps:
+      - name: Convert artifacts map to array
+        id: transform
+        shell: bash
+        env:
+          CONFIG_JSON: ${{ needs.load-config.outputs.config }}
+        run: |
+          set -euo pipefail
+          # converts the artifacts map (id: artifact) to array of artifacts with id property
+          ARTIFACTS=$(echo "$CONFIG_JSON" | jq -c '[.artifacts | to_entries[] | .value + {id: .key}]')
+          echo "artifacts=$ARTIFACTS" >> "$GITHUB_OUTPUT"
+
   # Executed for each configured branch
   build-artifact:
     name: Build artifact - ${{ matrix.artifact.id }}
-    needs: [load-config, create-release]
+    needs: [prepare-artifacts, create-release]
     # skip if validate only is enabled
     if: ${{ inputs.validate-only != true }}
+    permissions:
+      contents: write
     strategy:
       fail-fast: false
       matrix:
-        # Parse the full config JSON and extract only the artifacts array
-        artifact: ${{ fromJson(needs.load-config.outputs.config).artifacts }}
+        artifact: ${{ fromJson(needs.prepare-artifacts.outputs.artifacts) }}
 
     uses: ./.github/workflows/per-branch-compile.yml
     with:

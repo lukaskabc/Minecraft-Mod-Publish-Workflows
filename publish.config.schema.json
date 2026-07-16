@@ -74,37 +74,23 @@
       "type": "object",
       "title": "Discord Webhook",
       "properties": {
-        "discord_branch": {
-          "type": "string",
-          "description": "Updates from which **single** branch should be published to discord. What branch contains the **\"main\"** version of the mod? Enter the **exact** branch name.",
-          "title": "Discord branch",
-          "pattern": "\\S+"
-        },
         "username": {
           "type": "string",
-          "description": "Username used to send the webhook, defaults to `Mod Publish Plugin`",
+          "description": "Username used to send the webhook, defaults to the username configured when the webhook URL was created.",
           "title": "Username"
         },
         "avatar_url": {
           "type": "string",
           "title": "Avatar URL",
-          "description": "Avatar image URL for the webhook, defaults to `none`"
+          "description": "Avatar image URL for the webhook, defaults to the avatar configured when the webhook URL was created."
         },
         "content": {
           "type": "string",
           "title": "Content message",
-          "description": "Set the content message, changelog is **always appended** after this content. Use `{version}` as a placeholder for the released version. Defaults to \n`v{version} was released!`"
+          "description": "Set the content message. The following placeholders are available: \n`{version}`, \n`{changelog}`\n Defaults to \n`v{version} was released!\n{changelog}`"
         },
-        "thumbnail_url": {
-          "type": "string",
-          "title": "Thumbnail URL",
-          "description": "Image URL for the discord embeds thumbnail, e.g. Mod's logo"
-        },
-        "embed_color": {
-          "type": "string",
-          "title": "Embed color",
-          "description": "Color of the left line used in the discord embed. Full `RRGGBB` hex color prefixed with a `#`.",
-          "pattern": "^#[0-9a-fA-F]{6}$"
+        "embed": {
+          "$ref": "#/$defs/embed"
         },
         "nightly_content": {
           "type": "string",
@@ -117,121 +103,22 @@
           "description": "The text of the link to GitHub workflow run containing the nightly build. Defaults to: `Download from GitHub (Login required)`"
         }
       },
-      "additionalProperties": false,
-      "required": [
-        "discord_branch"
-      ]
+      "additionalProperties": false
     },
     "artifacts": {
       "title": "Artifacts / Branches",
-      "type": "array",
+      "type": "object",
       "description": "Configuration for artifacts that should be released",
-      "minItems": 1,
-      "items": {
-        "title": "Artifact / Branch",
-        "type": "object",
-        "properties": {
-          "id": {
-            "title": "Identifier",
-            "type": "string",
-            "description": "Unique identifier of the artifact for purposes of this workflow. The name must be complaint with gradle task naming rules. Must not use `<space>` `/` `\\` `:` `<` `>` `\"` `?` `*` `|`. You should also not use `.` as a leading or trailing character.",
-            "pattern": "^([^ \\/\\\\:<>\"?*|.]|[^ \\/\\\\:<>\"?*|.][^ \\/\\\\:<>\"?*|]*[^ \\/\\\\:<>\"?*|.])$"
-          },
-          "file_glob": {
-            "title": "File glob",
-            "type": "string",
-            "description": "The glob for the compiled artifact to be uploaded. Can use `{version}` which will be replaced with the current mod version. E.g. \n`build/libs/*-1.21.1-neoforge-{version}.jar`",
-            "pattern": "\\S+"
-          },
-          "branch": {
-            "title": "Git Branch",
-            "type": "string",
-            "description": "The name of the branch from which the artifact is compiled",
-            "pattern": "\\S+"
-          },
-          "release_type": {
-            "$ref": "#/$defs/release_type",
-            "description": "The stability type of the release. If not specified, the Default release type is used."
-          },
-          "loaders": {
-            "title": "Mod loaders",
-            "type": "array",
-            "description": "Mod loaders that can load the artifact",
-            "minItems": 1,
-            "items": {
-              "type": "string",
-              "enum": [
-                "Neoforge",
-                "Fabric",
-                "Forge"
-              ]
-            },
-            "uniqueItems": true
-          },
-          "game_versions": {
-            "title": "Game versions",
-            "type": "array",
-            "description": "Supported game versions for the artifact (e.g. `1.21.1`)",
-            "minItems": 1,
-            "items": {
-              "title": "Game Version",
-              "pattern": "^\\d+(\\.\\d+)+$",
-              "type": "string",
-              "minLength": 1
-            },
-            "uniqueItems": true
-          },
-          "java_version": {
-            "title": "Java version",
-            "type": "string",
-            "description": "The java version required to build the branch and run the mod (e.g. `17`)",
-            "pattern": "\\S+"
-          },
-          "version_properties": {
-            "title": "File version replacements",
-            "type": "array",
-            "description": "List of files and respective properties where the version should be set. Only supports properties format (`property=value`). Use your gradle build script to distribute the value to other files. If none is supplied, defaults to `mod_version` in `gradle.properties`.",
-            "items": {
-              "title": "Property file",
-              "type": "object",
-              "properties": {
-                "file": {
-                  "title": "File path",
-                  "type": "string",
-                  "description": "The exact relative path to the file (e.g. `gradle.properties`)",
-                  "pattern": "\\S+"
-                },
-                "property": {
-                  "title": "Property name",
-                  "type": "string",
-                  "description": "The name of the property which should be set to the version (e.g. `mod_version`)",
-                  "pattern": "\\S+"
-                }
-              },
-              "required": [
-                "file",
-                "property"
-              ],
-              "additionalProperties": false
-            }
-          },
-          "dependencies": {
-            "type": "object",
-            "description": "Dependencies for the artifact (merged with **common dependencies**)",
-            "$ref": "#/$defs/dependencies"
-          }
-        },
-        "additionalProperties": false,
-        "required": [
-          "id",
-          "branch",
-          "loaders",
-          "game_versions",
-          "java_version",
-          "file_glob"
-        ]
+      "minProperties": 1,
+      "propertyNames": {
+        "title": "Artifact Identifier",
+        "type": "string",
+        "description": "Unique identifier of the artifact for purposes of this workflow. The name must be complaint with gradle task naming rules. Must not use `<space>` `/` `\\` `:` `<` `>` `\"` `?` `*` `|`. You should also not use `.` as a leading or trailing character.",
+        "pattern": "^([^ \\/\\\\:<>\"?*|.]|[^ \\/\\\\:<>\"?*|.][^ \\/\\\\:<>\"?*|]*[^ \\/\\\\:<>\"?*|.])$"
       },
-      "uniqueItems": true
+      "additionalProperties": {
+        "$ref": "#/$defs/artifact"
+      }
     },
     "common_dependencies": {
       "title": "Common dependencies",
@@ -286,6 +173,174 @@
     }
   ],
   "$defs": {
+    "embed": {
+      "type": "object",
+      "title": "Discord Embed",
+      "description": "An embed object to be sent with the Discord webhook.\nAvailable placeholders: \n{version} The mod version without 'v' prefix, \n{changelog} The changelog contents",
+      "additionalProperties": false,
+      "properties": {
+        "title": {
+          "type": "string",
+          "title": "Title",
+          "description": "The title of the embed"
+        },
+        "description": {
+          "type": "string",
+          "title": "Description",
+          "description": "The description of the embed"
+        },
+        "color": {
+          "type": "string",
+          "title": "Color",
+          "description": "Color of the left line used in the discord embed. Full `RRGGBB` hex color prefixed with a `#`.",
+          "pattern": "^#[0-9a-fA-F]{6}$"
+        },
+        "footer": {
+          "type": "object",
+          "title": "Embed Footer",
+          "description": "Footer information for the embed",
+          "required": [
+            "text"
+          ],
+          "additionalProperties": false,
+          "properties": {
+            "text": {
+              "type": "string",
+              "title": "Text",
+              "description": "The footer text"
+            },
+            "icon_url": {
+              "type": "string",
+              "title": "Icon URL",
+              "description": "The URL of the footer icon"
+            }
+          }
+        },
+        "thumbnail": {
+          "type": "object",
+          "title": "Embed Thumbnail",
+          "description": "Thumbnail info for the embed",
+          "required": [
+            "url"
+          ],
+          "additionalProperties": false,
+          "properties": {
+            "url": {
+              "type": "string",
+              "title": "URL",
+              "description": "Source URL of the thumbnail"
+            },
+            "height": {
+              "type": "integer",
+              "title": "Height",
+              "description": "The height of the thumbnail"
+            },
+            "width": {
+              "type": "integer",
+              "title": "Width",
+              "description": "The width of the thumbnail"
+            }
+          }
+        }
+      }
+    },
+    "artifact": {
+      "title": "Artifact / Branch",
+      "type": "object",
+      "properties": {
+        "file_glob": {
+          "title": "File glob",
+          "type": "string",
+          "description": "The glob for the compiled artifact to be uploaded. Can use `{version}` which will be replaced with the current mod version. E.g. \n`build/libs/*-1.21.1-neoforge-{version}.jar`",
+          "pattern": "\\S+"
+        },
+        "branch": {
+          "title": "Git Branch",
+          "type": "string",
+          "description": "The name of the branch from which the artifact is compiled",
+          "pattern": "\\S+"
+        },
+        "release_type": {
+          "$ref": "#/$defs/release_type",
+          "description": "The stability type of the release. If not specified, the Default release type is used."
+        },
+        "loaders": {
+          "title": "Mod loaders",
+          "type": "array",
+          "description": "Mod loaders that can load the artifact",
+          "minItems": 1,
+          "items": {
+            "type": "string",
+            "enum": [
+              "Neoforge",
+              "Fabric",
+              "Forge"
+            ]
+          },
+          "uniqueItems": true
+        },
+        "game_versions": {
+          "title": "Game versions",
+          "type": "array",
+          "description": "Supported game versions for the artifact (e.g. `1.21.1`)",
+          "minItems": 1,
+          "items": {
+            "title": "Game Version",
+            "pattern": "^\\d+(\\.\\d+)+$",
+            "type": "string",
+            "minLength": 1
+          },
+          "uniqueItems": true
+        },
+        "java_version": {
+          "title": "Java version",
+          "type": "string",
+          "description": "The java version required to build the branch and run the mod (e.g. `17`)",
+          "pattern": "\\S+"
+        },
+        "version_properties": {
+          "title": "File version replacements",
+          "type": "array",
+          "description": "List of files and respective properties where the version should be set. Only supports properties format (`property=value`). Use your gradle build script to distribute the value to other files. If none is supplied, defaults to `mod_version` in `gradle.properties`.",
+          "items": {
+            "title": "Property file",
+            "type": "object",
+            "properties": {
+              "file": {
+                "title": "File path",
+                "type": "string",
+                "description": "The exact relative path to the file (e.g. `gradle.properties`)",
+                "pattern": "\\S+"
+              },
+              "property": {
+                "title": "Property name",
+                "type": "string",
+                "description": "The name of the property which should be set to the version (e.g. `mod_version`)",
+                "pattern": "\\S+"
+              }
+            },
+            "required": [
+              "file",
+              "property"
+            ],
+            "additionalProperties": false
+          }
+        },
+        "dependencies": {
+          "type": "object",
+          "description": "Dependencies for the artifact (merged with **common dependencies**)",
+          "$ref": "#/$defs/dependencies"
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "branch",
+        "loaders",
+        "game_versions",
+        "java_version",
+        "file_glob"
+      ]
+    },
     "release_type": {
       "title": "Release type",
       "type": "string",

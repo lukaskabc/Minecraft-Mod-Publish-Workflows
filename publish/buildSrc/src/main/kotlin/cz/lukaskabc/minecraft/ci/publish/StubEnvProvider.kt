@@ -2,9 +2,8 @@ package cz.lukaskabc.minecraft.ci.publish
 
 import org.gradle.api.Project
 
-val stubStringValue = "Test Env disabled"
-
 class StubEnvProvider(private val project: Project) : EnvProvider(project.providers) {
+    private val stubStringValue = "Test Env disabled"
 
     override fun isDryRun() = true
 

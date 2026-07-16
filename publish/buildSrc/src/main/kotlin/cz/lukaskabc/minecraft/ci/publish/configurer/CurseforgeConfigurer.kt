@@ -3,8 +3,10 @@ package cz.lukaskabc.minecraft.ci.publish.configurer
 
 import cz.lukaskabc.minecraft.ci.publish.ProjectConfiguration
 import cz.lukaskabc.minecraft.ci.publish.schema.Artifact
+import cz.lukaskabc.minecraft.ci.publish.schema.Artifacts
 import cz.lukaskabc.minecraft.ci.publish.schema.CfDependency
 import cz.lukaskabc.minecraft.ci.publish.schema.Dependencies
+import me.modmuss50.mpp.ModPublishExtension
 import me.modmuss50.mpp.ReleaseType
 import me.modmuss50.mpp.platforms.curseforge.CurseforgeDependency
 import org.gradle.api.JavaVersion
@@ -12,10 +14,8 @@ import org.gradle.api.provider.Provider
 import org.gradle.internal.extensions.stdlib.toDefaultLowerCase
 
 
-class CurseforgeConfigurer(configuration: ProjectConfiguration, curseforgeApiKeyProvider: Provider<String>) :
-    PlatformConfigurer<CurseforgeDependency, CfDependency>(configuration, curseforgeApiKeyProvider) {
-
-    override fun isEnabled(): Boolean = publishConfig.curseforgeEnabled
+class CurseforgeConfigurer(configuration: ProjectConfiguration) :
+    PlatformConfigurer<CurseforgeDependency, CfDependency>(configuration, configuration.envProvider::curseforgeToken) {
 
     override fun configureDependency(
         platformDep: CurseforgeDependency,
@@ -28,21 +28,25 @@ class CurseforgeConfigurer(configuration: ProjectConfiguration, curseforgeApiKey
 
     override fun extractDependencies(deps: Dependencies): List<CfDependency>? = deps.curseforge
 
-    override fun configure(artifact: Artifact) {
-        context.curseforge("curseforge-${artifact.id}") {
-            configurePlatform(this, artifact)
-            minecraftVersions.addAll(artifact.gameVersions)
+    override fun configure(artifactId: String, artifact: Artifact) {
+        val publishConfig = configuration.publishConfig
+        publishMods {
+            curseforge("curseforge-${artifactId}") {
+                configurePlatform(this, artifact)
+                minecraftVersions.addAll(artifact.gameVersions)
 
-            configureDependencies(this, artifact)
+                configureDependencies(this, artifact)
 
-            client.set(publishConfig.client)
-            server.set(publishConfig.server)
+                client.set(publishConfig.client)
+                server.set(publishConfig.server)
 
-            projectSlug.set(publishConfig.curseforgeProjectSlug)
-            projectId.set(publishConfig.curseforgeProjectId)
-            changelogType.set("markdown")
+                projectSlug.set(publishConfig.curseforgeProjectSlug)
+                projectId.set(publishConfig.curseforgeProjectId)
+                changelogType.set("markdown")
 
-            javaVersions.add(JavaVersion.toVersion(artifact.javaVersion))
+                // do not publish Java version, compiler can use different version than the mod at runtime,
+                // the mod should respect version required by the game version
+            }
         }
     }
 }
