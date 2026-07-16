@@ -26,8 +26,7 @@ class NightlyAnnounceDiscordAction(configuration: ProjectConfiguration) : Abstra
     }
 
     private fun getButtonLabel(params: PlaceholderProcessor.Params): String {
-        val label = configuration.publishConfig.discordWebhook?.nightlyDiscordButtonLabel ?: ("(Login required) " +
-                PlatformConfigurer.DEFAULT_DISCORD_BUTTON_LABEL)
+        val label = configuration.publishConfig.discordWebhook?.nightlyDiscordButtonLabel ?: "Download from GitHub (Login required)"
         return PlaceholderProcessor.process(label, params)
     }
 
@@ -38,10 +37,7 @@ class NightlyAnnounceDiscordAction(configuration: ProjectConfiguration) : Abstra
             val webhookConfig = configuration.publishConfig.discordWebhook ?:
                 throw GradleException("Discord webhook not configured")
 
-            val artifactId = envProvider.artifactId()
-            val artifact = getArtifact(artifactId)
-
-            logger.lifecycle("Preparing announcement of nightly build for artifact ID: $artifactId")
+            logger.lifecycle("Preparing announcement of nightly build")
 
             val nightlyUri = URI(envProvider.discordNightlyWebhookUrl())
                 .apply { addQueryParam(this, "with_components", "true") }
@@ -50,9 +46,6 @@ class NightlyAnnounceDiscordAction(configuration: ProjectConfiguration) : Abstra
             val placeholderParams = PlaceholderProcessor.Params(
                 modVersion = configuration.modVersion,
                 changelog = changelog,
-                loaders = artifact.loaders.map { it.value() },
-                gameVersions = artifact.gameVersions,
-                fileName = artifactFile(artifact).name,
                 platform = ReleasePlatform.GITHUB
             )
 
