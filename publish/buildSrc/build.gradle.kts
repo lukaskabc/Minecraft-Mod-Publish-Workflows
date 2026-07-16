@@ -116,9 +116,10 @@ tasks.register<Test>("testDiscordAnnounce") {
 
 tasks.named<Test>("test") {
     useJUnitPlatform()
-    filter {
-        excludeTestsMatching("cz.lukaskabc.minecraft.ci.publish.action.AnnounceDiscordActionTest")
-    }
+    exclude("**/AnnounceDiscordActionTest.class")
+
+    // FIXME: Remove once more tests are added
+    failOnNoDiscoveredTests = false
 }
 
 idea {
