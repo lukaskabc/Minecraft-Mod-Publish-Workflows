@@ -46,13 +46,19 @@ tasks.register(TaskNames.PUBLISH_ARTIFACT.taskName) {
 }
 
 tasks.register(TaskNames.ANNOUNCE_DISCORD.taskName) {
-    group = "publishing"
+    group = "announcing"
     description = "Announces the new release to Discord"
 }
 
 tasks.register(TaskNames.NIGHTLY_ANNOUNCE_DISCORD.taskName) {
-    group = "publishing"
+    group = "announcing"
     description = "Announces and uploads nightly build to Discord"
+}
+
+tasks.register<DiscordNightlyArtifactUploadTask>(TaskNames.UPLOAD_DISCORD_NIGHTLY_ARTIFACT.taskName) {
+    discordNightlyWebhookUrl = provider(envProvider::discordNightlyWebhookUrl)
+    discordMessageId = provider(envProvider::nightlyDiscordMessageId)
+    filePath = provider(envProvider::nightlyArtifactFilePath)
 }
 
 if (gradle.startParameter.taskNames.contains(TaskNames.PUBLISH_MODS.taskName)) {
@@ -69,6 +75,7 @@ gradle.startParameter.taskNames.forEach { taskName ->
         TaskNames.PUBLISH_ARTIFACT.taskName -> PublishArtifactAction(configuration)
         TaskNames.ANNOUNCE_DISCORD.taskName -> AnnounceDiscordAction(configuration)
         TaskNames.NIGHTLY_ANNOUNCE_DISCORD.taskName -> NightlyAnnounceDiscordAction(configuration)
+
         else -> return@forEach
     }
     action.run()

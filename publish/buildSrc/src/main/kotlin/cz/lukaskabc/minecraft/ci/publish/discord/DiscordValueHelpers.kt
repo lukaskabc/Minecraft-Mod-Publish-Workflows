@@ -28,6 +28,23 @@ fun addQueryParam(uri: URI?, paramName: String, paramValue: String): URI {
     return URI(rebuilt)
 }
 
+fun withPatchPath(uri: URI?, messageId: String?): URI {
+    if (uri == null || messageId == null) {
+        throw GradleException("Discord Webhook URI not specified!")
+    }
+
+    val rebuilt = buildString {
+        append(uri.scheme).append(':')
+        if (uri.rawAuthority != null) append("//").append(uri.rawAuthority)
+        append(uri.rawPath ?: "")
+        append("/messages/$messageId")
+        append('?').append(uri.rawQuery)
+        if (uri.rawFragment != null) append('#').append(uri.rawFragment)
+    }
+
+    return URI(rebuilt)
+}
+
 fun getEmoji(publishResult: PublishResult): Emoji? = getEmoji(publishResult.type)
 
 fun getEmoji(type: String): Emoji? {

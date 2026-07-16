@@ -4,7 +4,6 @@ import cz.lukaskabc.minecraft.ci.publish.ProjectAware
 import cz.lukaskabc.minecraft.ci.publish.ProjectConfiguration
 import cz.lukaskabc.minecraft.ci.publish.schema.Artifact
 import cz.lukaskabc.minecraft.ci.publish.schema.PublishConfigSchema
-import cz.lukaskabc.minecraft.ci.publish.schema.PublishConfigSchema.ReleaseType
 import me.modmuss50.mpp.ReleaseType
 import org.gradle.api.GradleException
 import java.io.File

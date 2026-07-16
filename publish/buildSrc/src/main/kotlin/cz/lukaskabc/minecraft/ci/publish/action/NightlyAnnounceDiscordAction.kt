@@ -67,7 +67,10 @@ class NightlyAnnounceDiscordAction(configuration: ProjectConfiguration) : Abstra
             )
 
             logger.lifecycle("Sending nightly build announcement to Discord Nightly Webhook")
-            WebhookExecutor.execute(nightlyUri, webhook)
+            val result = WebhookExecutor.execute(nightlyUri, webhook)
+            if (result?.id == null) {
+                throw GradleException("Failure during Discord webhook execution, failed to retrieve the submitted message ID")
+            }
         }
     }
 }
