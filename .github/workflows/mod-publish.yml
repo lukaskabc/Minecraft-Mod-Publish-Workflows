@@ -149,7 +149,7 @@ jobs:
       - name: ${{ matrix.id }} - Upload publish mods result
         uses: actions/upload-artifact@v7
         with:
-          name: modPublish-result-${{ matrix.id }}
+          name: modPublish-result-curseforge-${{ matrix.id }}
           path: workflow/publish/build/publishMods/*.json
           if-no-files-found: 'error'
           retention-days: 1
@@ -197,7 +197,7 @@ jobs:
       - name: ${{ matrix.id }} - Upload publish mods result
         uses: actions/upload-artifact@v7
         with:
-          name: modPublish-result-${{ matrix.id }}
+          name: modPublish-result-modrinth-${{ matrix.id }}
           path: workflow/publish/build/publishMods/*.json
           if-no-files-found: 'error'
           retention-days: 1
