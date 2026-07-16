@@ -43,7 +43,7 @@ class NightlyAnnounceDiscordAction(configuration: ProjectConfiguration) : Abstra
 
             val placeholderParams = PlaceholderProcessor.Params(
                 modVersion = configuration.modVersion,
-                changelog = changelog,
+                changelog = this@NightlyAnnounceDiscordAction.changelog,
                 platform = ReleasePlatform.GITHUB
             )
 

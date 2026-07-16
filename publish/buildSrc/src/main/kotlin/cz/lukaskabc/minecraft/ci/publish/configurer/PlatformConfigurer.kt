@@ -80,7 +80,7 @@ abstract class PlatformConfigurer<PD : PlatformDependency, D> : ProjectAware {
         val template = artifact.discordButtonLabel ?: DEFAULT_DISCORD_BUTTON_LABEL
         val params = PlaceholderProcessor.Params(
             modVersion = configuration.modVersion,
-            changelog = context.changelog.getOrElse(""),
+            changelog = this@PlatformConfigurer.changelog,
             loaders = context.modLoaders.get(),
             gameVersions = artifact.gameVersions,
             fileName = context.file.get().asFile.name,

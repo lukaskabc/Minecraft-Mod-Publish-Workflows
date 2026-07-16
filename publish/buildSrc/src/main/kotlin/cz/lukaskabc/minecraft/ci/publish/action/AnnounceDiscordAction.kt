@@ -65,7 +65,7 @@ class AnnounceDiscordAction(configuration: ProjectConfiguration) : ProjectAware(
 
             val placeholderParams = PlaceholderProcessor.Params(
                 modVersion = configuration.modVersion,
-                changelog = changelog
+                changelog = this@AnnounceDiscordAction.changelog
             )
 
             val uri = URIBuilder(configuration.envProvider.discordWebhookUrl())

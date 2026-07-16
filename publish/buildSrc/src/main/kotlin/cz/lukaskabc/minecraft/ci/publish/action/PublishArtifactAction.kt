@@ -41,7 +41,7 @@ class PublishArtifactAction(configuration: ProjectConfiguration): AbstractProjec
                     type.set(releaseType.mapType())
                 }
 
-                changelog.set(changelog)
+                changelog.set(this@PublishArtifactAction.changelog)
                 version.set(modVersion)
                 displayName.set("v${modVersion}")
 
