@@ -169,7 +169,7 @@ jobs:
           set -euo pipefail
           cd repository
           chmod +x ./gradlew
-          ./gradlew build
+          ./gradlew build --no-daemon
 
       - name: Check compiled artifact exists
         id: asset
