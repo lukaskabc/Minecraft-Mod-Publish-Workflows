@@ -34,7 +34,7 @@ class AnnounceDiscordAction(configuration: ProjectConfiguration) : ProjectAware(
     private fun createButtons(): List<ButtonComponent> {
         val buttons = publishResults().files.map {
             PublishResult.fromJson(it.readText())
-        }.map {
+        }.sortedBy { it.type }.map {
             ButtonComponent(
                 label = it.title,
                 url =  it.link,
