@@ -23,9 +23,13 @@ object PlaceholderProcessor {
         val fileName: String? = null,
         val platform: ReleasePlatform? = null
     ) {
-        fun getLoaders(): String? = loaders?.joinToString("-")
+        fun getLoaders(): String? = loaders?.map(this::capitalFirstChar)?.joinToString("-")
         fun getGameVersions(): String? = gameVersions?.joinToString("-")
-        fun getPlatform(): String? = platform?.name?.lowercase()?.replaceFirstChar { it.uppercase() }
+        fun getPlatform(): String? = platform?.name?.let(this::capitalFirstChar)
+
+        private fun capitalFirstChar(str: String): String {
+            return str.replaceFirstChar { it.uppercase() }
+        }
     }
 
     fun process(text: String, params: Params): String {
