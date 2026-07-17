@@ -5,57 +5,54 @@ Internally uses [Mod publish plugin created by Modmuss](https://github.com/modmu
 The workflows are written with support for multi-branch releases for publishing different jars for different versions and mod loaders.
 
 Available workflows:
-- Release a new version, upload it to Curseforge, Modrinth, Github release and send announcement to Discord webhook
-- Build a nightly (preview) jar and optionally post it to Discord webhook
+- **Release a new version**, upload it to Curseforge, Modrinth, Github release and send announcement to Discord webhook
+- **Build a nightly (preview) jar** and optionally post it to Discord webhook
 
 Requirements for the mod repository:
 - Installed [Gradle wrapper](https://docs.gradle.org/current/userguide/gradle_wrapper.html)
 - Buildable with `gradlew build`
 - Project version must be set in properties or toml file (`some_property=value` or `property="value"`)
+- Each configured branch must produce exactly one artifact (mod jar) with a unique name
+
+[//]: # (TODO: Add support for multiple artifact per branch)
+[//]: # (Group artifact configs per branch -> execute compilation -> upload artifacts for each glob configured for the branch)
+
+Currently missing features that might be added in the future:
+- Support for multiple artifacts per branch
+- Support for Beta / Alpha versions and GitHub Pre-Releases
+- Support for other platforms supported by the Mod publish plugin
+- Support for Minecraft version range
 
 ___
 
 ## Publication process
 
-The process to release a new version consists of the following steps:
-1. The author manually triggers draft release pipeline with the **version number**
-- A GitHub release draft is created for the main branch
-- For each involved branch:
-  - The artifact is compiled
-  - 2 commits are pushed advancing the version set in the files
-    - 1.The version being published (e.g. 1.2.3)
-    - 2.The next development version (e.g. 1.2.4-alpha)
-  - The artifact is attached to the release draft
-  - **(During the process, there must be no new commits added to the involved branches)**
+**[For setup instructions see docs/meain-release.md](docs/main-release.md)**
 
-2. The author fills the GitHub release draft description with the **changelog**
-3. The author can access the attached jars and test them locally if desired
-4. The author publishes the GitHub release
-5. The mod publish workflow is automatically triggered
-- JARs are downloaded from the GitHub release
-- They are published using the [Mod publish plugin created by Modmuss](https://github.com/modmuss50/mod-publish-plugin).
-- The workflow is configured for publishing to: (each step being optional)
-  - Modrinth
-  - Curseforge 
-  - and Discord
-- After all artifacts are successfully published to both Modrinth and Curseforge, an announcement is sent to Discord webhook
+Summary of the publication process:
+1. GitHub Release Draft is created
+2. Mod jars are compiled from all configured branches and attached to the release draft
+3. Bump version commits are pushed to every configured branch
+4. The mod author fills in the changelog and publishes the release
+5. All jars are uploaded to the configured platforms (Curseforge, Modrinth)
+6. Discord announcement is sent
 
-## Release version setup
-Described in [MAIN-RELEASE](./MAIN-RELEASE.md) file
+Each jar is published to each platform as a specific GitHub workflow job shown in the workflow detail.
+Each such job can be individually re-run to perform the upload again.
 
-## Nightly (preview) builds
-Optionally, in addition to the main release workflow, there is pipeline for building preview jars to Discord webhook.
+![New version discord announcement](docs/img/discord_release_announcement.png)
 
-First configure the main release workflow and include the options for nightly builds in the same configuration file.
+## Nightly build process
 
-1. Add [keyword-nightly-build.yml](./.github/workflows/template/keyword-nightly-build.yml) to your repository workflows to each branch from which you want to publish the nightly builds.
-2. Configure the branches and commit keywords that should trigger the nightly build
-3. At the bottom of the file, pin the workflow version and configure the file upload limit for your discord server
-- If the compiled file has bigger size than the configured value, the upload job will be skipped.
-- The downside of not uploading to discord is, that the user needs to be logged in to download the build from GitHub.
+**[For setup instructions see docs/nightly-build.md](docs/nightly-build.md)**
 
-4. Configure nightly webhook secret (see [MAIN-RELEASE](./MAIN-RELEASE.md) for detailed instructions)
-- `DISCORD_NIGHTLY_WEBHOOK_URL` the webhook URL to which nightly builds should be announced and uploaded
+Summary of the nightly build process:
+1. The build is triggered
+   1. A commit with a keyword is pushed to a configured branch
+   2. The build is manually triggered from GitHub UI
+2. The nightly jar is compiled from the branch
+3. Discord nightly build announcement is sent
+4. The jar is uploaded to discord if meets the server upload limit
 
 ## Comparison of popular tools
 

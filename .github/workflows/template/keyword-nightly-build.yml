@@ -8,7 +8,7 @@
 #
 # Recommended:
 #   Change the reference to specific version of the workflow called in nightly-build job
-#   Change branches that triggers this workflow automatically in on.push.branches
+#   Change the branch at which this workflow is used
 #   Change trigger keywords in env.TRIGGER_KEYWORDS
 
 name: Nightly Build on Keyword commit
@@ -16,11 +16,9 @@ name: Nightly Build on Keyword commit
 on:
   push:
     branches:
-      # Add every branch that should be eligible for nightly builds.
-      # Pushes to any other branch never even starts this workflow.
-      # Workflow is always run on the respective branch, you can keep here only the branch on which this file is placed
+      # The branch at which this workflow is placed
       - main
-      - develop
+
   workflow_dispatch:
   # Allows to manually start the workflow
 

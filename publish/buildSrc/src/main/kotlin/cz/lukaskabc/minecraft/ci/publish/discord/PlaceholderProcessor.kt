@@ -28,7 +28,7 @@ object PlaceholderProcessor {
         fun getPlatform(): String? = platform?.name?.let(this::capitalFirstChar)
 
         private fun capitalFirstChar(str: String): String {
-            return str.replaceFirstChar { it.uppercase() }
+            return str.lowercase().replaceFirstChar { it.uppercase() }
         }
     }
 

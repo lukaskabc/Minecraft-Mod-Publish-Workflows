@@ -100,7 +100,7 @@ jobs:
               repository: $repo,
               releaseId: .databaseId,
               url: "https://github.com/\($repo)/releases/tag/\($tag)",
-              title: .name
+              title: "GitHub: \(.name)"
             }' > workflow/publish/build/publishMods/github-publish-result.json
 
       - name: Prepare gradle wrapper

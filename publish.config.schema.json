@@ -38,31 +38,31 @@
     },
     "discord_enabled": {
       "type": "boolean",
-      "description": "Whether the normal release artifact(s) should be published to Discord",
+      "description": "Whether the normal release artifact(s) should be announced to Discord",
       "title": "Announce on Discord",
       "default": false
     },
     "discord_announce_nightly_builds": {
       "title": "Announce nightly builds to discord",
       "type": "boolean",
-      "description": "Whether nightly builds should be announced to the nightly webhook",
+      "description": "Whether nightly builds should be announced and uploaded to the nightly webhook",
       "default": false
     },
     "curseforge_project_slug": {
       "type": "string",
-      "description": "The Curseforge project slug",
+      "description": "The Curseforge project slug. When on the mod page, the slug is part of the link: `https://www.curseforge.com/minecraft/mc-mods/<slug>`",
       "title": "Curseforge project slug",
       "pattern": "\\S+"
     },
     "curseforge_project_id": {
       "type": "string",
-      "description": "The Curseforge project ID",
+      "description": "The Curseforge project ID. Project ID (number) can be found in the details section of the mod page.",
       "title": "Curseforge project ID",
       "pattern": "\\d+"
     },
     "modrinth_project_id": {
       "type": "string",
-      "description": "The Modrinth project ID",
+      "description": "The Modrinth project ID. Visit the mod page on Modrinth, click the three dots and copy the the ID.",
       "title": "Modrinth project ID"
     },
     "default_release_type": {
@@ -87,7 +87,7 @@
         "release_content": {
           "type": "string",
           "title": "Content message",
-          "description": "Set the content message. The following placeholders are available: \n`{version}`, \n`{changelog}`\n Defaults to \n`# Changelog \n{changelog}`"
+          "description": "Set the content message. The following placeholders are available: `{version}`, `{changelog}`. Defaults to: `# Changelog \\n{changelog}`"
         },
         "release_embed": {
           "title": "Version release Discord Embed",
@@ -96,12 +96,12 @@
         "nightly_content": {
           "type": "string",
           "title": "Content message for Nightly build",
-          "description": "Set the content message. Available placeholders: \n`{version}` The nightly mod version. Defaults to \n`# Nightly build \nv{version}`"
+          "description": "Set the content message. Available placeholders: `{version}` - The nightly mod version. Defaults to: `# Nightly build \\nv{version}`"
         },
         "nightly_discord_button_label": {
           "type": "string",
           "title": "Nightly GitHub link title",
-          "description": "The text of the link to GitHub workflow run containing the nightly build. \nAvailable placeholders: {version}. \nDefaults to: `Download from GitHub (Login required)`"
+          "description": "The text of the link to GitHub workflow run containing the nightly build. Available placeholders: `{version}`. Defaults to: `Download from GitHub (Login required)`"
         }
       },
       "additionalProperties": false
@@ -109,12 +109,11 @@
     "artifacts": {
       "title": "Artifacts / Branches",
       "type": "object",
-      "description": "Configuration for artifacts that should be released",
+      "description": "Configuration for artifacts that should be released. The Key (identifier) of the artifact if for purposes of this workflow. The name must be complaint with gradle task naming rules. Must not use `<space>` `/` `\\` `:` `<` `>` `\"` `?` `*` `|`. You should also not use `.` as a leading or trailing character.",
       "minProperties": 1,
       "propertyNames": {
         "title": "Artifact Identifier",
         "type": "string",
-        "description": "Unique identifier of the artifact for purposes of this workflow. The name must be complaint with gradle task naming rules. Must not use `<space>` `/` `\\` `:` `<` `>` `\"` `?` `*` `|`. You should also not use `.` as a leading or trailing character.",
         "pattern": "^([^ \\/\\\\:<>\"?*|.]|[^ \\/\\\\:<>\"?*|.][^ \\/\\\\:<>\"?*|]*[^ \\/\\\\:<>\"?*|.])$"
       },
       "additionalProperties": {
@@ -124,7 +123,7 @@
     "common_dependencies": {
       "title": "Common dependencies",
       "type": "object",
-      "description": "Common dependencies for **each artifact** (all branches)",
+      "description": "Common dependencies for **each artifact** (all branches). These dependencies will be applied to all published artifacts.",
       "$ref": "#/$defs/dependencies"
     }
   },
@@ -177,7 +176,7 @@
     "embed": {
       "type": "object",
       "title": "Discord Embed",
-      "description": "An embed object to be sent with the Discord webhook.\nAvailable placeholders: \n{version} The mod version without 'v' prefix, \n{changelog} The changelog contents. \n Do not use Discord tags in embed, if you want to send a notifications, use the tag in the standard message content.",
+      "description": "An embed object to be sent with the Discord webhook. Available placeholders: `{version}` The mod version **without** 'v' prefix, `{changelog}` The changelog contents. Do not use Discord tags in embed, if you want to send a notifications, use the tag in the standard message content.",
       "additionalProperties": false,
       "properties": {
         "title": {
@@ -188,7 +187,7 @@
         "description": {
           "type": "string",
           "title": "Description",
-          "description": "The description of the embed"
+          "description": "The description of the embed, discord formatting syntax can be used."
         },
         "color": {
           "type": "string",
@@ -252,13 +251,13 @@
         "file_glob": {
           "title": "File glob",
           "type": "string",
-          "description": "The glob for the compiled artifact to be uploaded. Can use `{version}` which will be replaced with the current mod version. E.g. \n`build/libs/*-1.21.1-neoforge-{version}.jar`",
+          "description": "The glob for the compiled artifact to be uploaded. Can use `{version}` which will be replaced with the current mod version. E.g. \n`build/libs/*-1.21.1-neoforge-{version}.jar`. The glob must be unique and match a single artifact with unique name. The last part of the glob (for the file name) must not match any other artifact from a different branch!",
           "pattern": "\\S+"
         },
         "branch": {
           "title": "Git Branch",
           "type": "string",
-          "description": "The name of the branch from which the artifact is compiled",
+          "description": "The name of the branch from which the artifact is compiled. Currently a branch can be configured only once for a single artifact!",
           "pattern": "\\S+"
         },
         "release_type": {
@@ -296,18 +295,18 @@
         "java_version": {
           "title": "Java version",
           "type": "string",
-          "description": "The java version required to build the branch and run the mod (e.g. `17`)",
+          "description": "The java version required to build the branch (e.g. `17`)",
           "pattern": "\\S+"
         },
         "discord_button_label": {
           "title": "Discord announcement button label",
-          "description": "Text to use for link button in discord announcement. \nAvailable placeholders: {loaders}, {version}, {game_versions}, {file_name}, {platform}. \nDefaults to: `{platform}: {loaders} {game_versions}`",
+          "description": "Text to use for link button in discord announcement. Available placeholders: `{loaders}`, `{version}`, `{game_versions}`, `{file_name}`, `{platform}`. Defaults to: `{platform}: {loaders} {game_versions}`",
           "type": "string"
         },
         "version_properties": {
           "title": "File version replacements",
           "type": "array",
-          "description": "List of files and respective properties where the version should be set. Only supports properties format (`property=value`). Use your gradle build script to distribute the value to other files. If none is supplied, defaults to `mod_version` in `gradle.properties`.",
+          "description": "List of files and respective properties where the version should be set before the artifact is compiled. Only supports properties format (`property=value`). Use your gradle build script to distribute the value to other files. If none is supplied, defaults to `mod_version` in `gradle.properties`.",
           "items": {
             "title": "Property file",
             "type": "object",
@@ -416,7 +415,7 @@
       "title": "Modrinth dependency",
       "type": "object",
       "additionalProperties": false,
-      "description": "Dependency on Modrinth platform. Only one, either ID or slug can be provided, you need to pick which value should be required. If you provide both values, ID takes priority and slug is not used.",
+      "description": "Dependency on Modrinth platform. Only one, either ID or slug is required. If you provide both values, ID takes priority and slug is not used.",
       "properties": {
         "id": {
           "title": "ID",

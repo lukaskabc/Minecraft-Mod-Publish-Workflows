@@ -58,8 +58,8 @@ class AnnounceDiscordAction(configuration: ProjectConfiguration) : ProjectAware(
 
         val actionRows = groupedByType.flatMap { (type, groupResults) ->
             groupResults
-                // Sort by link within the group
-                .sortedBy { it.link }
+                // Sort by title within the group
+                .sortedBy { it.title }
                 .map { result ->
                     ButtonComponent(
                         label = result.title,
