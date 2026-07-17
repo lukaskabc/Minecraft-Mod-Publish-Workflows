@@ -37,6 +37,9 @@ Summary of the publication process:
 5. All jars are uploaded to the configured platforms (Curseforge, Modrinth)
 6. Discord announcement is sent
 
+Each jar is published to each platform as a specific GitHub workflow job shown in the workflow detail.
+Each such job can be individually re-run to perform the upload again.
+
 ![New version discord announcement](docs/img/discord_release_announcement.png)
 
 ## Nightly build process
