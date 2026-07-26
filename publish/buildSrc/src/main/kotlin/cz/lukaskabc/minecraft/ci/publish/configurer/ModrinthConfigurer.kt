@@ -6,6 +6,7 @@ import cz.lukaskabc.minecraft.ci.publish.schema.Artifact
 import cz.lukaskabc.minecraft.ci.publish.schema.CfDependency
 import cz.lukaskabc.minecraft.ci.publish.schema.Dependencies
 import cz.lukaskabc.minecraft.ci.publish.schema.MrDependency
+import cz.lukaskabc.minecraft.ci.publish.schema.PublishConfigSchema
 import me.modmuss50.mpp.platforms.modrinth.ModrinthDependency
 import me.modmuss50.mpp.platforms.modrinth.ModrinthEnvironment
 import org.gradle.api.GradleException
@@ -40,23 +41,14 @@ class ModrinthConfigurer(configuration: ProjectConfiguration) :
 
                 configureDependencies(this, artifact)
 
-                val clientBit = if (publishConfig.client) 1 else 0
-                val serverBit = if (publishConfig.server) 2 else 0
-
-                val env: ModrinthEnvironment? = when (clientBit or serverBit) {
-                    1 -> ModrinthEnvironment.CLIENT_ONLY
-                    2 -> ModrinthEnvironment.SERVER_ONLY
-                    3 -> ModrinthEnvironment.CLIENT_AND_SERVER
-                    else -> {
-                        throw GradleException("Unexpected side configuration: server ${publishConfig.server} | client ${publishConfig.client}")
-                    }
-                }
-
-                environment.set(env)
+                environment.set(publishConfig.modrinthEnvironment())
                 projectId.set(publishConfig.modrinthProjectId)
 
                 announcementTitle.set(getAnnounceTitle(artifact, this@publishMods, ReleasePlatform.MODRINTH))
             }
         }
     }
+
+    protected fun PublishConfigSchema.modrinthEnvironment(): ModrinthEnvironment =
+        ModrinthEnvironment.valueOf(configuration.publishConfig.environment.name)
 }

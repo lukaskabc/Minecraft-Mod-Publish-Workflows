@@ -1,6 +1,5 @@
 {
-  "client": true,
-  "server": false,
+  "environment": "CLIENT_AND_SERVER",
   "curseforge_enabled": true,
   "modrinth_enabled": true,
   "discord_enabled": true,
