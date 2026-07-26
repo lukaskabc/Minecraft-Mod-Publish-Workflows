@@ -7,10 +7,12 @@ import cz.lukaskabc.minecraft.ci.publish.discord.PlaceholderProcessor
 import cz.lukaskabc.minecraft.ci.publish.schema.Artifact
 import cz.lukaskabc.minecraft.ci.publish.schema.CfDependency
 import cz.lukaskabc.minecraft.ci.publish.schema.Dependencies
+import cz.lukaskabc.minecraft.ci.publish.schema.PublishConfigSchema
 import me.modmuss50.mpp.ModPublishExtension
 import me.modmuss50.mpp.PlatformDependency
 import me.modmuss50.mpp.PlatformDependencyContainer
 import me.modmuss50.mpp.PlatformOptions
+import me.modmuss50.mpp.platforms.modrinth.ModrinthEnvironment
 import org.gradle.api.provider.Provider
 import java.util.concurrent.Callable
 
@@ -89,6 +91,7 @@ abstract class PlatformConfigurer<PD : PlatformDependency, D> : ProjectAware {
 
         return PlaceholderProcessor.process(template, params)
     }
+
 
     companion object {
         const val DEFAULT_DISCORD_BUTTON_LABEL = "{platform}: {loaders} {game_versions}"

@@ -6,6 +6,7 @@ import cz.lukaskabc.minecraft.ci.publish.ReleasePlatform
 import cz.lukaskabc.minecraft.ci.publish.schema.Artifact
 import cz.lukaskabc.minecraft.ci.publish.schema.CfDependency
 import cz.lukaskabc.minecraft.ci.publish.schema.Dependencies
+import cz.lukaskabc.minecraft.ci.publish.schema.PublishConfigSchema
 import me.modmuss50.mpp.platforms.curseforge.CurseforgeDependency
 
 
@@ -32,8 +33,9 @@ class CurseforgeConfigurer(configuration: ProjectConfiguration) :
 
                 configureDependencies(this, artifact)
 
-                client.set(publishConfig.client)
-                server.set(publishConfig.server)
+                val sideEnv = publishConfig.curseforgeEnvironment()
+                client.set(sideEnv.client)
+                server.set(sideEnv.server)
 
                 projectSlug.set(publishConfig.curseforgeProjectSlug)
                 projectId.set(publishConfig.curseforgeProjectId)
@@ -46,4 +48,7 @@ class CurseforgeConfigurer(configuration: ProjectConfiguration) :
             }
         }
     }
+
+    protected fun PublishConfigSchema.curseforgeEnvironment(): CurseforgeEnvironment =
+        CurseforgeEnvironment.from(configuration.publishConfig.environment)
 }

@@ -3,8 +3,7 @@
   "type": "object",
   "required": [
     "artifacts",
-    "client",
-    "server",
+    "environment",
     "curseforge_enabled",
     "modrinth_enabled",
     "discord_enabled",
@@ -12,17 +11,9 @@
     "default_release_type"
   ],
   "properties": {
-    "client": {
-      "type": "boolean",
-      "description": "Indicates if the mod is client-side",
-      "title": "Client side",
-      "default": false
-    },
-    "server": {
-      "type": "boolean",
-      "description": "Indicates if the mod is server-side",
-      "title": "Server side",
-      "default": false
+    "environment": {
+      "title": "Environment",
+      "$ref": "#/$defs/environment"
     },
     "curseforge_enabled": {
       "type": "boolean",
@@ -173,6 +164,21 @@
     }
   ],
   "$defs": {
+    "environment": {
+      "description": "Specifies the client and server environment requirements for the project. The options mirror the environment settings from Modrinth, for more details see [New Environments](https://modrinth.com/news/article/new-environments/).",
+      "type": "string",
+      "enum": [
+        "Client Only",
+        "Server Only",
+        "Dedicated Server Only",
+        "Client and Server",
+        "Server Only Client Optional",
+        "Client Only Server Optional",
+        "Client or Server Prefers Both",
+        "Client or Server",
+        "Singleplayer Only"
+      ]
+    },
     "embed": {
       "type": "object",
       "title": "Discord Embed",
@@ -433,12 +439,20 @@
         }
       },
       "if": {
-        "not": { "required": ["id"] }
+        "not": {
+          "required": [
+            "id"
+          ]
+        }
       },
       "then": {
-        "required": ["slug"]
+        "required": [
+          "slug"
+        ]
       },
-      "required": ["dependency_type"]
+      "required": [
+        "dependency_type"
+      ]
     }
   }
 }
