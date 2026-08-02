@@ -181,7 +181,7 @@ jobs:
 
       - name: Pre-build buildSrc
         working-directory: workflow/publish
-        run: ./gradlew clean build -p buildSrc
+        run: ./gradlew clean build -p buildSrc --no-daemon
 
       - name: Save Gradle build cache
         uses: actions/cache/save@v6
@@ -243,7 +243,7 @@ jobs:
           export CONFIG_JSON=$(cat repository/publish.config.json)
           chmod +x workflow/publish/gradlew
           cd workflow/publish
-          ./gradlew publishArtifact
+          ./gradlew publishArtifact --no-daemon
 
       - name: ${{ matrix.id }} - Upload publish mods result
         uses: actions/upload-artifact@v7
@@ -306,7 +306,7 @@ jobs:
           export CONFIG_JSON=$(cat repository/publish.config.json)
           chmod +x workflow/publish/gradlew
           cd workflow/publish
-          ./gradlew publishArtifact
+          ./gradlew publishArtifact --no-daemon
 
       - name: ${{ matrix.id }} - Upload publish mods result
         uses: actions/upload-artifact@v7
@@ -380,4 +380,4 @@ jobs:
           export CONFIG_JSON=$(cat repository/publish.config.json)
           chmod +x workflow/publish/gradlew
           cd workflow/publish
-          ./gradlew announceDiscord
+          ./gradlew announceDiscord --no-daemon
