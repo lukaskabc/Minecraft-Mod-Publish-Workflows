@@ -15,6 +15,11 @@ on:
         required: false
         default: false
         type: boolean
+      sequential_publication:
+        description: If true, publications will be performed sequentially.
+        required: false
+        default: false
+        type: boolean
     secrets:
       CURSEFORGE_API_KEY:
         required: false
@@ -111,7 +116,7 @@ jobs:
         run: |
           set -euo pipefail
           CONFIG=repository/publish.config.json
-          echo "artifact_ids=$(jq -c '[.artifacts | keys[]]' "$CONFIG")" >> "$GITHUB_OUTPUT"
+          echo "artifact_ids=$(jq -c '[.artifacts | keys_unsorted]' "$CONFIG")" >> "$GITHUB_OUTPUT"
           echo "curseforge_enabled=$(jq -r '.curseforge_enabled' "$CONFIG")" >> "$GITHUB_OUTPUT"
           echo "modrinth_enabled=$(jq -r '.modrinth_enabled' "$CONFIG")" >> "$GITHUB_OUTPUT"
           echo "discord_enabled=$(jq -r '.discord_enabled' "$CONFIG")" >> "$GITHUB_OUTPUT"
@@ -135,6 +140,7 @@ jobs:
     strategy:
       # Allow some tasks to succeed and do not cancel others if one fails
       fail-fast: false
+      max-parallel: ${{ inputs.sequential_publication && 1 || 100 }} # run sequentially
       matrix:
         id: ${{ fromJson(needs.prepare.outputs.artifact_ids) }}
     steps:
@@ -183,6 +189,7 @@ jobs:
     permissions: {}
     strategy:
       fail-fast: false
+      max-parallel: ${{ inputs.sequential_publication && 1 || 100 }} # run sequentially
       matrix:
         id: ${{ fromJson(needs.prepare.outputs.artifact_ids) }}
     steps:
