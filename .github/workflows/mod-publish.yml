@@ -149,8 +149,6 @@ jobs:
           retention-days: 1
 
   prepare-buildsrc:
-    # Only needed to warm the Gradle build cache when running sequentially
-    if: inputs.sequential_publication
     runs-on: ubuntu-latest
     name: Pre-build buildSrc and warm Gradle cache
     steps:
