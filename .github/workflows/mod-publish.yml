@@ -30,6 +30,8 @@ on:
 
 env:
   MOD_PUBLISH_JAVA_VERSION: 25
+  GRADLE_BUILD_CACHE_PATH: ~/.gradle/caches/build-cache-1
+  GRADLE_BUILD_CACHE_KEY: gradle-buildcache-${{ github.run_id }}-${{ github.run_attempt }}
 
 permissions:
   contents: read
@@ -180,8 +182,8 @@ jobs:
       - name: Save Gradle build cache
         uses: actions/cache/save@v6
         with:
-          path: ~/.gradle/caches/build-cache-1
-          key: gradle-buildcache-${{ github.run_id }}-${{ github.run_attempt }}
+          path: ${{ env.GRADLE_BUILD_CACHE_PATH }}
+          key: ${{ env.GRADLE_BUILD_CACHE_KEY }}
 
   publish-curseforge:
     needs: [prepare-matrix, prepare-assets, prepare-buildsrc]
@@ -219,8 +221,8 @@ jobs:
         if: inputs.sequential_publication
         uses: actions/cache/restore@v6
         with:
-          path: ~/.gradle/caches/build-cache-1
-          key: gradle-buildcache-${{ github.run_id }}-${{ github.run_attempt }}
+          path: ${{ env.GRADLE_BUILD_CACHE_PATH }}
+          key: ${{ env.GRADLE_BUILD_CACHE_KEY }}
 
       - name: ${{ matrix.id }} - Publish CurseForge artifact
         shell: bash
@@ -280,8 +282,8 @@ jobs:
         if: inputs.sequential_publication
         uses: actions/cache/restore@v6
         with:
-          path: ~/.gradle/caches/build-cache-1
-          key: gradle-buildcache-${{ github.run_id }}-${{ github.run_attempt }}
+          path: ${{ env.GRADLE_BUILD_CACHE_PATH }}
+          key: ${{ env.GRADLE_BUILD_CACHE_KEY }}
 
       - name: ${{ matrix.id }} - Publish Modrinth artifact
         shell: bash
@@ -353,8 +355,8 @@ jobs:
         if: inputs.sequential_publication
         uses: actions/cache/restore@v6
         with:
-          path: ~/.gradle/caches/build-cache-1
-          key: gradle-buildcache-${{ github.run_id }}-${{ github.run_attempt }}
+          path: ${{ env.GRADLE_BUILD_CACHE_PATH }}
+          key: ${{ env.GRADLE_BUILD_CACHE_KEY }}
 
       - name: Announce on Discord
         shell: bash
