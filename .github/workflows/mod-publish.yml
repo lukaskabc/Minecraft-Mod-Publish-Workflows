@@ -15,6 +15,11 @@ on:
         required: false
         default: false
         type: boolean
+      sequential_publication:
+        description: If true, publications will be performed sequentially.
+        required: false
+        default: false
+        type: boolean
     secrets:
       CURSEFORGE_API_KEY:
         required: false
@@ -25,14 +30,17 @@ on:
 
 env:
   MOD_PUBLISH_JAVA_VERSION: 25
+  GRADLE_BUILD_CACHE_PATH: ~/.gradle/caches/build-cache-1
+  GRADLE_BUILD_CACHE_KEY: gradle-buildcache-${{ github.run_id }}-${{ github.run_attempt }}
 
 permissions:
   contents: read
 
 jobs:
-  prepare:
+  # Constructs matrix for creating GitHub Worklfow jobs
+  prepare-matrix:
     runs-on: ubuntu-latest
-    name: Checkout repositories, download release assets and compute the publish matrix
+    name: Compute the publish matrix
     outputs:
       version: ${{ steps.extract_version.outputs.version }}
       artifact_ids: ${{ steps.matrix.outputs.artifact_ids }}
@@ -45,7 +53,38 @@ jobs:
         uses: actions/checkout@v7
         with:
           ref: ${{ inputs.release_tag }}
-          fetch-depth: 0
+          sparse-checkout: /publish.config.json
+          sparse-checkout-cone-mode: false
+          path: repository
+
+      - name: Extract version without 'v' prefix
+        id: extract_version
+        env:
+          RELEASE_TAG: ${{ inputs.release_tag }}
+        run: |
+          echo "version=${RELEASE_TAG#v}" >> "$GITHUB_OUTPUT"
+
+      - name: Compute artifact matrix and enabled platforms
+        id: matrix
+        run: |
+          set -euo pipefail
+          CONFIG=repository/publish.config.json
+          echo "artifact_ids=$(jq -c '.artifacts | keys_unsorted' "$CONFIG")" >> "$GITHUB_OUTPUT"
+          echo "curseforge_enabled=$(jq -r '.curseforge_enabled' "$CONFIG")" >> "$GITHUB_OUTPUT"
+          echo "modrinth_enabled=$(jq -r '.modrinth_enabled' "$CONFIG")" >> "$GITHUB_OUTPUT"
+          echo "discord_enabled=$(jq -r '.discord_enabled' "$CONFIG")" >> "$GITHUB_OUTPUT"
+
+  prepare-assets:
+    runs-on: ubuntu-latest
+    name: Download release assets and prepare publish workspace
+    steps:
+      - name: Checkout the main branch in caller repository
+        # Checksout the mod repository at the release tag - this will provide the configuration
+        uses: actions/checkout@v7
+        with:
+          ref: ${{ inputs.release_tag }}
+          sparse-checkout: /publish.config.json
+          sparse-checkout-cone-mode: false
           path: repository
 
       - name: Checkout workflow repository
@@ -56,13 +95,6 @@ jobs:
           ref: ${{ inputs.workflow_ref }}
           path: workflow
           fetch-depth: 1
-
-      - name: Extract version without 'v' prefix
-        id: extract_version
-        env:
-          RELEASE_TAG: ${{ inputs.release_tag }}
-        run: |
-          echo "version=${RELEASE_TAG#v}" >> "$GITHUB_OUTPUT"
 
       - name: Download release assets
         env:
@@ -106,16 +138,6 @@ jobs:
       - name: Prepare gradle wrapper
         run: chmod +x workflow/publish/gradlew
 
-      - name: Compute artifact matrix and enabled platforms
-        id: matrix
-        run: |
-          set -euo pipefail
-          CONFIG=repository/publish.config.json
-          echo "artifact_ids=$(jq -c '[.artifacts | keys[]]' "$CONFIG")" >> "$GITHUB_OUTPUT"
-          echo "curseforge_enabled=$(jq -r '.curseforge_enabled' "$CONFIG")" >> "$GITHUB_OUTPUT"
-          echo "modrinth_enabled=$(jq -r '.modrinth_enabled' "$CONFIG")" >> "$GITHUB_OUTPUT"
-          echo "discord_enabled=$(jq -r '.discord_enabled' "$CONFIG")" >> "$GITHUB_OUTPUT"
-
       - name: Upload publish workspace
         # Give access to files for upcoming jobs
         uses: actions/upload-artifact@v7
@@ -126,17 +148,62 @@ jobs:
             repository/publish.config.json
           retention-days: 1
 
+  prepare-buildsrc:
+    runs-on: ubuntu-latest
+    name: Pre-build buildSrc and warm Gradle cache
+    steps:
+      - name: Checkout workflow repository
+        # Checksout the repository of this workflow to use the files
+        uses: actions/checkout@v7
+        with:
+          repository: lukaskabc/Minecraft-Mod-Publish-Workflows
+          ref: ${{ inputs.workflow_ref }}
+          path: workflow
+          fetch-depth: 1
+
+      - name: Prepare gradle wrapper
+        run: chmod +x workflow/publish/gradlew
+
+      - name: Setup Java
+        uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: ${{ env.MOD_PUBLISH_JAVA_VERSION }}
+
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v6
+        with:
+          cache-cleanup: on-success
+          cache-read-only: false
+          cache-write-only: false
+
+      - name: Pre-build buildSrc
+        working-directory: workflow/publish
+        run: ./gradlew clean build -p buildSrc --no-daemon
+
+      - name: Save Gradle build cache
+        uses: actions/cache/save@v6
+        with:
+          path: ${{ env.GRADLE_BUILD_CACHE_PATH }}
+          key: ${{ env.GRADLE_BUILD_CACHE_KEY }}
+
   publish-curseforge:
-    needs: prepare
-    if: needs.prepare.outputs.curseforge_enabled == 'true'
+    needs: [prepare-matrix, prepare-assets, prepare-buildsrc]
+    if: |
+      !cancelled() &&
+      needs.prepare-matrix.result == 'success' &&
+      needs.prepare-assets.result == 'success' &&
+      (needs.prepare-buildsrc.result == 'success' || needs.prepare-buildsrc.result == 'skipped') &&
+      needs.prepare-matrix.outputs.curseforge_enabled == 'true'
     runs-on: ubuntu-latest
     name: ${{ matrix.id }} - Publish to CurseForge
     permissions: {}
     strategy:
       # Allow some tasks to succeed and do not cancel others if one fails
       fail-fast: false
+      max-parallel: ${{ inputs.sequential_publication && 1 || 100 }} # run sequentially
       matrix:
-        id: ${{ fromJson(needs.prepare.outputs.artifact_ids) }}
+        id: ${{ fromJson(needs.prepare-matrix.outputs.artifact_ids) }}
     steps:
       - name: Download publish workspace
         uses: actions/download-artifact@v8
@@ -151,6 +218,15 @@ jobs:
 
       - name: Setup Gradle
         uses: gradle/actions/setup-gradle@v6
+        with:
+          cache-read-only: true
+
+      - name: Restore Gradle build cache
+        if: inputs.sequential_publication
+        uses: actions/cache/restore@v6
+        with:
+          path: ${{ env.GRADLE_BUILD_CACHE_PATH }}
+          key: ${{ env.GRADLE_BUILD_CACHE_KEY }}
 
       - name: ${{ matrix.id }} - Publish CurseForge artifact
         shell: bash
@@ -158,14 +234,14 @@ jobs:
           CURSEFORGE_API_KEY: ${{ secrets.CURSEFORGE_API_KEY }}
           PLATFORM: 'curseforge'
           DRY_RUN: ${{ inputs.dry_run }}
-          VERSION: ${{ needs.prepare.outputs.version }}
+          VERSION: ${{ needs.prepare-matrix.outputs.version }}
           ARTIFACT_ID: ${{ matrix.id }}
         run: |
           set -euo pipefail
           export CONFIG_JSON=$(cat repository/publish.config.json)
           chmod +x workflow/publish/gradlew
           cd workflow/publish
-          ./gradlew publishArtifact
+          ./gradlew publishArtifact --no-daemon
 
       - name: ${{ matrix.id }} - Upload publish mods result
         uses: actions/upload-artifact@v7
@@ -176,15 +252,21 @@ jobs:
           retention-days: 1
 
   publish-modrinth:
-    needs: prepare
-    if: needs.prepare.outputs.modrinth_enabled == 'true'
+    needs: [prepare-matrix, prepare-assets, prepare-buildsrc]
+    if: |
+      !cancelled() &&
+      needs.prepare-matrix.result == 'success' &&
+      needs.prepare-assets.result == 'success' &&
+      (needs.prepare-buildsrc.result == 'success' || needs.prepare-buildsrc.result == 'skipped') &&
+      needs.prepare-matrix.outputs.modrinth_enabled == 'true'
     runs-on: ubuntu-latest
     name: ${{ matrix.id }} - Publish to Modrinth
     permissions: {}
     strategy:
       fail-fast: false
+      max-parallel: ${{ inputs.sequential_publication && 1 || 100 }} # run sequentially
       matrix:
-        id: ${{ fromJson(needs.prepare.outputs.artifact_ids) }}
+        id: ${{ fromJson(needs.prepare-matrix.outputs.artifact_ids) }}
     steps:
       - name: Download publish workspace
         uses: actions/download-artifact@v8
@@ -199,6 +281,15 @@ jobs:
 
       - name: Setup Gradle
         uses: gradle/actions/setup-gradle@v6
+        with:
+          cache-read-only: true
+
+      - name: Restore Gradle build cache
+        if: inputs.sequential_publication
+        uses: actions/cache/restore@v6
+        with:
+          path: ${{ env.GRADLE_BUILD_CACHE_PATH }}
+          key: ${{ env.GRADLE_BUILD_CACHE_KEY }}
 
       - name: ${{ matrix.id }} - Publish Modrinth artifact
         shell: bash
@@ -206,14 +297,14 @@ jobs:
           MODRINTH_API_KEY: ${{ secrets.MODRINTH_API_KEY }}
           PLATFORM: 'modrinth'
           DRY_RUN: ${{ inputs.dry_run }}
-          VERSION: ${{ needs.prepare.outputs.version }}
+          VERSION: ${{ needs.prepare-matrix.outputs.version }}
           ARTIFACT_ID: ${{ matrix.id }}
         run: |
           set -euo pipefail
           export CONFIG_JSON=$(cat repository/publish.config.json)
           chmod +x workflow/publish/gradlew
           cd workflow/publish
-          ./gradlew publishArtifact
+          ./gradlew publishArtifact --no-daemon
 
       - name: ${{ matrix.id }} - Upload publish mods result
         uses: actions/upload-artifact@v7
@@ -224,15 +315,17 @@ jobs:
           retention-days: 1
 
   announce-discord:
-    needs: [prepare, publish-curseforge, publish-modrinth]
+    needs: [prepare-matrix, prepare-assets, prepare-buildsrc, publish-curseforge, publish-modrinth]
     # !cancelled() - run always even if a dependency "failed (checked later)" or was skipped (disabled)
-    # Check that prepare job succeeded
+    # Check that the prepare jobs succeeded
     # Check that discord is enabled
     # Check that both modrinth and curseforge jobs succeeded
     if: |
       !cancelled() &&
-      needs.prepare.result == 'success' &&
-      needs.prepare.outputs.discord_enabled == 'true' &&
+      needs.prepare-matrix.result == 'success' &&
+      needs.prepare-assets.result == 'success' &&
+      (needs.prepare-buildsrc.result == 'success' || needs.prepare-buildsrc.result == 'skipped') &&
+      needs.prepare-matrix.outputs.discord_enabled == 'true' &&
       (needs.publish-curseforge.result == 'success' || needs.publish-curseforge.result == 'skipped') &&
       (needs.publish-modrinth.result == 'success' || needs.publish-modrinth.result == 'skipped')
     runs-on: ubuntu-latest
@@ -264,16 +357,25 @@ jobs:
 
       - name: Setup Gradle
         uses: gradle/actions/setup-gradle@v6
+        with:
+          cache-read-only: true
+
+      - name: Restore Gradle build cache
+        if: inputs.sequential_publication
+        uses: actions/cache/restore@v6
+        with:
+          path: ${{ env.GRADLE_BUILD_CACHE_PATH }}
+          key: ${{ env.GRADLE_BUILD_CACHE_KEY }}
 
       - name: Announce on Discord
         shell: bash
         env:
           DISCORD_WEBHOOK_URL: ${{ secrets.DISCORD_WEBHOOK_URL }}
           DRY_RUN: ${{ inputs.dry_run }}
-          VERSION: ${{ needs.prepare.outputs.version }}
+          VERSION: ${{ needs.prepare-matrix.outputs.version }}
         run: |
           set -euo pipefail
           export CONFIG_JSON=$(cat repository/publish.config.json)
           chmod +x workflow/publish/gradlew
           cd workflow/publish
-          ./gradlew announceDiscord
+          ./gradlew announceDiscord --no-daemon
