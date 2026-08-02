@@ -177,7 +177,7 @@ jobs:
 
       - name: Pre-build buildSrc
         working-directory: workflow/publish
-        run: ./gradlew buildSrc:build
+        run: ./gradlew clean build -p buildSrc
 
       - name: Save Gradle build cache
         uses: actions/cache/save@v6
@@ -309,7 +309,7 @@ jobs:
           retention-days: 1
 
   announce-discord:
-    needs: [prepare-matrix, prepare-assets, publish-curseforge, publish-modrinth]
+    needs: [prepare-matrix, prepare-assets, prepare-buildsrc, publish-curseforge, publish-modrinth]
     # !cancelled() - run always even if a dependency "failed (checked later)" or was skipped (disabled)
     # Check that the prepare jobs succeeded
     # Check that discord is enabled
@@ -318,6 +318,7 @@ jobs:
       !cancelled() &&
       needs.prepare-matrix.result == 'success' &&
       needs.prepare-assets.result == 'success' &&
+      (needs.prepare-buildsrc.result == 'success' || needs.prepare-buildsrc.result == 'skipped') &&
       needs.prepare-matrix.outputs.discord_enabled == 'true' &&
       (needs.publish-curseforge.result == 'success' || needs.publish-curseforge.result == 'skipped') &&
       (needs.publish-modrinth.result == 'success' || needs.publish-modrinth.result == 'skipped')
